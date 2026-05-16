@@ -1,7 +1,14 @@
 // ============================================================
-// CONFIG — โหลดจาก assets/js/config.js
+// CONFIG — โหลดจาก assets/js/config.js (fallback demo mode ถ้าไม่มีไฟล์)
 // ============================================================
-const { GAS_URL, SPREADSHEET_ID, GOOGLE_API_KEY } = APP_CONFIG;
+const _cfg = (typeof APP_CONFIG !== 'undefined') ? APP_CONFIG : {
+  GAS_URL:        'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL',
+  SPREADSHEET_ID: 'YOUR_SPREADSHEET_ID',
+  GOOGLE_API_KEY: 'YOUR_GOOGLE_API_KEY',
+  REPAIR_SHEET:   'แจ้งซ่อม',
+  BOOKING_SHEET:  'จองห้องประชุม',
+};
+const { GAS_URL, SPREADSHEET_ID, GOOGLE_API_KEY } = _cfg;
 
 const SHEETS_BASE = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values`;
 
@@ -202,7 +209,7 @@ async function fetchStatus(ticket) {
     return getDemoStatus(ticket);
   }
   const isRepair = ticket.startsWith('REP');
-  const rows = await fetchSheetData(isRepair ? APP_CONFIG.REPAIR_SHEET : APP_CONFIG.BOOKING_SHEET, isRepair ? 'A:H' : 'A:G');
+  const rows = await fetchSheetData(isRepair ? _cfg.REPAIR_SHEET : _cfg.BOOKING_SHEET, isRepair ? 'A:H' : 'A:G');
   if (rows.length <= 1) return null;
 
   const row = rows.slice(1).find(r => r[0] === ticket);
@@ -231,7 +238,7 @@ async function fetchStatus(ticket) {
 }
 
 async function fetchByName(name) {
-  const rows = await fetchSheetData(APP_CONFIG.REPAIR_SHEET, 'A:H');
+  const rows = await fetchSheetData(_cfg.REPAIR_SHEET, 'A:H');
   if (rows.length <= 1) return [];
   const q = name.toLowerCase();
   return rows.slice(1)
@@ -251,7 +258,7 @@ async function fetchBookings(year, month) {
   if (GOOGLE_API_KEY === 'YOUR_GOOGLE_API_KEY') {
     return getDemoBookings();
   }
-  const rows = await fetchSheetData(APP_CONFIG.BOOKING_SHEET, 'A:G');
+  const rows = await fetchSheetData(_cfg.BOOKING_SHEET, 'A:G');
   if (rows.length <= 1) return [];
 
   const prefix = `${year}-${String(month).padStart(2, '0')}`;
