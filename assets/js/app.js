@@ -147,17 +147,33 @@ async function submitBooking(e) {
     return;
   }
 
-  // Pre-check conflict against cached bookings (best-effort; GAS ตรวจซ้ำอีกครั้ง)
   const selectedRoom = form.room.value;
   const selectedDate = `${form.bookingYear.value}-${form.bookingMonth.value}-${form.bookingDay.value}`;
-  const cached = allBookings.find(b =>
-    b.room === selectedRoom &&
-    b.date === selectedDate &&
-    startTime < b.endTime && endTime > b.startTime
-  );
-  if (cached) {
-    showToast(`ห้องนี้ถูกจองแล้วในช่วง ${cached.startTime}–${cached.endTime} น. โดย ${cached.name}`, 'error');
-    return;
+
+  // Fresh conflict check จาก Sheet โดยตรง (authoritative)
+  if (_cfg.GOOGLE_API_KEY !== 'YOUR_GOOGLE_API_KEY') {
+    try {
+      const rows = await fetchSheetData(_cfg.BOOKING_SHEET, 'A:M');
+      const existing = rows.slice(1)
+        .map(r => parseBookingRow(r))
+        .filter(b => b.room === selectedRoom && b.date === selectedDate && b.status !== 'ยกเลิก');
+      const fc = existing.find(b => startTime < b.endTime && endTime > b.startTime);
+      if (fc) {
+        showToast(`ห้องนี้ถูกจองแล้วในช่วง ${fc.startTime}–${fc.endTime} น. โดย ${fc.name}`, 'error');
+        renderSlotsPanel(document.getElementById('bookedSlotsPanel'), existing);
+        return;
+      }
+    } catch { /* fall through to GAS check */ }
+  } else {
+    // Demo mode — check against cache
+    const cached = allBookings.find(b =>
+      b.room === selectedRoom && b.date === selectedDate &&
+      startTime < b.endTime && endTime > b.startTime
+    );
+    if (cached) {
+      showToast(`ห้องนี้ถูกจองแล้วในช่วง ${cached.startTime}–${cached.endTime} น. โดย ${cached.name}`, 'error');
+      return;
+    }
   }
 
   const dateValue = `${form.bookingYear.value}-${form.bookingMonth.value}-${form.bookingDay.value}`;
@@ -703,14 +719,66 @@ function closeModal(e) {
 // ============================================================
 // HELPERS
 // ============================================================
+async function refreshBookedSlots() {
+  const room  = document.getElementById('roomSelect')?.value;
+  const year  = document.getElementById('bookingYear')?.value;
+  const month = document.getElementById('bookingMonth')?.value;
+  const day   = document.getElementById('bookingDay')?.value;
+  const panel = document.getElementById('bookedSlotsPanel');
+  if (!panel) return;
+  if (!room) { panel.classList.add('hidden'); return; }
+
+  const date = `${year}-${month}-${day}`;
+
+  panel.className = 'sm:col-span-2 p-3 rounded-xl border text-sm bg-slate-50 border-slate-200';
+  panel.innerHTML = '<div class="text-xs text-slate-400"><i class="fa-solid fa-spinner fa-spin mr-1"></i>กำลังตรวจสอบช่วงเวลาว่าง...</div>';
+  panel.classList.remove('hidden');
+
+  try {
+    let bookings;
+    if (_cfg.GOOGLE_API_KEY === 'YOUR_GOOGLE_API_KEY') {
+      bookings = getDemoBookings().filter(b => b.room === room && b.date === date && b.status !== 'ยกเลิก');
+    } else {
+      const rows = await fetchSheetData(_cfg.BOOKING_SHEET, 'A:M');
+      bookings = rows.slice(1)
+        .map(r => parseBookingRow(r))
+        .filter(b => b.room === room && b.date === date && b.status !== 'ยกเลิก');
+    }
+    renderSlotsPanel(panel, bookings);
+  } catch {
+    panel.classList.add('hidden');
+  }
+}
+
+function renderSlotsPanel(panel, bookings) {
+  if (bookings.length === 0) {
+    panel.className = 'sm:col-span-2 p-3 rounded-xl border text-sm bg-green-50 border-green-200';
+    panel.innerHTML = '<div class="flex items-center gap-1.5 text-green-700"><i class="fa-solid fa-circle-check"></i><span>ว่างทั้งวัน — สามารถจองได้</span></div>';
+  } else {
+    panel.className = 'sm:col-span-2 p-3 rounded-xl border text-sm bg-red-50 border-red-200';
+    panel.innerHTML = `
+      <div class="text-xs font-semibold text-red-600 mb-2"><i class="fa-solid fa-ban mr-1"></i>ช่วงเวลาที่ถูกจองแล้ว — เลือกเวลาอื่น</div>
+      <div class="space-y-1">
+        ${bookings.sort((a,b) => a.startTime.localeCompare(b.startTime)).map(b => `
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-clock text-red-400 text-xs flex-shrink-0"></i>
+            <span class="font-semibold text-red-700">${b.startTime} – ${b.endTime} น.</span>
+            <span class="text-slate-500">· ${b.name}</span>
+          </div>`).join('')}
+      </div>`;
+  }
+}
+
 function updateEquipmentOptions(roomId) {
   const container = document.getElementById('equipmentCheckboxes');
   if (!container) return;
   const room = ROOMS.find(r => r.id === roomId);
   if (!room) {
     container.innerHTML = '<p class="text-slate-400 text-sm italic">กรุณาเลือกห้องประชุมก่อน</p>';
+    document.getElementById('bookedSlotsPanel')?.classList.add('hidden');
     return;
   }
+  refreshBookedSlots();
   const checkboxes = room.features.map(f => `
     <label class="flex items-center gap-2 text-sm cursor-pointer">
       <input type="checkbox" name="equipment" value="${f}" class="accent-blue-600" />${f}
@@ -887,6 +955,7 @@ function updateDays() {
   daySel.value = String(
     (prev >= minD && prev <= maxD) ? prev : minD
   ).padStart(2, '0');
+  refreshBookedSlots();
 }
 
 function countChars(el) {
