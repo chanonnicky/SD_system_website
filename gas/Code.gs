@@ -548,6 +548,28 @@ function buildStatusUpdateFlex(d) {
     'ยกเลิก':          { emoji: '❌', color: '#dc2626', dark: '#991b1b' },
   }[d.status] || { emoji: '⚪', color: '#6b7280', dark: '#374151' };
 
+  const gasUrl = ScriptApp.getService().getUrl();
+  const makeStatusUri = (status) => {
+    const params = `?action=updateStatus&ticket=${encodeURIComponent(d.ticket)}&status=${encodeURIComponent(status)}`;
+    return CONFIG.MINI_APP_ID
+      ? `https://miniapp.line.me/${CONFIG.MINI_APP_ID}${params}`
+      : `${gasUrl}${params}`;
+  };
+
+  const isActive = d.status === 'รับเรื่อง' || d.status === 'กำลังดำเนินการ';
+
+  const footerContents = isActive
+    ? [
+        { type: 'box', layout: 'horizontal', spacing: 'md', contents: [
+          { type: 'button', action: { type: 'uri', label: '✅ เสร็จสิ้น', uri: makeStatusUri('เสร็จสิ้น') }, style: 'primary', color: '#059669', height: 'md', flex: 1 },
+          { type: 'button', action: { type: 'uri', label: '❌ ยกเลิก',   uri: makeStatusUri('ยกเลิก')   }, style: 'primary', color: '#dc2626', height: 'md', flex: 1 },
+        ]},
+        { type: 'button', action: { type: 'uri', label: '📊 ดูใน Google Sheets', uri: CONFIG.SHEET_URL }, style: 'link', height: 'sm' },
+      ]
+    : [
+        { type: 'button', action: { type: 'uri', label: '📊 ดูใน Google Sheets', uri: CONFIG.SHEET_URL }, style: 'primary', color: cfg.color, height: 'md' },
+      ];
+
   return {
     altText: `🔄 ${d.ticket} → ${d.status}`,
     contents: {
@@ -584,9 +606,8 @@ function buildStatusUpdateFlex(d) {
         type: 'box',
         layout: 'vertical',
         paddingAll: 'lg',
-        contents: [
-          { type: 'button', action: { type: 'uri', label: 'ดูใน Google Sheets', uri: CONFIG.SHEET_URL }, style: 'primary', color: cfg.color, height: 'md' },
-        ],
+        spacing: 'md',
+        contents: footerContents,
       },
     },
   };
