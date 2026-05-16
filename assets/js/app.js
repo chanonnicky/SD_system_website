@@ -153,6 +153,11 @@ async function submitBooking(e) {
     showToast('ไม่สามารถจองย้อนหลังได้', 'error');
     return;
   }
+  const maxDate = new Date(today.getFullYear(), 11, 31);
+  if (bookingDate > maxDate) {
+    showToast(`ไม่สามารถจองเกินสิ้นปี ค.ศ. ${today.getFullYear()} ได้`, 'error');
+    return;
+  }
 
   const otherEquipment = form.equipmentOther?.value.trim();
   const checkedEquipment = [...form.querySelectorAll('input[name="equipment"]:checked')]
@@ -797,7 +802,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Set min date for booking to today
   const dateInput = document.getElementById('bookingDate');
   if (dateInput) {
-    dateInput.min = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    dateInput.min = now.toISOString().split('T')[0];
+    dateInput.max = `${now.getFullYear()}-12-31`;
   }
   // Init calendar data in background
   loadCalendarBookings();
