@@ -261,7 +261,7 @@ async function submitToGAS(data) {
   const res = await fetch(_cfg.GAS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' }, // text/plain หลีกเลี่ยง CORS preflight
-    body: JSON.stringify(data),
+    body: JSON.stringify({ ...data, secret: _cfg.CLIENT_SECRET }),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();

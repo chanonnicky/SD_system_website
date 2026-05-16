@@ -32,6 +32,7 @@ jobs:
             GAS_URL:        '${{ secrets.GAS_URL }}',
             SPREADSHEET_ID: '${{ secrets.SPREADSHEET_ID }}',
             GOOGLE_API_KEY: '${{ secrets.GOOGLE_API_KEY }}',
+            CLIENT_SECRET:  '${{ secrets.CLIENT_SECRET }}',
             REPAIR_SHEET:   'แจ้งซ่อม',
             BOOKING_SHEET:  'จองห้องประชุม',
           };

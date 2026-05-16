@@ -30,6 +30,8 @@ const CONFIG = {
   REPAIR_SHEET:   'แจ้งซ่อม',
   BOOKING_SHEET:  'จองห้องประชุม',
   SHEET_URL:      'https://docs.google.com/spreadsheets/d/1rHGjwT6ZBf0qryjXahaw1RUve3ozvbIB89u3gSYzhbU/edit',
+  WEBHOOK_SECRET:  _props.WEBHOOK_SECRET || '', // ตั้งค่าใน Script Properties → ป้องกัน URL ปุ่ม LINE ถูกเดา
+  CLIENT_SECRET:   _props.CLIENT_SECRET  || '', // ตั้งค่าใน Script Properties + GitHub Secret CLIENT_SECRET
   MINI_APP_ID:    '2010102800-8WvwvjA4',
 };
 
@@ -69,6 +71,14 @@ function doGet(e) {
   }
 
   if (params.action === 'updateStatus' && params.ticket && params.status) {
+    if (CONFIG.WEBHOOK_SECRET && params.secret !== CONFIG.WEBHOOK_SECRET) {
+      return HtmlService.createHtmlOutput(
+        '<html><body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#fef2f2">' +
+        '<div style="text-align:center;padding:2rem"><div style="font-size:2.5rem">🔒</div>' +
+        '<p style="color:#dc2626;font-weight:600">ไม่มีสิทธิ์เข้าถึง</p>' +
+        '<p style="color:#6b7280;font-size:.85rem">Unauthorized</p></div></body></html>'
+      );
+    }
     const updated = updateRepairStatus(params.ticket, params.status);
 
     if (updated) {
@@ -126,6 +136,11 @@ function doPost(e) {
     if (body.events) {
       handleLineWebhook(body.events);
       return ContentService.createTextOutput('OK').setMimeType(ContentService.MimeType.TEXT);
+    }
+
+    if (CONFIG.CLIENT_SECRET && body.secret !== CONFIG.CLIENT_SECRET) {
+      return ContentService.createTextOutput(JSON.stringify({ success: false, error: 'Unauthorized' }))
+        .setMimeType(ContentService.MimeType.JSON);
     }
 
     if (body.type === 'repair') {
@@ -239,6 +254,14 @@ function replyLineMessage(replyToken, text) {
 // E=อุปกรณ์ F=สถานที่ G=อาการ H=รูปภาพ I=สถานะ
 // ============================================================
 function handleRepair(data) {
+  const phone = String(data.phone || '').replace(/[\s\-]/g, '');
+  if (!data.name || !data.phone || !data.equipment || !data.location || !data.description)
+    return { success: false, error: 'กรุณากรอกข้อมูลให้ครบถ้วน' };
+  if (!/^((\+66|0066)?\d{9}|0\d{8,9})$/.test(phone))
+    return { success: false, error: 'เบอร์โทรไม่ถูกต้อง' };
+  if (String(data.name).length > 100 || String(data.description).length > 2000)
+    return { success: false, error: 'ข้อมูลยาวเกินกำหนด' };
+
   const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   let sheet = ss.getSheetByName(CONFIG.REPAIR_SHEET);
 
@@ -280,6 +303,26 @@ function handleRepair(data) {
 // J=วัตถุประสงค์ K=อุปกรณ์ L=หมายเหตุ M=สถานะ
 // ============================================================
 function handleBooking(data) {
+  const allowedRooms = ['หอประชุมซาวีโอ', 'ห้องประชุมอัลเบรา', 'ห้องประชุมรีกัลโดเน', 'Auditorium'];
+  const phone = String(data.phone || '').replace(/[\s\-]/g, '');
+  if (!data.room || !data.date || !data.startTime || !data.endTime || !data.name || !data.phone)
+    return { success: false, error: 'กรุณากรอกข้อมูลให้ครบถ้วน' };
+  if (!allowedRooms.includes(data.room))
+    return { success: false, error: 'ห้องประชุมไม่ถูกต้อง' };
+  if (!/^((\+66|0066)?\d{9}|0\d{8,9})$/.test(phone))
+    return { success: false, error: 'เบอร์โทรไม่ถูกต้อง' };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(data.date))
+    return { success: false, error: 'รูปแบบวันที่ไม่ถูกต้อง' };
+  if (!/^\d{2}:\d{2}$/.test(data.startTime) || !/^\d{2}:\d{2}$/.test(data.endTime))
+    return { success: false, error: 'รูปแบบเวลาไม่ถูกต้อง' };
+  if (data.startTime >= data.endTime)
+    return { success: false, error: 'เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น' };
+  const tz = Session.getScriptTimeZone();
+  if (data.date < Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd'))
+    return { success: false, error: 'ไม่สามารถจองย้อนหลังได้' };
+  if (String(data.purpose || '').length > 500)
+    return { success: false, error: 'วัตถุประสงค์ยาวเกินกำหนด' };
+
   const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   let sheet = ss.getSheetByName(CONFIG.BOOKING_SHEET);
 
@@ -406,7 +449,8 @@ function getOrCreateFolderPath(pathParts) {
 function buildRepairFlex(data, ticket, dateStr, imageUrl) {
   const gasUrl = ScriptApp.getService().getUrl();
   const makeStatusUri = (status) => {
-    const params = `?action=updateStatus&ticket=${encodeURIComponent(ticket)}&status=${encodeURIComponent(status)}`;
+    const secret = CONFIG.WEBHOOK_SECRET ? `&secret=${encodeURIComponent(CONFIG.WEBHOOK_SECRET)}` : '';
+    const params = `?action=updateStatus&ticket=${encodeURIComponent(ticket)}&status=${encodeURIComponent(status)}${secret}`;
     return CONFIG.MINI_APP_ID
       ? `https://miniapp.line.me/${CONFIG.MINI_APP_ID}${params}`
       : `${gasUrl}${params}`;
@@ -474,7 +518,8 @@ function buildRepairFlex(data, ticket, dateStr, imageUrl) {
 function buildBookingFlex(data, ticket, createdAt, dateDisplay) {
   const gasUrl = ScriptApp.getService().getUrl();
   const makeStatusUri = (status) => {
-    const params = `?action=updateStatus&ticket=${encodeURIComponent(ticket)}&status=${encodeURIComponent(status)}`;
+    const secret = CONFIG.WEBHOOK_SECRET ? `&secret=${encodeURIComponent(CONFIG.WEBHOOK_SECRET)}` : '';
+    const params = `?action=updateStatus&ticket=${encodeURIComponent(ticket)}&status=${encodeURIComponent(status)}${secret}`;
     return CONFIG.MINI_APP_ID
       ? `https://miniapp.line.me/${CONFIG.MINI_APP_ID}${params}`
       : `${gasUrl}${params}`;
@@ -619,7 +664,8 @@ function buildStatusUpdateFlex(d) {
 
   const gasUrl = ScriptApp.getService().getUrl();
   const makeStatusUri = (status) => {
-    const params = `?action=updateStatus&ticket=${encodeURIComponent(d.ticket)}&status=${encodeURIComponent(status)}`;
+    const secret = CONFIG.WEBHOOK_SECRET ? `&secret=${encodeURIComponent(CONFIG.WEBHOOK_SECRET)}` : '';
+    const params = `?action=updateStatus&ticket=${encodeURIComponent(d.ticket)}&status=${encodeURIComponent(status)}${secret}`;
     return CONFIG.MINI_APP_ID
       ? `https://miniapp.line.me/${CONFIG.MINI_APP_ID}${params}`
       : `${gasUrl}${params}`;
