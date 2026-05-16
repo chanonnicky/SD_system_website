@@ -265,14 +265,37 @@ async function submitToGAS(data) {
 // จองห้อง (ใหม่ A:M): E=เวลาเริ่ม(4) F=เวลาสิ้นสุด(5) G=ชื่อ(6) … M=สถานะ(12)
 // จองห้อง (เก่า A:L): E=เวลารวม(4) "09:00–10:00" F=ชื่อ(5) … L=สถานะ(11)
 
+// Normalize เวลาที่ Sheets อาจ auto-convert เป็น "8:00 AM" หรือ decimal fraction
+function normalizeTime(v) {
+  const s = String(v || '').trim();
+  if (!s) return '';
+  // decimal fraction (UNFORMATTED_VALUE): 0.333… = 08:00
+  const n = parseFloat(s);
+  if (!isNaN(n) && s === String(n) && n >= 0 && n < 1) {
+    const tot = Math.round(n * 1440);
+    return `${String(Math.floor(tot / 60)).padStart(2, '0')}:${String(tot % 60).padStart(2, '0')}`;
+  }
+  // "8:00 AM" / "8:00 PM" / "8:00" / "08:00"
+  const m = s.match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+  if (m) {
+    let h = parseInt(m[1]);
+    if (m[3]) {
+      if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12;
+      if (m[3].toUpperCase() === 'AM' && h === 12) h = 0;
+    }
+    return `${String(h).padStart(2, '0')}:${m[2]}`;
+  }
+  return s;
+}
+
 // ตรวจ format เก่า/ใหม่ จาก column E: เก่า = มี "–", ใหม่ = ไม่มี
 function parseBookingRow(r) {
   const isOld = String(r[4] || '').includes('–');
   if (isOld) {
-    const [startTime = '', endTime = ''] = String(r[4]).split('–');
-    return { ticket: r[0], room: r[2], date: r[3], startTime, endTime, name: r[5], status: r[11] };
+    const [t1 = '', t2 = ''] = String(r[4]).split('–');
+    return { ticket: r[0], room: r[2], date: r[3], startTime: normalizeTime(t1), endTime: normalizeTime(t2), name: r[5], status: r[11] };
   }
-  return { ticket: r[0], room: r[2], date: r[3], startTime: r[4], endTime: r[5], name: r[6], status: r[12] };
+  return { ticket: r[0], room: r[2], date: r[3], startTime: normalizeTime(r[4]), endTime: normalizeTime(r[5]), name: r[6], status: r[12] };
 }
 
 async function fetchStatus(ticket) {

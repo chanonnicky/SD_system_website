@@ -306,6 +306,9 @@ function handleBooking(data) {
   ]);
 
   const newRow = sheet.getLastRow();
+  // บังคับ E:F เป็น plain text เพื่อป้องกัน Sheets auto-convert "08:00" → Date
+  sheet.getRange(newRow, 5, 1, 2).setNumberFormat('@');
+
   const roomColors = {
     'หอประชุมซาวีโอ':       '#dbeafe',
     'ห้องประชุมอัลเบรา':    '#d1fae5',
@@ -325,6 +328,20 @@ function handleBooking(data) {
 // ============================================================
 // CHECK BOOKING CONFLICT (cols A:M → 13 columns, status = col M = index 12)
 // ============================================================
+function normalizeTimeStr(val) {
+  if (!val) return '';
+  if (val instanceof Date) return Utilities.formatDate(val, Session.getScriptTimeZone(), 'HH:mm');
+  const s = String(val).trim();
+  const m = s.match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+  if (!m) return s;
+  let h = parseInt(m[1]);
+  if (m[3]) {
+    if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12;
+    if (m[3].toUpperCase() === 'AM' && h === 12) h = 0;
+  }
+  return `${String(h).padStart(2, '0')}:${m[2]}`;
+}
+
 function checkBookingConflict(sheet, room, date, startTime, endTime) {
   if (sheet.getLastRow() <= 1) return null;
 
@@ -334,13 +351,12 @@ function checkBookingConflict(sheet, room, date, startTime, endTime) {
     const [ticket, , rowRoom, rowDate, rowStart, rowEnd, , , , , , , rowStatus] = row;
     if (rowStatus === 'ยกเลิก' || rowStatus === 'เสร็จสิ้น') continue;
     if (rowRoom !== room) continue;
-    // Sheets อาจ auto-convert "2026-05-16" เป็น Date object
     const rowDateStr = rowDate instanceof Date
       ? Utilities.formatDate(rowDate, tz, 'yyyy-MM-dd')
       : String(rowDate).slice(0, 10);
     if (rowDateStr !== date) continue;
-    const rs = String(rowStart).trim();
-    const re = String(rowEnd).trim();
+    const rs = normalizeTimeStr(rowStart);
+    const re = normalizeTimeStr(rowEnd);
     if (startTime < re && endTime > rs) {
       return `${rs}–${re} น. (${ticket})`;
     }
