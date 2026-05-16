@@ -81,6 +81,7 @@ async function submitRepair(e) {
   const data = {
     type: 'repair',
     name: form.name.value.trim(),
+    phone: form.phone.value.trim(),
     equipment: equipmentVal === 'อื่นๆ' && equipmentOther ? `อื่นๆ (${equipmentOther})` : equipmentVal,
     location: [building, `ชั้น ${floor}`, `ห้อง ${room}`].filter(Boolean).join(' '),
     description: form.description.value.trim(),
