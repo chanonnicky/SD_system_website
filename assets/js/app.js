@@ -797,20 +797,55 @@ function getDemoStatus(ticket) {
   return null;
 }
 
+// วันนี้ และ max = วันนี้ + 2 ปี (คำนวณครั้งเดียว)
+const _bookingToday   = new Date();
+const _bookingMaxDate = new Date(
+  _bookingToday.getFullYear() + 2,
+  _bookingToday.getMonth(),
+  _bookingToday.getDate()
+);
+
+function updateMonths() {
+  const yearSel  = document.getElementById('bookingYear');
+  const monthSel = document.getElementById('bookingMonth');
+  if (!yearSel || !monthSel) return;
+  const y    = parseInt(yearSel.value);
+  const minM = (y === _bookingToday.getFullYear())   ? _bookingToday.getMonth() + 1   : 1;
+  const maxM = (y === _bookingMaxDate.getFullYear()) ? _bookingMaxDate.getMonth() + 1 : 12;
+  const prev = parseInt(monthSel.value);
+  monthSel.innerHTML = '';
+  for (let m = minM; m <= maxM; m++) {
+    const opt = document.createElement('option');
+    opt.value = String(m).padStart(2, '0');
+    opt.textContent = monthNamesTH[m - 1];
+    monthSel.appendChild(opt);
+  }
+  monthSel.value = String(
+    (prev >= minM && prev <= maxM) ? prev : minM
+  ).padStart(2, '0');
+  updateDays();
+}
+
 function updateDays() {
   const daySel   = document.getElementById('bookingDay');
   const monthSel = document.getElementById('bookingMonth');
   const yearSel  = document.getElementById('bookingYear');
   if (!daySel || !monthSel || !yearSel) return;
-  const daysInMonth = new Date(parseInt(yearSel.value), parseInt(monthSel.value), 0).getDate();
-  const prev = daySel.value;
+  const y = parseInt(yearSel.value);
+  const m = parseInt(monthSel.value);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const minD = (y === _bookingToday.getFullYear()   && m === _bookingToday.getMonth() + 1)   ? _bookingToday.getDate()   : 1;
+  const maxD = (y === _bookingMaxDate.getFullYear() && m === _bookingMaxDate.getMonth() + 1) ? _bookingMaxDate.getDate() : daysInMonth;
+  const prev = parseInt(daySel.value);
   daySel.innerHTML = '';
-  for (let d = 1; d <= daysInMonth; d++) {
+  for (let d = minD; d <= maxD; d++) {
     const opt = document.createElement('option');
     opt.value = opt.textContent = String(d).padStart(2, '0');
     daySel.appendChild(opt);
   }
-  if (prev && parseInt(prev) <= daysInMonth) daySel.value = prev;
+  daySel.value = String(
+    (prev >= minD && prev <= maxD) ? prev : minD
+  ).padStart(2, '0');
 }
 
 function countChars(el) {
@@ -834,34 +869,20 @@ function toggleEquipmentOther(select) {
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
-  // Populate booking date selects (วว/ดด/ปปปป)
-  const now     = new Date();
-  const maxYear = 2500;
-
+  // Populate booking date selects (วว/ดด/ปปปป) — min=วันนี้, max=วันนี้+2ปี
   const yearSel = document.getElementById('bookingYear');
   if (yearSel) {
-    for (let y = now.getFullYear(); y <= maxYear; y++) {
+    for (let y = _bookingToday.getFullYear(); y <= _bookingMaxDate.getFullYear(); y++) {
       const opt = document.createElement('option');
       opt.value = opt.textContent = String(y);
       yearSel.appendChild(opt);
     }
-    yearSel.value = String(now.getFullYear());
+    yearSel.value = String(_bookingToday.getFullYear());
   }
-
-  const monthSel = document.getElementById('bookingMonth');
-  if (monthSel) {
-    monthNamesTH.forEach((name, i) => {
-      const opt = document.createElement('option');
-      opt.value = String(i + 1).padStart(2, '0');
-      opt.textContent = name;
-      monthSel.appendChild(opt);
-    });
-    monthSel.value = String(now.getMonth() + 1).padStart(2, '0');
-  }
-
-  updateDays();
+  // months และ days ถูก populate โดย updateMonths() → updateDays()
+  updateMonths();
   const daySel = document.getElementById('bookingDay');
-  if (daySel) daySel.value = String(now.getDate()).padStart(2, '0');
+  if (daySel) daySel.value = String(_bookingToday.getDate()).padStart(2, '0');
 
   // Populate 24-hour time selects
   const hourSelects = ['startHour', 'endHour'];
