@@ -153,9 +153,9 @@ async function submitBooking(e) {
     showToast('ไม่สามารถจองย้อนหลังได้', 'error');
     return;
   }
-  const maxDate = new Date(today.getFullYear(), 11, 31);
+  const maxDate = new Date(today.getFullYear() + 2, 11, 31);
   if (bookingDate > maxDate) {
-    showToast(`ไม่สามารถจองเกินสิ้นปี ค.ศ. ${today.getFullYear()} ได้`, 'error');
+    showToast(`ไม่สามารถจองเกินปี ค.ศ. ${today.getFullYear() + 2} ได้`, 'error');
     return;
   }
 
@@ -804,7 +804,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (dateInput) {
     const now = new Date();
     dateInput.min = now.toISOString().split('T')[0];
-    dateInput.max = `${now.getFullYear()}-12-31`;
+    dateInput.max = `${now.getFullYear() + 2}-12-31`;
   }
   // Init calendar data in background
   loadCalendarBookings();
