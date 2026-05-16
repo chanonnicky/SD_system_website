@@ -21,13 +21,25 @@
 // (GAS ทำงานบน server ของ Google จึงอ่าน config.js ไม่ได้โดยตรง)
 // ============================================================
 const CONFIG = {
-  SPREADSHEET_ID: '1rHGjwT6ZBf0qryjXahaw1RUve3ozvbIB89u3gSYzhbU', // ← APP_CONFIG.SPREADSHEET_ID
-  LINE_TOKEN:     'kZDmkCpgVMDKGFDn3u0doCpZ9IiqpK4TvzULDxa9Sw7N02Btc/0MRxViBHBR6xMwsOO7kWeQWoEwCwwPctm/o+wKFDJp1J+BySHDDj9PDiq5jyMYqPa6+h7WCJCNYTU3kSljs22vMdFZTV5yVz1/hAdB04t89/1O/w1cDnyilFU=', // ← APP_CONFIG.LINE_TOKEN
-  REPAIR_SHEET:   'แจ้งซ่อม',        // ← APP_CONFIG.REPAIR_SHEET
-  BOOKING_SHEET:  'จองห้องประชุม',   // ← APP_CONFIG.BOOKING_SHEET
+  SPREADSHEET_ID: '1rHGjwT6ZBf0qryjXahaw1RUve3ozvbIB89u3gSYzhbU',
+  LINE_TOKEN:     'kZDmkCpgVMDKGFDn3u0doCpZ9IiqpK4TvzULDxa9Sw7N02Btc/0MRxViBHBR6xMwsOO7kWeQWoEwCwwPctm/o+wKFDJp1J+BySHDDj9PDiq5jyMYqPa6+h7WCJCNYTU3kSljs22vMdFZTV5yVz1/hAdB04t89/1O/w1cDnyilFU=',
+  REPAIR_SHEET:   'แจ้งซ่อม',
+  BOOKING_SHEET:  'จองห้องประชุม',
   SHEET_URL:      'https://docs.google.com/spreadsheets/d/1rHGjwT6ZBf0qryjXahaw1RUve3ozvbIB89u3gSYzhbU/edit',
-  MINI_APP_ID:    '2010102800-8WvwvjA4', // Developing environment
+  MINI_APP_ID:    '2010102800-8WvwvjA4',
 };
+
+// ============================================================
+// แจ้งซ่อม — Column layout (A:I)
+// A=เลขที่  B=วันที่แจ้ง  C=ชื่อผู้แจ้ง  D=เบอร์โทร
+// E=อุปกรณ์  F=สถานที่  G=อาการ  H=รูปภาพ  I=สถานะ
+// ============================================================
+
+// จองห้องประชุม — Column layout (A:L)
+// A=เลขที่  B=วันที่จอง  C=ห้อง  D=วันที่ใช้ห้อง  E=เวลา
+// F=ชื่อผู้จอง  G=เบอร์โทร  H=จำนวนผู้เข้าร่วม
+// I=วัตถุประสงค์  J=อุปกรณ์  K=หมายเหตุ  L=สถานะ
+// ============================================================
 
 // ============================================================
 // doGet — อัปเดตสถานะผ่าน LIFF (กดปุ่มใน LINE card)
@@ -35,8 +47,6 @@ const CONFIG = {
 function doGet(e) {
   let params = e.parameter || {};
 
-  // LINE Mini App wraps original query string inside liff.state
-  // e.g. liff.state = "/?action=updateStatus&ticket=REP-001&status=..."
   if (!params.action && params['liff.state']) {
     try {
       const liffState = decodeURIComponent(params['liff.state']);
@@ -97,7 +107,7 @@ function doGet(e) {
 }
 
 // ============================================================
-// HANDLE POST REQUESTS (repair, booking, LINE webhook)
+// HANDLE POST REQUESTS
 // ============================================================
 function doPost(e) {
   let result;
@@ -126,13 +136,11 @@ function doPost(e) {
 }
 
 // ============================================================
-// LINE WEBHOOK — จัดการ postback (อัปเดตสถานะ) และ log event
+// LINE WEBHOOK
 // ============================================================
 function handleLineWebhook(events) {
   for (const ev of events) {
-    if (ev.type === 'postback') {
-      handlePostback(ev);
-    }
+    if (ev.type === 'postback') handlePostback(ev);
   }
 }
 
@@ -165,7 +173,7 @@ function updateRepairStatus(ticket, newStatus) {
   const values = sheet.getDataRange().getValues();
   for (let i = 1; i < values.length; i++) {
     if (values[i][0] === ticket) {
-      sheet.getRange(i + 1, 8).setValue(newStatus); // col H = สถานะ
+      sheet.getRange(i + 1, 9).setValue(newStatus); // col I = สถานะ
       return true;
     }
   }
@@ -189,6 +197,8 @@ function replyLineMessage(replyToken, text) {
 
 // ============================================================
 // REPAIR HANDLER
+// A=เลขที่ B=วันที่แจ้ง C=ชื่อผู้แจ้ง D=เบอร์โทร
+// E=อุปกรณ์ F=สถานที่ G=อาการ H=รูปภาพ I=สถานะ
 // ============================================================
 function handleRepair(data) {
   const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
@@ -196,42 +206,40 @@ function handleRepair(data) {
 
   if (!sheet) {
     sheet = ss.insertSheet(CONFIG.REPAIR_SHEET);
-    sheet.appendRow(['เลขที่', 'วันที่แจ้ง', 'ชื่อผู้แจ้ง', 'อุปกรณ์', 'สถานที่', 'อาการ', 'รูปภาพ', 'สถานะ']);
-    sheet.getRange(1, 1, 1, 8).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
+    sheet.appendRow(['เลขที่', 'วันที่แจ้ง', 'ชื่อผู้แจ้ง', 'เบอร์โทร', 'อุปกรณ์', 'สถานที่', 'อาการ', 'รูปภาพ', 'สถานะ']);
+    sheet.getRange(1, 1, 1, 9).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
     sheet.setFrozenRows(1);
   }
 
   const lastRow = sheet.getLastRow();
-  const seq = lastRow;
   const year = new Date().getFullYear();
-  const ticket = `REP-${year}-${String(seq).padStart(3, '0')}`;
-
-  const now = new Date();
-  const dateStr = Utilities.formatDate(now, 'Asia/Bangkok', 'dd/MM/yyyy HH:mm');
+  const ticket = `REP-${year}-${String(lastRow).padStart(3, '0')}`;
+  const dateStr = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm');
 
   let imageUrl = '';
-  if (data.imageBase64) {
-    imageUrl = saveImageToDrive(data.imageBase64, ticket);
-  }
+  if (data.imageBase64) imageUrl = saveImageToDrive(data.imageBase64, ticket);
 
   sheet.appendRow([
-    ticket,              // A เลขที่
-    dateStr,             // B วันที่แจ้ง
-    data.name,           // C ชื่อผู้แจ้ง
-    data.equipment,      // D อุปกรณ์
-    data.location || '', // E สถานที่
-    data.description,    // F อาการ
-    imageUrl,            // G รูปภาพ
-    'รับเรื่อง',          // H สถานะ
+    ticket,               // A เลขที่
+    dateStr,              // B วันที่แจ้ง
+    data.name    || '',   // C ชื่อผู้แจ้ง
+    data.phone   || '',   // D เบอร์โทร
+    data.equipment|| '',  // E อุปกรณ์
+    data.location|| '',   // F สถานที่
+    data.description||'', // G อาการ
+    imageUrl,             // H รูปภาพ
+    'รับเรื่อง',           // I สถานะ
   ]);
 
   sendLineFlex(buildRepairFlex(data, ticket, dateStr, imageUrl));
-
   return { success: true, ticket };
 }
 
 // ============================================================
 // BOOKING HANDLER
+// A=เลขที่ B=วันที่จอง C=ห้อง D=วันที่ใช้ห้อง E=เวลา
+// F=ชื่อผู้จอง G=เบอร์โทร H=จำนวนผู้เข้าร่วม
+// I=วัตถุประสงค์ J=อุปกรณ์ K=หมายเหตุ L=สถานะ
 // ============================================================
 function handleBooking(data) {
   const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
@@ -239,8 +247,8 @@ function handleBooking(data) {
 
   if (!sheet) {
     sheet = ss.insertSheet(CONFIG.BOOKING_SHEET);
-    sheet.appendRow(['เลขที่', 'วันที่จอง', 'ห้อง', 'วันที่ใช้ห้อง', 'เวลา', 'ชื่อผู้จอง', 'สถานะ']);
-    sheet.getRange(1, 1, 1, 7).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
+    sheet.appendRow(['เลขที่', 'วันที่จอง', 'ห้อง', 'วันที่ใช้ห้อง', 'เวลา', 'ชื่อผู้จอง', 'เบอร์โทร', 'จำนวนผู้เข้าร่วม', 'วัตถุประสงค์', 'อุปกรณ์', 'หมายเหตุ', 'สถานะ']);
+    sheet.getRange(1, 1, 1, 12).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
     sheet.setFrozenRows(1);
   }
 
@@ -250,53 +258,52 @@ function handleBooking(data) {
   }
 
   const lastRow = sheet.getLastRow();
-  const seq = lastRow;
   const year = new Date().getFullYear();
-  const ticket = `BK-${year}-${String(seq).padStart(3, '0')}`;
-
-  const now = new Date();
-  const createdAt = Utilities.formatDate(now, 'Asia/Bangkok', 'dd/MM/yyyy HH:mm');
+  const ticket = `BK-${year}-${String(lastRow).padStart(3, '0')}`;
+  const createdAt = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm');
 
   sheet.appendRow([
-    ticket,                                   // A เลขที่
-    createdAt,                                // B วันที่จอง
-    data.room,                                // C ห้อง
-    data.date,                                // D วันที่ใช้ห้อง
-    `${data.startTime}–${data.endTime}`,      // E เวลา
-    data.name,                                // F ชื่อผู้จอง
-    'รับเรื่อง',                               // G สถานะ
+    ticket,                              // A เลขที่
+    createdAt,                           // B วันที่จอง
+    data.room        || '',              // C ห้อง
+    data.date        || '',              // D วันที่ใช้ห้อง
+    `${data.startTime}–${data.endTime}`, // E เวลา
+    data.name        || '',              // F ชื่อผู้จอง
+    data.phone       || '',              // G เบอร์โทร
+    data.attendees   || '',              // H จำนวนผู้เข้าร่วม
+    data.purpose     || '',              // I วัตถุประสงค์
+    data.equipment   || '',              // J อุปกรณ์
+    data.note        || '',              // K หมายเหตุ
+    'รับเรื่อง',                          // L สถานะ
   ]);
 
   const newRow = sheet.getLastRow();
-  // sync sheetColor กับ rooms.js → sheetColor ของแต่ละห้อง
   const roomColors = {
-    'ห้องประชุม A':       '#dbeafe',
-    'ห้องประชุม B':       '#d1fae5',
-    'ห้องประชุม C (ใหญ่)':'#ede9fe',
-    'ห้องอบรม':           '#ffedd5',
+    'หอประชุมซาวีโอ':       '#dbeafe',
+    'ห้องประชุมอัลเบรา':    '#d1fae5',
+    'ห้องประชุมรีกัลโดเน':  '#ede9fe',
+    'Auditorium':            '#ffedd5',
   };
-  if (roomColors[data.room]) sheet.getRange(newRow, 3).setBackground(roomColors[data.room]); // col C = ห้อง
+  if (roomColors[data.room]) sheet.getRange(newRow, 3).setBackground(roomColors[data.room]);
 
-  const dateParts = data.date.split('-');
+  const dateParts = (data.date || '').split('-');
   const thYear = parseInt(dateParts[0]) + 543;
   const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
   const dateDisplay = `${dateParts[2]} ${months[parseInt(dateParts[1])-1]} ${thYear}`;
 
   sendLineFlex(buildBookingFlex(data, ticket, createdAt, dateDisplay));
-
   return { success: true, ticket };
 }
 
 // ============================================================
-// CHECK BOOKING CONFLICT
+// CHECK BOOKING CONFLICT (cols A:L → 12 columns, status = col L = index 11)
 // ============================================================
 function checkBookingConflict(sheet, room, date, startTime, endTime) {
   if (sheet.getLastRow() <= 1) return null;
 
-  // cols: A=เลขที่, B=วันที่จอง, C=ห้อง, D=วันที่ใช้ห้อง, E=เวลา(start–end), F=ชื่อผู้จอง, G=สถานะ
-  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 7).getValues();
+  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 12).getValues();
   for (const row of data) {
-    const [ticket, , rowRoom, rowDate, rowTime, , rowStatus] = row;
+    const [ticket, , rowRoom, rowDate, rowTime, , , , , , , rowStatus] = row;
     if (rowStatus === 'ยกเลิก' || rowStatus === 'เสร็จสิ้น') continue;
     if (rowRoom !== room) continue;
     if (String(rowDate) !== date) continue;
@@ -314,11 +321,9 @@ function checkBookingConflict(sheet, room, date, startTime, endTime) {
 function saveImageToDrive(base64, ticket) {
   try {
     const folder = getOrCreateFolderPath(['ฝ่ายโสต', 'AV_Repair']);
-
     const blob = Utilities.newBlob(Utilities.base64Decode(base64), 'image/jpeg', `${ticket}.jpg`);
     const file = folder.createFile(blob);
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-
     return `https://lh3.googleusercontent.com/d/${file.getId()}`;
   } catch (err) {
     Logger.log('Drive upload error: ' + err.message);
@@ -346,101 +351,61 @@ function buildRepairFlex(data, ticket, dateStr, imageUrl) {
       ? `https://miniapp.line.me/${CONFIG.MINI_APP_ID}${params}`
       : `${gasUrl}${params}`;
   };
-  const bubble = {
-    type: 'bubble',
-    size: 'mega',
-    header: {
-      type: 'box',
-      layout: 'vertical',
-      backgroundColor: '#1d4ed8',
-      paddingAll: 'xl',
-      contents: [
-        { type: 'text', text: '🔧 แจ้งซ่อมใหม่', color: '#ffffff', size: 'xl', weight: 'bold' },
-        { type: 'text', text: ticket, color: '#bfdbfe', size: 'md', margin: 'sm' },
-        {
-          type: 'box',
-          layout: 'vertical',
-          backgroundColor: '#1e40af',
-          cornerRadius: 'md',
-          paddingAll: 'sm',
-          margin: 'lg',
-          contents: [
-            { type: 'text', text: '🟡 รับเรื่อง', color: '#fde68a', size: 'md', weight: 'bold', align: 'center' },
-          ],
-        },
-      ],
-    },
-    body: {
-      type: 'box',
-      layout: 'vertical',
-      spacing: 'md',
-      paddingAll: 'xl',
-      contents: [
-        ...(imageUrl ? [{
-          type: 'image',
-          url: imageUrl,
-          size: 'full',
-          aspectRatio: '20:13',
-          aspectMode: 'cover',
-          margin: 'none',
-        }, { type: 'separator', margin: 'lg' }] : []),
-        flexRow('👤 ผู้แจ้ง', data.name),
-        { type: 'separator', margin: 'sm' },
-        flexRow('🛠️ อุปกรณ์', data.equipment),
-        { type: 'separator', margin: 'sm' },
-        flexRow('📍 สถานที่', data.location || '-'),
-        { type: 'separator', margin: 'sm' },
-        flexRow('📝 อาการ', data.description),
-        { type: 'separator', margin: 'sm' },
-        flexRow('🕐 เวลา', dateStr),
-      ],
-    },
-    footer: {
-      type: 'box',
-      layout: 'vertical',
-      paddingAll: 'lg',
-      spacing: 'md',
-      contents: [
-        {
-          type: 'box',
-          layout: 'horizontal',
-          spacing: 'md',
-          contents: [
-            {
-              type: 'button',
-              action: { type: 'uri', label: '🔵 กำลังดำเนินการ', uri: makeStatusUri('กำลังดำเนินการ') },
-              style: 'secondary',
-              height: 'md',
-              flex: 1,
-            },
-            {
-              type: 'button',
-              action: { type: 'uri', label: '✅ เสร็จสิ้น', uri: makeStatusUri('เสร็จสิ้น') },
-              style: 'primary',
-              color: '#059669',
-              height: 'md',
-              flex: 1,
-            },
-          ],
-        },
-        {
-          type: 'button',
-          action: { type: 'uri', label: '❌ ยกเลิกการซ่อม', uri: makeStatusUri('ยกเลิก') },
-          style: 'primary',
-          color: '#dc2626',
-          height: 'md',
-        },
-        {
-          type: 'button',
-          action: { type: 'uri', label: '📊 ดูใน Google Sheets', uri: CONFIG.SHEET_URL },
-          style: 'link',
-          height: 'sm',
-        },
-      ],
+
+  return {
+    altText: `🔧 แจ้งซ่อมใหม่ ${ticket}`,
+    contents: {
+      type: 'bubble',
+      size: 'mega',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: '#1d4ed8',
+        paddingAll: 'xl',
+        contents: [
+          { type: 'text', text: '🔧 แจ้งซ่อมใหม่', color: '#ffffff', size: 'xl', weight: 'bold' },
+          { type: 'text', text: ticket, color: '#bfdbfe', size: 'md', margin: 'sm' },
+          { type: 'box', layout: 'vertical', backgroundColor: '#1e40af', cornerRadius: 'md', paddingAll: 'sm', margin: 'lg',
+            contents: [{ type: 'text', text: '🟡 รับเรื่อง', color: '#fde68a', size: 'md', weight: 'bold', align: 'center' }] },
+        ],
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'md',
+        paddingAll: 'xl',
+        contents: [
+          ...(imageUrl ? [{ type: 'image', url: imageUrl, size: 'full', aspectRatio: '20:13', aspectMode: 'cover', margin: 'none' },
+            { type: 'separator', margin: 'lg' }] : []),
+          flexRow('👤 ผู้แจ้ง',   data.name        || '-'),
+          { type: 'separator', margin: 'sm' },
+          flexRow('📞 เบอร์โทร',  data.phone       || '-'),
+          { type: 'separator', margin: 'sm' },
+          flexRow('🛠️ อุปกรณ์',  data.equipment   || '-'),
+          { type: 'separator', margin: 'sm' },
+          flexRow('📍 สถานที่',   data.location    || '-'),
+          { type: 'separator', margin: 'sm' },
+          flexRow('📝 อาการ',     data.description || '-'),
+          { type: 'separator', margin: 'sm' },
+          flexRow('🕐 เวลา',      dateStr),
+        ],
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        paddingAll: 'lg',
+        spacing: 'md',
+        contents: [
+          { type: 'box', layout: 'horizontal', spacing: 'md', contents: [
+            { type: 'button', action: { type: 'uri', label: '🔵 กำลังดำเนินการ', uri: makeStatusUri('กำลังดำเนินการ') }, style: 'secondary', height: 'md', flex: 1 },
+            { type: 'button', action: { type: 'uri', label: '✅ เสร็จสิ้น', uri: makeStatusUri('เสร็จสิ้น') }, style: 'primary', color: '#059669', height: 'md', flex: 1 },
+          ]},
+          { type: 'button', action: { type: 'uri', label: '❌ ยกเลิกการซ่อม', uri: makeStatusUri('ยกเลิก') }, style: 'primary', color: '#dc2626', height: 'md' },
+          { type: 'button', action: { type: 'uri', label: '📊 ดูใน Google Sheets', uri: CONFIG.SHEET_URL }, style: 'link', height: 'sm' },
+        ],
+      },
     },
   };
-
-  return { altText: `🔧 แจ้งซ่อมใหม่ ${ticket}`, contents: bubble };
 }
 
 // ============================================================
@@ -460,17 +425,8 @@ function buildBookingFlex(data, ticket, createdAt, dateDisplay) {
         contents: [
           { type: 'text', text: '📅 จองห้องประชุมใหม่', color: '#ffffff', size: 'xl', weight: 'bold' },
           { type: 'text', text: ticket, color: '#a7f3d0', size: 'md', margin: 'sm' },
-          {
-            type: 'box',
-            layout: 'vertical',
-            backgroundColor: '#064e3b',
-            cornerRadius: 'md',
-            paddingAll: 'sm',
-            margin: 'lg',
-            contents: [
-              { type: 'text', text: '🟡 รับเรื่อง', color: '#fde68a', size: 'md', weight: 'bold', align: 'center' },
-            ],
-          },
+          { type: 'box', layout: 'vertical', backgroundColor: '#064e3b', cornerRadius: 'md', paddingAll: 'sm', margin: 'lg',
+            contents: [{ type: 'text', text: '🟡 รับเรื่อง', color: '#fde68a', size: 'md', weight: 'bold', align: 'center' }] },
         ],
       },
       body: {
@@ -479,12 +435,7 @@ function buildBookingFlex(data, ticket, createdAt, dateDisplay) {
         spacing: 'md',
         paddingAll: 'xl',
         contents: [
-          {
-            type: 'box',
-            layout: 'vertical',
-            backgroundColor: '#f0fdf4',
-            cornerRadius: 'lg',
-            paddingAll: 'lg',
+          { type: 'box', layout: 'vertical', backgroundColor: '#f0fdf4', cornerRadius: 'lg', paddingAll: 'lg',
             contents: [
               { type: 'text', text: data.room, color: '#065f46', size: 'xl', weight: 'bold', align: 'center' },
               { type: 'text', text: dateDisplay, color: '#059669', size: 'md', align: 'center', margin: 'sm' },
@@ -492,14 +443,13 @@ function buildBookingFlex(data, ticket, createdAt, dateDisplay) {
             ],
           },
           { type: 'separator', margin: 'md' },
-          flexRow('👤 ผู้จอง', data.name),
-          flexRow('🏫 แผนก', data.department),
-          flexRow('📞 เบอร์', data.phone),
-          flexRow('👥 ผู้เข้าร่วม', `${data.attendees} คน`),
+          flexRow('👤 ผู้จอง',        data.name      || '-'),
+          flexRow('📞 เบอร์โทร',      data.phone     || '-'),
+          flexRow('👥 ผู้เข้าร่วม',   `${data.attendees || '-'} คน`),
           { type: 'separator', margin: 'sm' },
-          flexRow('📌 วัตถุประสงค์', data.purpose),
+          flexRow('📌 วัตถุประสงค์',  data.purpose   || '-'),
           ...(data.equipment ? [flexRow('🎛️ อุปกรณ์', data.equipment)] : []),
-          ...(data.note ? [flexRow('💬 หมายเหตุ', data.note)] : []),
+          ...(data.note      ? [flexRow('💬 หมายเหตุ', data.note)]      : []),
         ],
       },
       footer: {
@@ -507,13 +457,7 @@ function buildBookingFlex(data, ticket, createdAt, dateDisplay) {
         layout: 'vertical',
         paddingAll: 'lg',
         contents: [
-          {
-            type: 'button',
-            action: { type: 'uri', label: '📊 ดูในปฏิทิน Google Sheets', uri: CONFIG.SHEET_URL },
-            style: 'primary',
-            color: '#065f46',
-            height: 'md',
-          },
+          { type: 'button', action: { type: 'uri', label: '📊 ดูในปฏิทิน Google Sheets', uri: CONFIG.SHEET_URL }, style: 'primary', color: '#065f46', height: 'md' },
         ],
       },
     },
@@ -521,7 +465,7 @@ function buildBookingFlex(data, ticket, createdAt, dateDisplay) {
 }
 
 // ============================================================
-// FLEX ROW HELPER — label + value คู่แนวนอน
+// FLEX ROW HELPER
 // ============================================================
 function flexRow(label, value) {
   return {
@@ -530,29 +474,14 @@ function flexRow(label, value) {
     paddingTop: 'xs',
     paddingBottom: 'xs',
     contents: [
-      {
-        type: 'text',
-        text: label,
-        size: 'md',
-        color: '#6b7280',
-        flex: 4,
-        wrap: false,
-      },
-      {
-        type: 'text',
-        text: String(value),
-        size: 'md',
-        color: '#111827',
-        flex: 6,
-        wrap: true,
-        weight: 'bold',
-      },
+      { type: 'text', text: label, size: 'md', color: '#6b7280', flex: 4, wrap: false },
+      { type: 'text', text: String(value), size: 'md', color: '#111827', flex: 6, wrap: true, weight: 'bold' },
     ],
   };
 }
 
 // ============================================================
-// GET TICKET DATA — อ่านข้อมูล ticket จาก Sheet
+// GET TICKET DATA (repair: A:I → status = col I = index 8)
 // ============================================================
 function getTicketData(ticket) {
   const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
@@ -561,14 +490,14 @@ function getTicketData(ticket) {
   const values = sheet.getDataRange().getValues();
   for (let i = 1; i < values.length; i++) {
     if (values[i][0] === ticket) {
-      // cols: A=เลขที่(0), B=วันที่(1), C=ชื่อ(2), D=อุปกรณ์(3), E=สถานที่(4), F=อาการ(5), G=รูปภาพ(6), H=สถานะ(7)
       return {
-        ticket:      values[i][0],
-        name:        values[i][2],
-        equipment:   values[i][3],
-        location:    values[i][4],
-        description: values[i][5],
-        status:      values[i][7],
+        ticket:      values[i][0], // A
+        name:        values[i][2], // C
+        phone:       values[i][3], // D
+        equipment:   values[i][4], // E
+        location:    values[i][5], // F
+        description: values[i][6], // G
+        status:      values[i][8], // I
       };
     }
   }
@@ -576,7 +505,7 @@ function getTicketData(ticket) {
 }
 
 // ============================================================
-// BUILD STATUS UPDATE FLEX — card แจ้งสถานะหลังกดปุ่ม
+// BUILD STATUS UPDATE FLEX
 // ============================================================
 function buildStatusUpdateFlex(d) {
   const cfg = {
@@ -597,38 +526,10 @@ function buildStatusUpdateFlex(d) {
         backgroundColor: cfg.color,
         paddingAll: 'xl',
         contents: [
-          {
-            type: 'text',
-            text: '🔄 อัปเดตสถานะ',
-            color: '#ffffff',
-            size: 'xl',
-            weight: 'bold',
-          },
-          {
-            type: 'text',
-            text: d.ticket,
-            color: '#ffffff',
-            size: 'md',
-            margin: 'sm',
-          },
-          {
-            type: 'box',
-            layout: 'vertical',
-            backgroundColor: cfg.dark,
-            cornerRadius: 'md',
-            paddingAll: 'md',
-            margin: 'lg',
-            contents: [
-              {
-                type: 'text',
-                text: `${cfg.emoji}  ${d.status}`,
-                color: '#ffffff',
-                size: 'xxl',
-                weight: 'bold',
-                align: 'center',
-              },
-            ],
-          },
+          { type: 'text', text: '🔄 อัปเดตสถานะ', color: '#ffffff', size: 'xl', weight: 'bold' },
+          { type: 'text', text: d.ticket, color: '#ffffff', size: 'md', margin: 'sm' },
+          { type: 'box', layout: 'vertical', backgroundColor: cfg.dark, cornerRadius: 'md', paddingAll: 'md', margin: 'lg',
+            contents: [{ type: 'text', text: `${cfg.emoji}  ${d.status}`, color: '#ffffff', size: 'xxl', weight: 'bold', align: 'center' }] },
         ],
       },
       body: {
@@ -637,11 +538,13 @@ function buildStatusUpdateFlex(d) {
         paddingAll: 'xl',
         spacing: 'md',
         contents: [
-          flexRow('👤 ผู้แจ้ง', d.name),
+          flexRow('👤 ผู้แจ้ง',  d.name        || '-'),
           { type: 'separator', margin: 'sm' },
-          flexRow('🛠️ อุปกรณ์', d.equipment),
+          flexRow('📞 เบอร์',    d.phone       || '-'),
           { type: 'separator', margin: 'sm' },
-          flexRow('📍 สถานที่', d.location || '-'),
+          flexRow('🛠️ อุปกรณ์', d.equipment   || '-'),
+          { type: 'separator', margin: 'sm' },
+          flexRow('📍 สถานที่',  d.location    || '-'),
         ],
       },
       footer: {
@@ -649,13 +552,7 @@ function buildStatusUpdateFlex(d) {
         layout: 'vertical',
         paddingAll: 'lg',
         contents: [
-          {
-            type: 'button',
-            action: { type: 'uri', label: 'ดูใน Google Sheets', uri: CONFIG.SHEET_URL },
-            style: 'primary',
-            color: cfg.color,
-            height: 'md',
-          },
+          { type: 'button', action: { type: 'uri', label: 'ดูใน Google Sheets', uri: CONFIG.SHEET_URL }, style: 'primary', color: cfg.color, height: 'md' },
         ],
       },
     },
@@ -663,44 +560,31 @@ function buildStatusUpdateFlex(d) {
 }
 
 // ============================================================
-// SEND LINE FLEX MESSAGE — broadcast ถึงทุกคนที่เป็นเพื่อนกับ LINE OA
+// SEND LINE FLEX MESSAGE
 // ============================================================
 function sendLineFlex(flex) {
-  if (!CONFIG.LINE_TOKEN) {
-    Logger.log('LINE skipped (no token)');
-    return;
-  }
+  if (!CONFIG.LINE_TOKEN) { Logger.log('LINE skipped (no token)'); return; }
 
   const options = {
     method: 'post',
     contentType: 'application/json',
     headers: { Authorization: `Bearer ${CONFIG.LINE_TOKEN}` },
-    payload: JSON.stringify({
-      messages: [{
-        type: 'flex',
-        altText: flex.altText,
-        contents: flex.contents,
-      }],
-    }),
+    payload: JSON.stringify({ messages: [{ type: 'flex', altText: flex.altText, contents: flex.contents }] }),
     muteHttpExceptions: true,
   };
 
   try {
     const res = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/broadcast', options);
     const code = res.getResponseCode();
-    const body = res.getContentText();
-    if (code !== 200) {
-      Logger.log(`LINE API error ${code}: ${body}`);
-    } else {
-      Logger.log('LINE flex sent OK');
-    }
+    if (code !== 200) Logger.log(`LINE API error ${code}: ${res.getContentText()}`);
+    else Logger.log('LINE flex sent OK');
   } catch (err) {
     Logger.log('LINE error: ' + err.message);
   }
 }
 
 // ============================================================
-// TEST DRIVE — Run once to authorize DriveApp permission
+// TEST DRIVE ACCESS
 // ============================================================
 function testDriveAccess() {
   const folders = DriveApp.getFoldersByName('AV_Repairs');
@@ -711,7 +595,7 @@ function testDriveAccess() {
 }
 
 // ============================================================
-// SETUP FUNCTION — Run once to create sheets & initial data
+// SETUP FUNCTION — Run once to create sheets
 // ============================================================
 function setupSpreadsheet() {
   const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
@@ -719,8 +603,8 @@ function setupSpreadsheet() {
   let repairSheet = ss.getSheetByName(CONFIG.REPAIR_SHEET);
   if (!repairSheet) {
     repairSheet = ss.insertSheet(CONFIG.REPAIR_SHEET);
-    repairSheet.appendRow(['เลขที่', 'วันที่แจ้ง', 'ชื่อผู้แจ้ง', 'อุปกรณ์', 'สถานที่', 'อาการ', 'รูปภาพ', 'สถานะ']);
-    repairSheet.getRange(1, 1, 1, 8).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
+    repairSheet.appendRow(['เลขที่', 'วันที่แจ้ง', 'ชื่อผู้แจ้ง', 'เบอร์โทร', 'อุปกรณ์', 'สถานที่', 'อาการ', 'รูปภาพ', 'สถานะ']);
+    repairSheet.getRange(1, 1, 1, 9).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
     repairSheet.setFrozenRows(1);
     Logger.log('Created repair sheet');
   }
@@ -728,8 +612,8 @@ function setupSpreadsheet() {
   let bookingSheet = ss.getSheetByName(CONFIG.BOOKING_SHEET);
   if (!bookingSheet) {
     bookingSheet = ss.insertSheet(CONFIG.BOOKING_SHEET);
-    bookingSheet.appendRow(['เลขที่', 'วันที่จอง', 'ห้อง', 'วันที่ใช้ห้อง', 'เวลา', 'ชื่อผู้จอง', 'สถานะ']);
-    bookingSheet.getRange(1, 1, 1, 7).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
+    bookingSheet.appendRow(['เลขที่', 'วันที่จอง', 'ห้อง', 'วันที่ใช้ห้อง', 'เวลา', 'ชื่อผู้จอง', 'เบอร์โทร', 'จำนวนผู้เข้าร่วม', 'วัตถุประสงค์', 'อุปกรณ์', 'หมายเหตุ', 'สถานะ']);
+    bookingSheet.getRange(1, 1, 1, 12).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
     bookingSheet.setFrozenRows(1);
     Logger.log('Created booking sheet');
   }

@@ -224,15 +224,15 @@ async function submitToGAS(data) {
   return json.ticket;
 }
 
-// แจ้งซ่อม:  A=เลขที่(0) B=วันที่(1) C=ชื่อ(2) D=อุปกรณ์(3) E=สถานที่(4) F=อาการ(5) G=รูปภาพ(6) H=สถานะ(7)
-// จองห้อง:   A=เลขที่(0) B=วันที่จอง(1) C=ห้อง(2) D=วันที่ใช้(3) E=เวลา(4) F=ชื่อ(5) G=สถานะ(6)
+// แจ้งซ่อม:  A=เลขที่(0) B=วันที่(1) C=ชื่อ(2) D=เบอร์(3) E=อุปกรณ์(4) F=สถานที่(5) G=อาการ(6) H=รูปภาพ(7) I=สถานะ(8)
+// จองห้อง:   A=เลขที่(0) B=วันที่จอง(1) C=ห้อง(2) D=วันที่ใช้(3) E=เวลา(4) F=ชื่อ(5) G=เบอร์(6) H=จำนวน(7) I=วัตถุประสงค์(8) J=อุปกรณ์(9) K=หมายเหตุ(10) L=สถานะ(11)
 async function fetchStatus(ticket) {
   if (_cfg.GOOGLE_API_KEY === 'YOUR_GOOGLE_API_KEY') {
     await new Promise(r => setTimeout(r, 800));
     return getDemoStatus(ticket);
   }
   const isRepair = ticket.startsWith('REP');
-  const rows = await fetchSheetData(isRepair ? _cfg.REPAIR_SHEET : _cfg.BOOKING_SHEET, isRepair ? 'A:H' : 'A:G');
+  const rows = await fetchSheetData(isRepair ? _cfg.REPAIR_SHEET : _cfg.BOOKING_SHEET, isRepair ? 'A:I' : 'A:L');
   if (rows.length <= 1) return null;
 
   const row = rows.slice(1).find(r => r[0] === ticket);
@@ -242,10 +242,10 @@ async function fetchStatus(ticket) {
     return {
       ticket:      row[0],
       name:        row[2],
-      equipment:   row[3],
-      location:    row[4],
-      description: row[5],
-      status:      row[7],
+      equipment:   row[4],
+      location:    row[5],
+      description: row[6],
+      status:      row[8],
     };
   }
   const [startTime = '', endTime = ''] = (row[4] || '').split('–');
@@ -256,12 +256,12 @@ async function fetchStatus(ticket) {
     startTime,
     endTime,
     name:      row[5],
-    status:    row[6],
+    status:    row[11],
   };
 }
 
 async function fetchByName(name) {
-  const rows = await fetchSheetData(_cfg.REPAIR_SHEET, 'A:H');
+  const rows = await fetchSheetData(_cfg.REPAIR_SHEET, 'A:I');
   if (rows.length <= 1) return [];
   const q = name.toLowerCase();
   return rows.slice(1)
@@ -269,10 +269,10 @@ async function fetchByName(name) {
     .map(r => ({
       ticket:      r[0],
       name:        r[2],
-      equipment:   r[3],
-      location:    r[4],
-      description: r[5],
-      status:      r[7],
+      equipment:   r[4],
+      location:    r[5],
+      description: r[6],
+      status:      r[8],
     }))
     .reverse();
 }
@@ -281,12 +281,12 @@ async function fetchBookings(year, month) {
   if (_cfg.GOOGLE_API_KEY === 'YOUR_GOOGLE_API_KEY') {
     return getDemoBookings();
   }
-  const rows = await fetchSheetData(_cfg.BOOKING_SHEET, 'A:G');
+  const rows = await fetchSheetData(_cfg.BOOKING_SHEET, 'A:L');
   if (rows.length <= 1) return [];
 
   const prefix = `${year}-${String(month).padStart(2, '0')}`;
   return rows.slice(1)
-    .filter(r => r[3]?.startsWith(prefix) && r[6] !== 'ยกเลิก')
+    .filter(r => r[3]?.startsWith(prefix) && r[11] !== 'ยกเลิก')
     .map(r => {
       const [startTime = '', endTime = ''] = (r[4] || '').split('–');
       return {
