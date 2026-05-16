@@ -65,12 +65,25 @@ function resizeImageToBase64(file, maxPx = 1200, quality = 0.82) {
 }
 
 // ============================================================
+// PHONE VALIDATION — รองรับเบอร์ไทย 9-10 หลัก (มี/ไม่มี -, +66)
+// ============================================================
+function validatePhone(phone) {
+  const cleaned = phone.replace(/[\s\-]/g, '');
+  return /^((\+66|0066)?\d{9}|0\d{8,9})$/.test(cleaned);
+}
+
+// ============================================================
 // REPAIR FORM SUBMISSION
 // ============================================================
 async function submitRepair(e) {
   e.preventDefault();
   const form = e.target;
   const btn = form.querySelector('button[type="submit"]');
+
+  if (!validatePhone(form.phone.value.trim())) {
+    showToast('เบอร์โทรติดต่อไม่ถูกต้อง กรุณากรอกเบอร์ 9-10 หลัก', 'error');
+    return;
+  }
 
   const equipmentVal = form.equipment.value;
   const equipmentOther = form.equipmentOther?.value.trim();
@@ -121,6 +134,11 @@ async function submitBooking(e) {
   e.preventDefault();
   const form = e.target;
   const btn = form.querySelector('button[type="submit"]');
+
+  if (!validatePhone(form.phone.value.trim())) {
+    showToast('เบอร์โทรติดต่อไม่ถูกต้อง กรุณากรอกเบอร์ 9-10 หลัก', 'error');
+    return;
+  }
 
   const startTime = form.startTime.value;
   const endTime = form.endTime.value;
