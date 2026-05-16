@@ -163,7 +163,6 @@ async function submitBooking(e) {
     type: 'booking',
     name: form.name.value.trim(),
     phone: form.phone.value.trim(),
-    email: form.email.value.trim(),
     attendees: form.attendees.value,
     room: form.room.value,
     date: form.date.value,
