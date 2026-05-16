@@ -791,6 +791,15 @@ function getDemoStatus(ticket) {
   return null;
 }
 
+function countChars(el) {
+  const counter = el.parentElement.querySelector('.char-counter');
+  if (!counter) return;
+  const n = el.value.length;
+  const max = el.maxLength;
+  counter.textContent = `${n}/${max}`;
+  counter.classList.toggle('char-counter-warn', n >= max * 0.9);
+}
+
 function toggleEquipmentOther(select) {
   const other = document.getElementById('equipmentOther');
   const isOther = select.value === 'อื่นๆ';

@@ -118,7 +118,8 @@
                 </div>
                 <div class="form-group sm:col-span-2">
                   <label class="form-label required">อาการ / ปัญหาที่พบ</label>
-                  <textarea name="description" class="form-input" rows="4" placeholder="อธิบายอาการที่พบ เช่น เปิดไม่ติด, มีเสียงดัง, สัญญาณขาดหาย..." required></textarea>
+                  <textarea name="description" class="form-input" rows="4" maxlength="1000" placeholder="อธิบายอาการที่พบ เช่น เปิดไม่ติด, มีเสียงดัง, สัญญาณขาดหาย..." oninput="countChars(this)" required></textarea>
+                  <span class="char-counter">0/1000</span>
                 </div>
                 <div class="form-group sm:col-span-2">
                   <label class="form-label">แนบรูปภาพ (ถ้ามี)</label>
@@ -229,7 +230,8 @@
                 </div>
                 <div class="form-group sm:col-span-2">
                   <label class="form-label required">วัตถุประสงค์การประชุม</label>
-                  <input type="text" name="purpose" class="form-input" placeholder="เช่น ประชุมแผนงานประจำเดือน" required />
+                  <input type="text" name="purpose" class="form-input" maxlength="1000" placeholder="เช่น ประชุมแผนงานประจำเดือน" oninput="countChars(this)" required />
+                  <span class="char-counter">0/1000</span>
                 </div>
                 <div class="form-group sm:col-span-2">
                   <label class="form-label">อุปกรณ์ที่ต้องการใช้</label>
@@ -239,7 +241,8 @@
                 </div>
                 <div class="form-group sm:col-span-2">
                   <label class="form-label">หมายเหตุเพิ่มเติม</label>
-                  <textarea name="note" class="form-input" rows="3" placeholder="ข้อมูลเพิ่มเติมที่ต้องการแจ้งให้ทราบ"></textarea>
+                  <textarea name="note" class="form-input" rows="3" maxlength="1000" placeholder="ข้อมูลเพิ่มเติมที่ต้องการแจ้งให้ทราบ" oninput="countChars(this)"></textarea>
+                  <span class="char-counter">0/1000</span>
                 </div>
               </div>
 
