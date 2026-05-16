@@ -492,18 +492,7 @@ function renderStatusCard(d) {
         `}
       </div>
 
-      ${isActive ? `
-      <div class="flex gap-3 mt-5">
-        <button onclick="updateTicketStatus('${d.ticket}','เสร็จสิ้น')"
-          class="btn-primary flex-1" style="background:#16a34a">
-          <i class="fa-solid fa-circle-check mr-2"></i>เสร็จสิ้น
-        </button>
-        <button onclick="updateTicketStatus('${d.ticket}','ยกเลิก')"
-          class="btn-secondary flex-1" style="color:#dc2626;border-color:#fca5a5">
-          <i class="fa-solid fa-ban mr-2"></i>ยกเลิก
-        </button>
-      </div>` : ''}
-      <div class="mt-3">${backBtn()}</div>
+      <div class="mt-5">${backBtn()}</div>
     </div>`;
 }
 
