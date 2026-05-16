@@ -138,7 +138,6 @@ async function submitBooking(e) {
   const data = {
     type: 'booking',
     name: form.name.value.trim(),
-    department: form.department.value.trim(),
     phone: form.phone.value.trim(),
     attendees: form.attendees.value,
     room: form.room.value,
