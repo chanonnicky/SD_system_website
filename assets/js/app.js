@@ -439,8 +439,8 @@ function backBtn() {
 
 function statusStyle(status) {
   return {
-    'รับเรื่อง':       { cls: 'status-pending',    icon: 'fa-clock',        label: 'รับเรื่อง' },
-    'กำลังดำเนินการ': { cls: 'status-inprogress', icon: 'fa-gear fa-spin', label: 'กำลังดำเนินการ' },
+    'รับเรื่อง':       { cls: 'status-pending',    icon: 'fa-clock fa-beat',     label: 'รับเรื่อง' },
+    'กำลังดำเนินการ': { cls: 'status-inprogress', icon: 'fa-gear fa-spin',      label: 'กำลังดำเนินการ' },
     'เสร็จสิ้น':       { cls: 'status-done',       icon: 'fa-circle-check', label: 'เสร็จสิ้น' },
     'ยกเลิก':          { cls: 'status-cancelled',  icon: 'fa-ban',          label: 'ยกเลิก' },
   }[status] || { cls: 'status-pending', icon: 'fa-clock', label: status || 'รับเรื่อง' };
@@ -502,22 +502,32 @@ function renderStatusCard(d) {
           ? 'bg-white border-red-300 text-red-300'
           : 'bg-white border-slate-300 text-slate-400';
 
-    const ringCls   = active ? 'ring-4 ring-blue-100' : '';
     const iconInner = done
       ? '<i class="fa-solid fa-check text-xs"></i>'
       : isCancelled
         ? '<i class="fa-solid fa-xmark text-xs"></i>'
-        : `<span class="text-xs font-bold">${i + 1}</span>`;
+        : active
+          ? '<span class="w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse inline-block"></span>'
+          : `<span class="text-xs font-bold">${i + 1}</span>`;
 
     const labelCls = done ? 'text-blue-700 font-semibold' : active ? 'text-blue-600 font-semibold' : isCancelled ? 'text-red-400' : 'text-slate-400';
     const descCls  = done ? 'text-slate-500' : active ? 'text-slate-500' : 'text-slate-300';
     const lineCls  = done ? 'bg-blue-500' : isCancelled ? 'bg-red-200' : 'bg-slate-200';
 
+    const circleEl = active
+      ? `<div class="relative flex-shrink-0">
+           <span class="absolute inset-0 rounded-full bg-blue-400 opacity-30 animate-ping"></span>
+           <div class="relative w-9 h-9 rounded-full border-2 flex items-center justify-center ${circleCls}">
+             ${iconInner}
+           </div>
+         </div>`
+      : `<div class="w-9 h-9 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${circleCls}">
+           ${iconInner}
+         </div>`;
+
     return `
       <div class="flex flex-col items-center flex-1 gap-1 min-w-0">
-        <div class="w-9 h-9 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${circleCls} ${ringCls}">
-          ${iconInner}
-        </div>
+        ${circleEl}
         <p class="text-xs font-medium text-center leading-tight ${labelCls}">${step.label}</p>
         <p class="text-xs text-center leading-tight ${descCls}">${step.desc}</p>
       </div>
