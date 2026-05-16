@@ -243,11 +243,11 @@ select.form-input { cursor: pointer; }
 }
 .booking-event:hover { filter: brightness(0.93); transform: scale(1.02); }
 
-/* Room colors — pastel bg + dark text (Google Calendar style) */
-.room-savio      { background: #dbeafe; color: #1e3a8a; border-left-color: #2563eb; }
-.room-albera     { background: #dcfce7; color: #14532d; border-left-color: #16a34a; }
-.room-regaldon   { background: #f3e8ff; color: #581c87; border-left-color: #9333ea; }
-.room-auditorium { background: #ffedd5; color: #7c2d12; border-left-color: #ea580c; }
+/* Room colors — vivid pastel bg + dark text, 4 clearly distinct hues */
+.room-savio      { background: #bfdbfe; color: #1e3a8a; border-left-color: #1d4ed8; } /* Blue   */
+.room-albera     { background: #a7f3d0; color: #064e3b; border-left-color: #059669; } /* Teal   */
+.room-regaldon   { background: #ddd6fe; color: #4c1d95; border-left-color: #7c3aed; } /* Violet */
+.room-auditorium { background: #fecaca; color: #7f1d1d; border-left-color: #ef4444; } /* Red    */
 
 /* === TOAST === */
 .toast-item {

@@ -234,7 +234,19 @@ async function submitToGAS(data) {
 }
 
 // แจ้งซ่อม:  A=เลขที่(0) B=วันที่(1) C=ชื่อ(2) D=เบอร์(3) E=อุปกรณ์(4) F=สถานที่(5) G=อาการ(6) H=รูปภาพ(7) I=สถานะ(8)
-// จองห้อง:   A=เลขที่(0) B=วันที่จอง(1) C=ห้อง(2) D=วันที่ใช้(3) E=เวลาเริ่ม(4) F=เวลาสิ้นสุด(5) G=ชื่อ(6) H=เบอร์(7) I=จำนวน(8) J=วัตถุประสงค์(9) K=อุปกรณ์(10) L=หมายเหตุ(11) M=สถานะ(12)
+// จองห้อง (ใหม่ A:M): E=เวลาเริ่ม(4) F=เวลาสิ้นสุด(5) G=ชื่อ(6) … M=สถานะ(12)
+// จองห้อง (เก่า A:L): E=เวลารวม(4) "09:00–10:00" F=ชื่อ(5) … L=สถานะ(11)
+
+// ตรวจ format เก่า/ใหม่ จาก column E: เก่า = มี "–", ใหม่ = ไม่มี
+function parseBookingRow(r) {
+  const isOld = String(r[4] || '').includes('–');
+  if (isOld) {
+    const [startTime = '', endTime = ''] = String(r[4]).split('–');
+    return { ticket: r[0], room: r[2], date: r[3], startTime, endTime, name: r[5], status: r[11] };
+  }
+  return { ticket: r[0], room: r[2], date: r[3], startTime: r[4], endTime: r[5], name: r[6], status: r[12] };
+}
+
 async function fetchStatus(ticket) {
   if (_cfg.GOOGLE_API_KEY === 'YOUR_GOOGLE_API_KEY') {
     await new Promise(r => setTimeout(r, 800));
@@ -257,15 +269,7 @@ async function fetchStatus(ticket) {
       status:      row[8],
     };
   }
-  return {
-    ticket:    row[0],
-    room:      row[2],
-    date:      row[3],
-    startTime: row[4],
-    endTime:   row[5],
-    name:      row[6],
-    status:    row[12],
-  };
+  return parseBookingRow(row);
 }
 
 async function fetchByName(name) {
@@ -294,15 +298,8 @@ async function fetchBookings(year, month) {
 
   const prefix = `${year}-${String(month).padStart(2, '0')}`;
   return rows.slice(1)
-    .filter(r => r[3]?.startsWith(prefix) && r[12] !== 'ยกเลิก')
-    .map(r => ({
-      ticket:    r[0],
-      room:      r[2],
-      date:      r[3],
-      startTime: r[4],
-      endTime:   r[5],
-      name:      r[6],
-    }));
+    .map(r => parseBookingRow(r))
+    .filter(b => b.date?.startsWith(prefix) && b.status !== 'ยกเลิก');
 }
 
 // ============================================================
