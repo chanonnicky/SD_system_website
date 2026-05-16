@@ -135,16 +135,21 @@ async function submitBooking(e) {
     return;
   }
 
+  const checkedEquipment = [...form.querySelectorAll('input[name="equipment"]:checked')]
+    .map(el => el.value).join(', ');
+
   const data = {
     type: 'booking',
     name: form.name.value.trim(),
     phone: form.phone.value.trim(),
+    email: form.email.value.trim(),
     attendees: form.attendees.value,
     room: form.room.value,
     date: form.date.value,
     startTime,
     endTime,
     purpose: form.purpose.value.trim(),
+    equipment: checkedEquipment,
     note: form.note.value.trim(),
     timestamp: new Date().toISOString(),
   };
