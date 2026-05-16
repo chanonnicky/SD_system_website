@@ -219,26 +219,26 @@
                 <div class="form-group">
                   <label class="form-label required">วันที่ใช้ห้อง <span class="text-slate-400 font-normal">(วว/ดด/ปปปป ค.ศ.)</span></label>
                   <div class="flex gap-1 items-center flex-wrap">
-                    <select name="bookingDay" id="bookingDay" class="time-select" required></select>
+                    <select name="bookingDay" id="bookingDay" class="pick-sel pick-sel-sm" required></select>
                     <span class="text-slate-400 font-bold">/</span>
-                    <select name="bookingMonth" id="bookingMonth" class="time-select" style="width:8.5rem" onchange="updateDays()" required></select>
+                    <select name="bookingMonth" id="bookingMonth" class="pick-sel pick-sel-lg" onchange="updateDays()" required></select>
                     <span class="text-slate-400 font-bold">/</span>
-                    <select name="bookingYear" id="bookingYear" class="time-select" style="width:5.5rem" onchange="updateDays()" required></select>
+                    <select name="bookingYear" id="bookingYear" class="pick-sel pick-sel-md" onchange="updateDays()" required></select>
                   </div>
                 </div>
                 <div class="form-group">
                   <label class="form-label required">เวลา <span class="text-slate-400 font-normal">(24 ชั่วโมง)</span></label>
                   <div class="flex gap-2 items-center flex-wrap">
                     <div class="flex items-center gap-1">
-                      <select name="startHour" id="startHour" class="time-select" required></select>
+                      <select name="startHour" id="startHour" class="pick-sel pick-sel-sm" required></select>
                       <span class="font-bold text-slate-500">:</span>
-                      <select name="startMin" id="startMin" class="time-select" required></select>
+                      <select name="startMin" id="startMin" class="pick-sel pick-sel-sm" required></select>
                     </div>
                     <span class="text-slate-500">ถึง</span>
                     <div class="flex items-center gap-1">
-                      <select name="endHour" id="endHour" class="time-select" required></select>
+                      <select name="endHour" id="endHour" class="pick-sel pick-sel-sm" required></select>
                       <span class="font-bold text-slate-500">:</span>
-                      <select name="endMin" id="endMin" class="time-select" required></select>
+                      <select name="endMin" id="endMin" class="pick-sel pick-sel-sm" required></select>
                     </div>
                     <span class="text-slate-400 text-sm">น.</span>
                   </div>

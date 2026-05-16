@@ -299,26 +299,25 @@ select.form-input { cursor: pointer; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* === TIME SELECT (Safari-compatible) === */
-.time-select {
-  width: 5.2rem;
-  padding: 0.55rem 0.4rem;
+/* === PICKER SELECT (time & date) — Safari-compatible === */
+/* ไม่ใช้ border-radius, font-family, outline:none บน select เพราะ Safari render ผิด */
+.pick-sel {
+  padding: 0.5rem 0.3rem;
   border: 1.5px solid #e2e8f0;
-  border-radius: 0.625rem;
-  font-size: 0.9rem;
-  font-family: 'Sarabun', sans-serif;
+  font-size: 0.875rem;
   color: #1e293b;
   background: white;
+  cursor: pointer;
   -webkit-appearance: auto;
   appearance: auto;
-  cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  outline: none;
 }
-.time-select:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
-}
+.pick-sel:focus { border-color: #3b82f6; outline: none; }
+.pick-sel-sm  { width: 4.8rem; }   /* วัน / ชั่วโมง / นาที */
+.pick-sel-md  { width: 5.8rem; }   /* ปี */
+.pick-sel-lg  { width: 9rem;   }   /* เดือน (ชื่อภาษาไทย) */
+/* compat alias */
+.time-select { padding: 0.5rem 0.3rem; border: 1.5px solid #e2e8f0; font-size: 0.875rem; color: #1e293b; background: white; cursor: pointer; -webkit-appearance: auto; appearance: auto; width: 4.8rem; }
+.time-select:focus { border-color: #3b82f6; outline: none; }
 
 /* === CHAR COUNTER === */
 .char-counter {
