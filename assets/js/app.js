@@ -35,7 +35,7 @@ function showTab(tabName) {
   document.getElementById(`tab-${tabName}`).classList.remove('hidden');
   document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
 
-  if (tabName === 'calendar') renderCalendar();
+  if (tabName === 'calendar') { allBookings = []; renderCalendar(); }
 }
 
 // ============================================================
@@ -180,8 +180,8 @@ async function submitBooking(e) {
     const ticket = await submitToGAS(data);
     clearRoomSelection();
     form.reset();
-    // Refresh calendar bookings
-    await loadCalendarBookings();
+    // Add booking to calendar immediately (optimistic update)
+    allBookings.push({ ticket, date: data.date, room: data.room, startTime: data.startTime, endTime: data.endTime, name: data.name });
     showSuccess(
       'จองห้องสำเร็จ!',
       `ห้อง "${data.room}" วันที่ ${formatDateTH(data.date)} เวลา ${data.startTime}–${data.endTime} น.`,
@@ -225,14 +225,14 @@ async function submitToGAS(data) {
 }
 
 // แจ้งซ่อม:  A=เลขที่(0) B=วันที่(1) C=ชื่อ(2) D=เบอร์(3) E=อุปกรณ์(4) F=สถานที่(5) G=อาการ(6) H=รูปภาพ(7) I=สถานะ(8)
-// จองห้อง:   A=เลขที่(0) B=วันที่จอง(1) C=ห้อง(2) D=วันที่ใช้(3) E=เวลา(4) F=ชื่อ(5) G=เบอร์(6) H=จำนวน(7) I=วัตถุประสงค์(8) J=อุปกรณ์(9) K=หมายเหตุ(10) L=สถานะ(11)
+// จองห้อง:   A=เลขที่(0) B=วันที่จอง(1) C=ห้อง(2) D=วันที่ใช้(3) E=เวลาเริ่ม(4) F=เวลาสิ้นสุด(5) G=ชื่อ(6) H=เบอร์(7) I=จำนวน(8) J=วัตถุประสงค์(9) K=อุปกรณ์(10) L=หมายเหตุ(11) M=สถานะ(12)
 async function fetchStatus(ticket) {
   if (_cfg.GOOGLE_API_KEY === 'YOUR_GOOGLE_API_KEY') {
     await new Promise(r => setTimeout(r, 800));
     return getDemoStatus(ticket);
   }
   const isRepair = ticket.startsWith('REP');
-  const rows = await fetchSheetData(isRepair ? _cfg.REPAIR_SHEET : _cfg.BOOKING_SHEET, isRepair ? 'A:I' : 'A:L');
+  const rows = await fetchSheetData(isRepair ? _cfg.REPAIR_SHEET : _cfg.BOOKING_SHEET, isRepair ? 'A:I' : 'A:M');
   if (rows.length <= 1) return null;
 
   const row = rows.slice(1).find(r => r[0] === ticket);
@@ -248,15 +248,14 @@ async function fetchStatus(ticket) {
       status:      row[8],
     };
   }
-  const [startTime = '', endTime = ''] = (row[4] || '').split('–');
   return {
     ticket:    row[0],
     room:      row[2],
     date:      row[3],
-    startTime,
-    endTime,
-    name:      row[5],
-    status:    row[11],
+    startTime: row[4],
+    endTime:   row[5],
+    name:      row[6],
+    status:    row[12],
   };
 }
 
@@ -281,23 +280,20 @@ async function fetchBookings(year, month) {
   if (_cfg.GOOGLE_API_KEY === 'YOUR_GOOGLE_API_KEY') {
     return getDemoBookings();
   }
-  const rows = await fetchSheetData(_cfg.BOOKING_SHEET, 'A:L');
+  const rows = await fetchSheetData(_cfg.BOOKING_SHEET, 'A:M');
   if (rows.length <= 1) return [];
 
   const prefix = `${year}-${String(month).padStart(2, '0')}`;
   return rows.slice(1)
-    .filter(r => r[3]?.startsWith(prefix) && r[11] !== 'ยกเลิก')
-    .map(r => {
-      const [startTime = '', endTime = ''] = (r[4] || '').split('–');
-      return {
-        ticket:    r[0],
-        room:      r[2],
-        date:      r[3],
-        startTime,
-        endTime,
-        name:      r[5],
-      };
-    });
+    .filter(r => r[3]?.startsWith(prefix) && r[12] !== 'ยกเลิก')
+    .map(r => ({
+      ticket:    r[0],
+      room:      r[2],
+      date:      r[3],
+      startTime: r[4],
+      endTime:   r[5],
+      name:      r[6],
+    }));
 }
 
 // ============================================================

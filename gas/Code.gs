@@ -35,10 +35,10 @@ const CONFIG = {
 // E=อุปกรณ์  F=สถานที่  G=อาการ  H=รูปภาพ  I=สถานะ
 // ============================================================
 
-// จองห้องประชุม — Column layout (A:L)
-// A=เลขที่  B=วันที่จอง  C=ห้อง  D=วันที่ใช้ห้อง  E=เวลา
-// F=ชื่อผู้จอง  G=เบอร์โทร  H=จำนวนผู้เข้าร่วม
-// I=วัตถุประสงค์  J=อุปกรณ์  K=หมายเหตุ  L=สถานะ
+// จองห้องประชุม — Column layout (A:M)
+// A=เลขที่  B=วันที่จอง  C=ห้อง  D=วันที่ใช้ห้อง  E=เวลาเริ่ม  F=เวลาสิ้นสุด
+// G=ชื่อผู้จอง  H=เบอร์โทร  I=จำนวนผู้เข้าร่วม
+// J=วัตถุประสงค์  K=อุปกรณ์  L=หมายเหตุ  M=สถานะ
 // ============================================================
 
 // ============================================================
@@ -237,9 +237,9 @@ function handleRepair(data) {
 
 // ============================================================
 // BOOKING HANDLER
-// A=เลขที่ B=วันที่จอง C=ห้อง D=วันที่ใช้ห้อง E=เวลา
-// F=ชื่อผู้จอง G=เบอร์โทร H=จำนวนผู้เข้าร่วม
-// I=วัตถุประสงค์ J=อุปกรณ์ K=หมายเหตุ L=สถานะ
+// A=เลขที่ B=วันที่จอง C=ห้อง D=วันที่ใช้ห้อง E=เวลาเริ่ม F=เวลาสิ้นสุด
+// G=ชื่อผู้จอง H=เบอร์โทร I=จำนวนผู้เข้าร่วม
+// J=วัตถุประสงค์ K=อุปกรณ์ L=หมายเหตุ M=สถานะ
 // ============================================================
 function handleBooking(data) {
   const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
@@ -247,8 +247,8 @@ function handleBooking(data) {
 
   if (!sheet) {
     sheet = ss.insertSheet(CONFIG.BOOKING_SHEET);
-    sheet.appendRow(['เลขที่', 'วันที่จอง', 'ห้อง', 'วันที่ใช้ห้อง', 'เวลา', 'ชื่อผู้จอง', 'เบอร์โทร', 'จำนวนผู้เข้าร่วม', 'วัตถุประสงค์', 'อุปกรณ์', 'หมายเหตุ', 'สถานะ']);
-    sheet.getRange(1, 1, 1, 12).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
+    sheet.appendRow(['เลขที่', 'วันที่จอง', 'ห้อง', 'วันที่ใช้ห้อง', 'เวลาเริ่ม', 'เวลาสิ้นสุด', 'ชื่อผู้จอง', 'เบอร์โทร', 'จำนวนผู้เข้าร่วม', 'วัตถุประสงค์', 'อุปกรณ์', 'หมายเหตุ', 'สถานะ']);
+    sheet.getRange(1, 1, 1, 13).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
     sheet.setFrozenRows(1);
   }
 
@@ -263,18 +263,19 @@ function handleBooking(data) {
   const createdAt = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm');
 
   sheet.appendRow([
-    ticket,                              // A เลขที่
-    createdAt,                           // B วันที่จอง
-    data.room        || '',              // C ห้อง
-    data.date        || '',              // D วันที่ใช้ห้อง
-    `${data.startTime}–${data.endTime}`, // E เวลา
-    data.name        || '',              // F ชื่อผู้จอง
-    data.phone       || '',              // G เบอร์โทร
-    data.attendees   || '',              // H จำนวนผู้เข้าร่วม
-    data.purpose     || '',              // I วัตถุประสงค์
-    data.equipment   || '',              // J อุปกรณ์
-    data.note        || '',              // K หมายเหตุ
-    'รับเรื่อง',                          // L สถานะ
+    ticket,               // A เลขที่
+    createdAt,            // B วันที่จอง
+    data.room      || '', // C ห้อง
+    data.date      || '', // D วันที่ใช้ห้อง
+    data.startTime || '', // E เวลาเริ่ม
+    data.endTime   || '', // F เวลาสิ้นสุด
+    data.name      || '', // G ชื่อผู้จอง
+    data.phone     || '', // H เบอร์โทร
+    data.attendees || '', // I จำนวนผู้เข้าร่วม
+    data.purpose   || '', // J วัตถุประสงค์
+    data.equipment || '', // K อุปกรณ์
+    data.note      || '', // L หมายเหตุ
+    'รับเรื่อง',           // M สถานะ
   ]);
 
   const newRow = sheet.getLastRow();
@@ -296,20 +297,19 @@ function handleBooking(data) {
 }
 
 // ============================================================
-// CHECK BOOKING CONFLICT (cols A:L → 12 columns, status = col L = index 11)
+// CHECK BOOKING CONFLICT (cols A:M → 13 columns, status = col M = index 12)
 // ============================================================
 function checkBookingConflict(sheet, room, date, startTime, endTime) {
   if (sheet.getLastRow() <= 1) return null;
 
-  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 12).getValues();
+  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 13).getValues();
   for (const row of data) {
-    const [ticket, , rowRoom, rowDate, rowTime, , , , , , , rowStatus] = row;
+    const [ticket, , rowRoom, rowDate, rowStart, rowEnd, , , , , , , rowStatus] = row;
     if (rowStatus === 'ยกเลิก' || rowStatus === 'เสร็จสิ้น') continue;
     if (rowRoom !== room) continue;
     if (String(rowDate) !== date) continue;
-    const [rowStart, rowEnd] = String(rowTime).split('–');
     if (startTime < rowEnd && endTime > rowStart) {
-      return `${rowTime} น. (${ticket})`;
+      return `${rowStart}–${rowEnd} น. (${ticket})`;
     }
   }
   return null;
@@ -612,8 +612,8 @@ function setupSpreadsheet() {
   let bookingSheet = ss.getSheetByName(CONFIG.BOOKING_SHEET);
   if (!bookingSheet) {
     bookingSheet = ss.insertSheet(CONFIG.BOOKING_SHEET);
-    bookingSheet.appendRow(['เลขที่', 'วันที่จอง', 'ห้อง', 'วันที่ใช้ห้อง', 'เวลา', 'ชื่อผู้จอง', 'เบอร์โทร', 'จำนวนผู้เข้าร่วม', 'วัตถุประสงค์', 'อุปกรณ์', 'หมายเหตุ', 'สถานะ']);
-    bookingSheet.getRange(1, 1, 1, 12).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
+    bookingSheet.appendRow(['เลขที่', 'วันที่จอง', 'ห้อง', 'วันที่ใช้ห้อง', 'เวลาเริ่ม', 'เวลาสิ้นสุด', 'ชื่อผู้จอง', 'เบอร์โทร', 'จำนวนผู้เข้าร่วม', 'วัตถุประสงค์', 'อุปกรณ์', 'หมายเหตุ', 'สถานะ']);
+    bookingSheet.getRange(1, 1, 1, 13).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
     bookingSheet.setFrozenRows(1);
     Logger.log('Created booking sheet');
   }
