@@ -124,6 +124,8 @@ function doPost(e) {
       result = handleRepair(body);
     } else if (body.type === 'booking') {
       result = handleBooking(body);
+    } else if (body.type === 'updateStatus') {
+      result = handleUpdateStatus(body);
     } else {
       result = { success: false, error: 'Unknown type' };
     }
@@ -178,6 +180,31 @@ function updateRepairStatus(ticket, newStatus) {
     }
   }
   return false;
+}
+
+function handleUpdateStatus(data) {
+  const ticket   = String(data.ticket  || '').trim();
+  const newStatus = String(data.status || '').trim();
+  const allowed  = ['รับเรื่อง', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก'];
+  if (!ticket || !allowed.includes(newStatus)) {
+    return { success: false, error: 'ข้อมูลไม่ถูกต้อง' };
+  }
+
+  const ss        = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  const isRepair  = ticket.startsWith('REP');
+  const sheetName = isRepair ? CONFIG.REPAIR_SHEET : CONFIG.BOOKING_SHEET;
+  const statusCol = isRepair ? 9 : 13; // repair=I(9), booking=M(13)
+  const sheet     = ss.getSheetByName(sheetName);
+  if (!sheet) return { success: false, error: 'ไม่พบ Sheet' };
+
+  const values = sheet.getDataRange().getValues();
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][0]) === ticket) {
+      sheet.getRange(i + 1, statusCol).setValue(newStatus);
+      return { success: true };
+    }
+  }
+  return { success: false, error: `ไม่พบ Ticket ${ticket}` };
 }
 
 function replyLineMessage(replyToken, text) {

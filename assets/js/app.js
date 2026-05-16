@@ -351,6 +351,19 @@ async function showTicketDetail(ticket) {
   resultEl.innerHTML = data ? renderStatusCard(data) : notFoundHTML(`ไม่พบ Ticket "${ticket}"`);
 }
 
+async function updateTicketStatus(ticket, newStatus) {
+  const label = newStatus === 'ยกเลิก' ? 'ยกเลิก Ticket นี้' : `เปลี่ยนสถานะเป็น "${newStatus}"`;
+  if (!confirm(`ยืนยัน${label}?`)) return;
+
+  try {
+    await submitToGAS({ type: 'updateStatus', ticket, status: newStatus });
+    showToast(`อัปเดตสถานะเป็น "${newStatus}" สำเร็จ`, 'success');
+    await showTicketDetail(ticket);
+  } catch (err) {
+    showToast(err.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่', 'error');
+  }
+}
+
 function notFoundHTML(msg) {
   return `<div class="card text-center py-8">
     <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -402,6 +415,7 @@ function renderNameResults(results) {
 function renderStatusCard(d) {
   const s = statusStyle(d.status);
   const isRepair = d.ticket?.startsWith('REP');
+  const isActive = d.status !== 'เสร็จสิ้น' && d.status !== 'ยกเลิก';
 
   const steps = isRepair
     ? ['รับเรื่อง', 'กำลังดำเนินการ', 'เสร็จแล้ว']
@@ -462,7 +476,18 @@ function renderStatusCard(d) {
         `}
       </div>
 
-      <div class="mt-5">${backBtn()}</div>
+      ${isActive ? `
+      <div class="flex gap-3 mt-5">
+        <button onclick="updateTicketStatus('${d.ticket}','เสร็จสิ้น')"
+          class="btn-primary flex-1" style="background:#16a34a">
+          <i class="fa-solid fa-circle-check mr-2"></i>เสร็จสิ้น
+        </button>
+        <button onclick="updateTicketStatus('${d.ticket}','ยกเลิก')"
+          class="btn-secondary flex-1" style="color:#dc2626;border-color:#fca5a5">
+          <i class="fa-solid fa-ban mr-2"></i>ยกเลิก
+        </button>
+      </div>` : ''}
+      <div class="mt-3">${backBtn()}</div>
     </div>`;
 }
 
