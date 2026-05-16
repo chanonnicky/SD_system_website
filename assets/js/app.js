@@ -147,19 +147,11 @@ async function submitBooking(e) {
     return;
   }
 
-  const bookingDate = new Date(form.date.value);
+  const dateValue = `${form.bookingYear.value}-${form.bookingMonth.value}-${form.bookingDay.value}`;
+  const bookingDate = new Date(dateValue + 'T00:00:00');
   const today = new Date(); today.setHours(0,0,0,0);
-  if (bookingDate.getFullYear() > 2400) {
-    showToast('กรุณากรอกปี ค.ศ. ไม่ใช่ พ.ศ. (เช่น 2026 ไม่ใช่ 2569)', 'error');
-    return;
-  }
   if (bookingDate < today) {
     showToast('ไม่สามารถจองย้อนหลังได้', 'error');
-    return;
-  }
-  const maxDate = new Date(today.getFullYear() + 2, 11, 31);
-  if (bookingDate > maxDate) {
-    showToast(`ไม่สามารถจองเกินปี ค.ศ. ${today.getFullYear() + 2} ได้`, 'error');
     return;
   }
 
@@ -174,7 +166,7 @@ async function submitBooking(e) {
     phone: form.phone.value.trim(),
     attendees: form.attendees.value,
     room: form.room.value,
-    date: form.date.value,
+    date: dateValue,
     startTime,
     endTime,
     purpose: form.purpose.value.trim(),
@@ -805,6 +797,22 @@ function getDemoStatus(ticket) {
   return null;
 }
 
+function updateDays() {
+  const daySel   = document.getElementById('bookingDay');
+  const monthSel = document.getElementById('bookingMonth');
+  const yearSel  = document.getElementById('bookingYear');
+  if (!daySel || !monthSel || !yearSel) return;
+  const daysInMonth = new Date(parseInt(yearSel.value), parseInt(monthSel.value), 0).getDate();
+  const prev = daySel.value;
+  daySel.innerHTML = '';
+  for (let d = 1; d <= daysInMonth; d++) {
+    const opt = document.createElement('option');
+    opt.value = opt.textContent = String(d).padStart(2, '0');
+    daySel.appendChild(opt);
+  }
+  if (prev && parseInt(prev) <= daysInMonth) daySel.value = prev;
+}
+
 function countChars(el) {
   const counter = el.parentElement.querySelector('.char-counter');
   if (!counter) return;
@@ -826,13 +834,34 @@ function toggleEquipmentOther(select) {
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
-  // Set min/max date for booking
-  const dateInput = document.getElementById('bookingDate');
-  if (dateInput) {
-    const now = new Date();
-    dateInput.min = now.toISOString().split('T')[0];
-    dateInput.max = `${now.getFullYear() + 2}-12-31`;
+  // Populate booking date selects (วว/ดด/ปปปป)
+  const now     = new Date();
+  const maxYear = now.getFullYear() + 2;
+
+  const yearSel = document.getElementById('bookingYear');
+  if (yearSel) {
+    for (let y = now.getFullYear(); y <= maxYear; y++) {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = String(y);
+      yearSel.appendChild(opt);
+    }
+    yearSel.value = String(now.getFullYear());
   }
+
+  const monthSel = document.getElementById('bookingMonth');
+  if (monthSel) {
+    monthNamesTH.forEach((name, i) => {
+      const opt = document.createElement('option');
+      opt.value = String(i + 1).padStart(2, '0');
+      opt.textContent = name;
+      monthSel.appendChild(opt);
+    });
+    monthSel.value = String(now.getMonth() + 1).padStart(2, '0');
+  }
+
+  updateDays();
+  const daySel = document.getElementById('bookingDay');
+  if (daySel) daySel.value = String(now.getDate()).padStart(2, '0');
 
   // Populate 24-hour time selects
   const hourSelects = ['startHour', 'endHour'];

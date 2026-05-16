@@ -217,8 +217,14 @@
                   </select>
                 </div>
                 <div class="form-group">
-                  <label class="form-label required">วันที่ใช้ห้อง <span class="text-slate-400 font-normal">(ค.ศ.)</span></label>
-                  <input type="date" name="date" id="bookingDate" class="form-input" required />
+                  <label class="form-label required">วันที่ใช้ห้อง <span class="text-slate-400 font-normal">(วว/ดด/ปปปป ค.ศ.)</span></label>
+                  <div class="flex gap-1 items-center flex-wrap">
+                    <select name="bookingDay" id="bookingDay" class="time-select" required></select>
+                    <span class="text-slate-400 font-bold">/</span>
+                    <select name="bookingMonth" id="bookingMonth" class="time-select" style="width:8.5rem" onchange="updateDays()" required></select>
+                    <span class="text-slate-400 font-bold">/</span>
+                    <select name="bookingYear" id="bookingYear" class="time-select" style="width:5.5rem" onchange="updateDays()" required></select>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label class="form-label required">เวลา <span class="text-slate-400 font-normal">(24 ชั่วโมง)</span></label>
