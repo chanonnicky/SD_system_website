@@ -1,5 +1,7 @@
 # ระบบงานโสตทัศนูปกรณ์ โรงเรียน
 
+**Live:** https://chanonnicky.github.io/SD_AV_website/
+
 ระบบแจ้งซ่อมอุปกรณ์และจองห้องประชุมสำหรับงานโสตทัศนูปกรณ์ของโรงเรียน พัฒนาด้วย HTML + Tailwind CSS โดยใช้ Google Apps Script เป็น Backend และ Google Sheets เป็นฐานข้อมูล
 
 ---
