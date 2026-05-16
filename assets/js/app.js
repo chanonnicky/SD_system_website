@@ -148,9 +148,10 @@ async function submitBooking(e) {
   }
 
   const bookingDate = new Date(form.date.value);
-  const today = new Date(); today.setHours(0,0,0,0);
-  if (bookingDate < today) {
-    showToast('ไม่สามารถจองย้อนหลังได้', 'error');
+  const minDate = new Date(); minDate.setHours(0,0,0,0);
+  minDate.setDate(minDate.getDate() + 7);
+  if (bookingDate < minDate) {
+    showToast('กรุณาจองล่วงหน้าอย่างน้อย 7 วันทำการ', 'error');
     return;
   }
 
