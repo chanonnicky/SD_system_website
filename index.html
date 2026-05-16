@@ -221,11 +221,20 @@
                   <input type="date" name="date" id="bookingDate" class="form-input" required />
                 </div>
                 <div class="form-group">
-                  <label class="form-label required">เวลา</label>
-                  <div class="flex gap-2 items-center">
-                    <input type="time" name="startTime" class="form-input" required />
+                  <label class="form-label required">เวลา <span class="text-slate-400 font-normal">(24 ชั่วโมง)</span></label>
+                  <div class="flex gap-2 items-center flex-wrap">
+                    <div class="flex items-center gap-1">
+                      <select name="startHour" id="startHour" class="form-input" style="width:4.5rem" required></select>
+                      <span class="font-bold text-slate-500">:</span>
+                      <select name="startMin" id="startMin" class="form-input" style="width:4.5rem" required></select>
+                    </div>
                     <span class="text-slate-500">ถึง</span>
-                    <input type="time" name="endTime" class="form-input" required />
+                    <div class="flex items-center gap-1">
+                      <select name="endHour" id="endHour" class="form-input" style="width:4.5rem" required></select>
+                      <span class="font-bold text-slate-500">:</span>
+                      <select name="endMin" id="endMin" class="form-input" style="width:4.5rem" required></select>
+                    </div>
+                    <span class="text-slate-400 text-sm">น.</span>
                   </div>
                 </div>
                 <div class="form-group sm:col-span-2">

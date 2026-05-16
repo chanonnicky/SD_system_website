@@ -140,8 +140,8 @@ async function submitBooking(e) {
     return;
   }
 
-  const startTime = form.startTime.value;
-  const endTime = form.endTime.value;
+  const startTime = `${form.startHour.value}:${form.startMin.value}`;
+  const endTime   = `${form.endHour.value}:${form.endMin.value}`;
   if (startTime >= endTime) {
     showToast('เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น', 'error');
     return;
@@ -812,13 +812,41 @@ function toggleEquipmentOther(select) {
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
-  // Set min date for booking to today
+  // Set min/max date for booking
   const dateInput = document.getElementById('bookingDate');
   if (dateInput) {
     const now = new Date();
     dateInput.min = now.toISOString().split('T')[0];
     dateInput.max = `${now.getFullYear() + 2}-12-31`;
   }
+
+  // Populate 24-hour time selects
+  const hourSelects = ['startHour', 'endHour'];
+  const minSelects  = ['startMin',  'endMin'];
+  const defaults    = { startHour: '08', startMin: '00', endHour: '09', endMin: '00' };
+
+  hourSelects.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    for (let h = 0; h < 24; h++) {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = String(h).padStart(2, '0');
+      sel.appendChild(opt);
+    }
+    sel.value = defaults[id];
+  });
+
+  minSelects.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    ['00', '15', '30', '45'].forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = m;
+      sel.appendChild(opt);
+    });
+    sel.value = defaults[id];
+  });
+
   // Init calendar data in background
   loadCalendarBookings();
 });
