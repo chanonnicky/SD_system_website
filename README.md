@@ -1,8 +1,8 @@
-# ระบบงานโสตทัศนูปกรณ์ โรงเรียน
+# ระบบงานโสตทัศนูปกรณ์ โรงเรียนเซนต์ดอมินิก
 
 **Live:** https://chanonnicky.github.io/SD_AV_website/
 
-ระบบแจ้งซ่อมอุปกรณ์และจองห้องประชุมสำหรับงานโสตทัศนูปกรณ์ของโรงเรียน พัฒนาด้วย HTML + Tailwind CSS โดยใช้ Google Apps Script เป็น Backend และ Google Sheets เป็นฐานข้อมูล
+ระบบแจ้งซ่อมอุปกรณ์และจองห้องประชุมสำหรับงานโสตทัศนูปกรณ์ พัฒนาด้วย HTML + Tailwind CSS โดยใช้ Google Apps Script เป็น Backend และ Google Sheets เป็นฐานข้อมูล
 
 ---
 
@@ -14,7 +14,7 @@
 | **จองห้องประชุม** | เลือกห้อง / วันเวลา → ตรวจ conflict → บันทึก Sheets + แจ้งเตือน LINE |
 | **ติดตามสถานะ** | ค้นหาด้วยเลขที่ Ticket หรือชื่อผู้แจ้ง |
 | **ปฏิทินห้องประชุม** | ดูตารางการจองรายเดือน กรองตามห้อง |
-| **Demo Mode** | ทดลองใช้งานได้ทันทีโดยไม่ต้องตั้งค่า |
+| **อัปเดตสถานะผ่าน LINE** | กดปุ่มใน LINE card → อัปเดต Sheets + แจ้งเตือนกลับ |
 
 ---
 
@@ -24,10 +24,15 @@
 Browser
   ├── POST (แจ้งซ่อม / จองห้อง) ──→ Google Apps Script Web App
   │                                       ├── บันทึก Google Sheets
-  │                                       └── ส่ง LINE Notification
+  │                                       └── ส่ง LINE Notification (multicast)
   │
-  └── GET (ติดตามสถานะ / ปฏิทิน) ──→ Google Sheets API v4
-                                          └── อ่านข้อมูลตรงจาก Spreadsheet
+  ├── GET (ติดตามสถานะ / ปฏิทิน) ──→ Google Sheets API v4
+  │                                       └── อ่านข้อมูลตรงจาก Spreadsheet
+  │
+LINE Card Buttons (via LIFF)
+  └── GET ?action=updateStatus ──→ Google Apps Script Web App
+                                      ├── อัปเดต Google Sheets
+                                      └── ส่ง LINE Status Card (multicast)
 ```
 
 ---
@@ -60,22 +65,24 @@ SD_AV_website/
 1. **สร้าง Google Spreadsheet** — แชร์เป็น "Anyone with the link can view"
 2. **สร้าง Google Cloud API Key** — จำกัดสิทธิ์เฉพาะ Google Sheets API
 3. **ตั้งค่า Google Apps Script** — วางโค้ดจาก `gas/Code.gs` แล้ว Deploy เป็น Web App
-4. **ตั้งค่า LINE Messaging API** — สร้าง Channel และคัดลอก Channel access token
-5. **กรอก config** — คัดลอก `config.example.js` → `config.js` แล้วใส่ค่าทั้งหมด
-6. **Deploy เว็บ** — GitHub Pages, Netlify, หรือ Web Server ของโรงเรียน
+4. **ตั้งค่า Script Properties** — ใส่ค่า `LINE_TOKEN`, `SPREADSHEET_ID`, `NOTIFY_USER_IDS` ฯลฯ
+5. **ตั้งค่า LINE Messaging API** — สร้าง Channel, ตั้ง Webhook URL = GAS URL, ตั้ง LIFF endpoint
+6. **หา LINE userId** — ส่ง `/myid` ใน LINE OA แล้วนำค่ามาใส่ `NOTIFY_USER_IDS`
+7. **กรอก GitHub Secrets** — `GAS_URL`, `SPREADSHEET_ID`, `GOOGLE_API_KEY`, `CLIENT_SECRET`
+8. **Deploy เว็บ** — Push to `main` → GitHub Actions deploy อัตโนมัติ
 
 ---
 
-## ห้องประชุมเริ่มต้น
+## ห้องประชุม
 
-| ห้อง | ความจุ | ชั้น | อุปกรณ์ |
-|------|--------|------|---------|
-| ห้องประชุม A | 20 คน | ชั้น 2 | Projector, Mic, TV |
-| ห้องประชุม B | 10 คน | ชั้น 3 | Smart TV, Speaker |
-| ห้องประชุม C (ใหญ่) | 50 คน | ชั้น 1 | Projector×2, Mic×4, Camera |
-| ห้องอบรม | 30 คน | ชั้น 4 | Projector, Zoom, Rec |
+| ห้อง | หมายเหตุ |
+|------|---------|
+| หอประชุมซาวีโอ | ห้องประชุมใหญ่ |
+| ห้องประชุมอัลเบรา | ห้องประชุมขนาดกลาง |
+| ห้องประชุมรีกัลโดเน | ห้องประชุมขนาดกลาง |
+| Auditorium | ห้องโสต |
 
-แก้ไขหรือเพิ่มห้องได้ที่ `rooms.js`
+แก้ไขหรือเพิ่มห้องได้ที่ `rooms.js` และ `gas/Code.gs` → `allowedRooms`
 
 ---
 
@@ -84,13 +91,17 @@ SD_AV_website/
 - **Frontend**: HTML5, [Tailwind CSS](https://tailwindcss.com), Font Awesome, Google Fonts (Sarabun)
 - **Backend**: Google Apps Script (Web App)
 - **Database**: Google Sheets
-- **Notification**: LINE Messaging API
+- **Notification**: LINE Messaging API (multicast)
 - **Data Read**: Google Sheets API v4
+- **Hosting**: GitHub Pages (deploy via GitHub Actions)
 
 ---
 
 ## ความปลอดภัย
 
 - `assets/js/config.js` อยู่ใน `.gitignore` — ไม่ถูก commit ขึ้น Git
-- ใช้ `config.example.js` เป็น template สำหรับผู้ติดตั้งใหม่
-- API Key ของ Google ควร restrict ให้ใช้ได้เฉพาะ Google Sheets API
+- Secrets ฝั่ง GAS เก็บใน **Script Properties** (ไม่ hardcode ใน code)
+- Secrets ฝั่ง Frontend เก็บใน **GitHub Secrets** → inject ตอน deploy
+- `WEBHOOK_SECRET` ป้องกัน URL ปุ่ม LINE ถูกเรียกโดยไม่ได้รับอนุญาต
+- `CLIENT_SECRET` ป้องกัน POST endpoint ถูกเรียกจากภายนอก
+- XSS prevention: `escHtml()` ทุก user-generated content ใน HTML

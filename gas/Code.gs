@@ -25,14 +25,17 @@
 // ============================================================
 const _props = PropertiesService.getScriptProperties().getProperties();
 const CONFIG = {
-  SPREADSHEET_ID: _props.SPREADSHEET_ID || '1rHGjwT6ZBf0qryjXahaw1RUve3ozvbIB89u3gSYzhbU',
-  LINE_TOKEN:     _props.LINE_TOKEN     || 'kZDmkCpgVMDKGFDn3u0doCpZ9IiqpK4TvzULDxa9Sw7N02Btc/0MRxViBHBR6xMwsOO7kWeQWoEwCwwPctm/o+wKFDJp1J+BySHDDj9PDiq5jyMYqPa6+h7WCJCNYTU3kSljs22vMdFZTV5yVz1/hAdB04t89/1O/w1cDnyilFU=',
-  REPAIR_SHEET:   'แจ้งซ่อม',
-  BOOKING_SHEET:  'จองห้องประชุม',
-  SHEET_URL:      'https://docs.google.com/spreadsheets/d/1rHGjwT6ZBf0qryjXahaw1RUve3ozvbIB89u3gSYzhbU/edit',
-  WEBHOOK_SECRET:  _props.WEBHOOK_SECRET || '', // ตั้งค่าใน Script Properties → ป้องกัน URL ปุ่ม LINE ถูกเดา
-  CLIENT_SECRET:   _props.CLIENT_SECRET  || '', // ตั้งค่าใน Script Properties + GitHub Secret CLIENT_SECRET
-  MINI_APP_ID:    '2010102800-8WvwvjA4',
+  SPREADSHEET_ID:   _props.SPREADSHEET_ID   || '1rHGjwT6ZBf0qryjXahaw1RUve3ozvbIB89u3gSYzhbU',
+  LINE_TOKEN:       _props.LINE_TOKEN        || 'kZDmkCpgVMDKGFDn3u0doCpZ9IiqpK4TvzULDxa9Sw7N02Btc/0MRxViBHBR6xMwsOO7kWeQWoEwCwwPctm/o+wKFDJp1J+BySHDDj9PDiq5jyMYqPa6+h7WCJCNYTU3kSljs22vMdFZTV5yVz1/hAdB04t89/1O/w1cDnyilFU=',
+  REPAIR_SHEET:     'แจ้งซ่อม',
+  BOOKING_SHEET:    'จองห้องประชุม',
+  SHEET_URL:        'https://docs.google.com/spreadsheets/d/1rHGjwT6ZBf0qryjXahaw1RUve3ozvbIB89u3gSYzhbU/edit',
+  WEBHOOK_SECRET:   _props.WEBHOOK_SECRET   || '',
+  CLIENT_SECRET:    _props.CLIENT_SECRET    || '',
+  MINI_APP_ID:      '2010102800-8WvwvjA4',
+  // NOTIFY_USER_IDS: userId ของ Admin ที่ต้องการรับแจ้งเตือน คั่นด้วย comma
+  // ตั้งค่าใน Script Properties → NOTIFY_USER_IDS → "Uxxxxxxx,Uyyyyyyy"
+  NOTIFY_USER_IDS:  _props.NOTIFY_USER_IDS  || '',
 };
 
 // ============================================================
@@ -176,7 +179,22 @@ function doPost(e) {
 // ============================================================
 function handleLineWebhook(events) {
   for (const ev of events) {
+    // บันทึก userId ทุกครั้งที่มี event เข้ามา เพื่อให้ Admin หา userId ได้
+    if (ev.source && ev.source.userId) {
+      Logger.log('LINE userId: ' + ev.source.userId + ' (type:' + ev.type + ')');
+    }
     if (ev.type === 'postback') handlePostback(ev);
+    if (ev.type === 'message' && ev.message && ev.message.type === 'text') {
+      handleTextMessage(ev);
+    }
+  }
+}
+
+function handleTextMessage(ev) {
+  const text = (ev.message.text || '').trim();
+  const userId = ev.source.userId;
+  if (text === '/myid') {
+    replyLineMessage(ev.replyToken, `🪪 LINE User ID ของคุณ:\n${userId}\n\nคัดลอกไปใส่ใน Script Properties → NOTIFY_USER_IDS`);
   }
 }
 
@@ -757,22 +775,64 @@ function buildStatusUpdateFlex(d) {
 function sendLineFlex(flex) {
   if (!CONFIG.LINE_TOKEN) { Logger.log('LINE skipped (no token)'); return; }
 
-  const options = {
-    method: 'post',
-    contentType: 'application/json',
-    headers: { Authorization: `Bearer ${CONFIG.LINE_TOKEN}` },
-    payload: JSON.stringify({ messages: [{ type: 'flex', altText: flex.altText, contents: flex.contents }] }),
-    muteHttpExceptions: true,
-  };
+  const userIds = CONFIG.NOTIFY_USER_IDS
+    ? CONFIG.NOTIFY_USER_IDS.split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+
+  // ใช้ multicast ถ้ากำหนด userId ไว้ → ประหยัด quota กว่า broadcast มาก
+  const endpoint = userIds.length > 0
+    ? 'https://api.line.me/v2/bot/message/multicast'
+    : 'https://api.line.me/v2/bot/message/broadcast';
+
+  const body = userIds.length > 0
+    ? { to: userIds, messages: [{ type: 'flex', altText: flex.altText, contents: flex.contents }] }
+    : { messages: [{ type: 'flex', altText: flex.altText, contents: flex.contents }] };
+
+  Logger.log('sendLineFlex → ' + (userIds.length > 0 ? 'multicast to ' + userIds.length + ' users' : 'broadcast'));
 
   try {
-    const res = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/broadcast', options);
+    const res = UrlFetchApp.fetch(endpoint, {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { Authorization: `Bearer ${CONFIG.LINE_TOKEN}` },
+      payload: JSON.stringify(body),
+      muteHttpExceptions: true,
+    });
     const code = res.getResponseCode();
     if (code !== 200) Logger.log(`LINE API error ${code}: ${res.getContentText()}`);
     else Logger.log('LINE flex sent OK');
   } catch (err) {
     Logger.log('LINE error: ' + err.message);
   }
+}
+
+// ============================================================
+// TEST LINE CONNECTION — Run this manually from GAS Editor
+// ============================================================
+function testLineConnection() {
+  Logger.log('LINE_TOKEN length: ' + (CONFIG.LINE_TOKEN ? CONFIG.LINE_TOKEN.length : 0));
+
+  const res = UrlFetchApp.fetch('https://api.line.me/v2/bot/info', {
+    method: 'get',
+    headers: { Authorization: `Bearer ${CONFIG.LINE_TOKEN}` },
+    muteHttpExceptions: true,
+  });
+  Logger.log('Bot info: ' + res.getResponseCode() + ' → ' + res.getContentText());
+}
+
+function testLineBroadcast() {
+  const res = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/broadcast', {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { Authorization: `Bearer ${CONFIG.LINE_TOKEN}` },
+    payload: JSON.stringify({ messages: [{ type: 'text', text: '🧪 ทดสอบระบบ AV — ' + new Date().toLocaleString('th-TH') }] }),
+    muteHttpExceptions: true,
+  });
+  const code = res.getResponseCode();
+  Logger.log('Broadcast: ' + code + ' → ' + res.getContentText());
+  if (code === 200) Logger.log('✅ ส่งสำเร็จ — ควรเห็น message ใน LINE แล้ว');
+  else if (code === 401) Logger.log('❌ LINE_TOKEN ไม่ถูกต้องหรือหมดอายุ');
+  else if (code === 403) Logger.log('❌ Token ไม่มีสิทธิ์ broadcast');
 }
 
 // ============================================================
