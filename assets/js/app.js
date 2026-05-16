@@ -935,27 +935,27 @@ function addDemoBooking(data, ticket) {
 
 function getDemoStatus(ticket) {
   if (ticket.startsWith('REP')) {
-    const statuses = ['รอดำเนินการ', 'กำลังดำเนินการ', 'เสร็จสิ้น'];
+    const statuses = ['รับเรื่อง', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก'];
     return {
       ticket,
       name: 'ตัวอย่าง ทดสอบ',
-      department: 'กลุ่มสาระวิทยาศาสตร์',
       equipment: 'โปรเจกเตอร์',
+      location: 'อาคาร SAVIO ชั้น 3 ห้อง 301',
       description: 'โปรเจกเตอร์ไม่สามารถเชื่อมต่อกับคอมพิวเตอร์ได้',
-      status: statuses[Math.floor(Math.random() * 3)],
+      status: statuses[parseInt(ticket.slice(-1)) % 4],
     };
   }
   if (ticket.startsWith('BK')) {
+    const statuses = ['รับเรื่อง', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก'];
     return {
       ticket,
       name: 'ตัวอย่าง ทดสอบ',
-      department: 'ฝ่ายวิชาการ',
-      room: 'ห้องประชุม A',
+      room: 'ห้องประชุมอัลเบรา',
       date: new Date().toISOString().split('T')[0],
       startTime: '10:00',
       endTime: '12:00',
       purpose: 'ประชุมทีม (ตัวอย่าง)',
-      status: 'กำลังดำเนินการ',
+      status: statuses[parseInt(ticket.slice(-1)) % 4],
     };
   }
   return null;
