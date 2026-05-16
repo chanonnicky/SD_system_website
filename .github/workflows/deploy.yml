@@ -24,6 +24,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Generate config.js from secrets
+        run: |
+          cat > assets/js/config.js << 'EOF'
+          window.APP_CONFIG = {
+            GAS_URL:        '${{ secrets.GAS_URL }}',
+            SPREADSHEET_ID: '${{ secrets.SPREADSHEET_ID }}',
+            GOOGLE_API_KEY: '${{ secrets.GOOGLE_API_KEY }}',
+            LINE_TOKEN:     '${{ secrets.LINE_TOKEN }}',
+            LINE_TO:        '${{ secrets.LINE_TO }}',
+            REPAIR_SHEET:   'แจ้งซ่อม',
+            BOOKING_SHEET:  'จองห้องประชุม',
+          };
+          EOF
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
