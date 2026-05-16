@@ -356,7 +356,10 @@ async function fetchBookings(year, month) {
 // ============================================================
 // STATUS TRACKING
 // ============================================================
+let _prevResultHTML = null; // เก็บ HTML ผลค้นหาก่อนหน้า เพื่อ restore เมื่อกด "กลับ"
+
 async function searchStatus() {
+  _prevResultHTML = null; // clear ทุกครั้งที่ search ใหม่
   const query = document.getElementById('ticketInput').value.trim();
   if (!query) { showToast('กรุณากรอกเลขที่ Ticket หรือชื่อผู้แจ้ง', 'error'); return; }
 
@@ -389,6 +392,7 @@ async function searchStatus() {
 
 async function showTicketDetail(ticket) {
   const resultEl = document.getElementById('statusResult');
+  _prevResultHTML = resultEl.innerHTML; // บันทึกผลค้นหาก่อนหน้า
   resultEl.innerHTML = '<div class="card text-center py-8"><div class="spinner mb-4"></div></div>';
   const data = await fetchStatus(ticket);
   resultEl.innerHTML = data ? renderStatusCard(data) : notFoundHTML(`ไม่พบ Ticket "${ticket}"`);
@@ -418,8 +422,19 @@ function notFoundHTML(msg) {
   </div>`;
 }
 
+function goBack() {
+  const resultEl = document.getElementById('statusResult');
+  if (_prevResultHTML) {
+    resultEl.innerHTML = _prevResultHTML;
+    _prevResultHTML = null;
+  } else {
+    resultEl.classList.add('hidden');
+    document.getElementById('recentTickets').classList.remove('hidden');
+  }
+}
+
 function backBtn() {
-  return `<div class="mt-4"><button onclick="document.getElementById('statusResult').classList.add('hidden');document.getElementById('recentTickets').classList.remove('hidden')" class="btn-secondary"><i class="fa-solid fa-arrow-left mr-2"></i>กลับ</button></div>`;
+  return `<div class="mt-4"><button onclick="goBack()" class="btn-secondary"><i class="fa-solid fa-arrow-left mr-2"></i>กลับ</button></div>`;
 }
 
 function statusStyle(status) {
