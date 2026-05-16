@@ -836,7 +836,7 @@ function toggleEquipmentOther(select) {
 document.addEventListener('DOMContentLoaded', () => {
   // Populate booking date selects (วว/ดด/ปปปป)
   const now     = new Date();
-  const maxYear = now.getFullYear() + 2;
+  const maxYear = 2500;
 
   const yearSel = document.getElementById('bookingYear');
   if (yearSel) {
