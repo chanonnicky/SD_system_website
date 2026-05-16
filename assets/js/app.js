@@ -11,6 +11,14 @@ const _cfg = window.APP_CONFIG || {
 
 const SHEETS_BASE = `https://sheets.googleapis.com/v4/spreadsheets/${_cfg.SPREADSHEET_ID}/values`;
 
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+// สำหรับค่า dynamic ใน onclick attribute: JSON.stringify + HTML-escape
+function safeAttr(v) {
+  return JSON.stringify(String(v ?? '')).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 // ============================================================
 // SHEETS API HELPER — อ่านข้อมูลตรงจาก Google Sheets
 // ============================================================
@@ -417,7 +425,7 @@ function notFoundHTML(msg) {
       <i class="fa-solid fa-circle-xmark text-red-400 text-3xl"></i>
     </div>
     <h3 class="font-semibold text-slate-700">ไม่พบข้อมูล</h3>
-    <p class="text-slate-500 text-sm mt-2">${msg}</p>
+    <p class="text-slate-500 text-sm mt-2">${escHtml(msg)}</p>
     ${backBtn()}
   </div>`;
 }
@@ -450,15 +458,15 @@ function renderNameResults(results) {
   const rows = results.map(d => {
     const s = statusStyle(d.status);
     return `
-      <div class="card mb-3 cursor-pointer hover:shadow-md transition-shadow" onclick="showTicketDetail('${d.ticket}')">
+      <div class="card mb-3 cursor-pointer hover:shadow-md transition-shadow" onclick="showTicketDetail(${safeAttr(d.ticket)})">
         <div class="flex items-start justify-between gap-3">
           <div class="flex-1 min-w-0">
-            <p class="font-bold text-blue-700 text-lg">${d.ticket}</p>
-            <p class="text-sm text-slate-700 font-medium mt-0.5">${d.name}</p>
-            <p class="text-sm text-slate-500 truncate">${d.equipment || '-'}</p>
-            <p class="text-xs text-slate-400">${d.location || '-'}</p>
+            <p class="font-bold text-blue-700 text-lg">${escHtml(d.ticket)}</p>
+            <p class="text-sm text-slate-700 font-medium mt-0.5">${escHtml(d.name)}</p>
+            <p class="text-sm text-slate-500 truncate">${escHtml(d.equipment || '-')}</p>
+            <p class="text-xs text-slate-400">${escHtml(d.location || '-')}</p>
           </div>
-          <span class="status-badge ${s.cls} shrink-0"><i class="fa-solid ${s.icon}"></i>${s.label}</span>
+          <span class="status-badge ${s.cls} shrink-0"><i class="fa-solid ${s.icon}"></i>${escHtml(s.label)}</span>
         </div>
       </div>`;
   }).join('');
@@ -546,8 +554,8 @@ function renderStatusCard(d) {
       <div class="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
           <p class="text-xs text-slate-500 mb-1">เลขที่ Ticket</p>
-          <p class="text-2xl font-bold text-blue-700">${d.ticket}</p>
-          <p class="text-sm text-slate-500 mt-1">${d.name || ''}</p>
+          <p class="text-2xl font-bold text-blue-700">${escHtml(d.ticket)}</p>
+          <p class="text-sm text-slate-500 mt-1">${escHtml(d.name || '')}</p>
         </div>
         <span class="status-badge ${s.cls}">
           <i class="fa-solid ${s.icon}"></i>${s.label}
@@ -561,24 +569,24 @@ function renderStatusCard(d) {
         ${isRepair ? `
           <div class="sm:col-span-2 bg-slate-50 rounded-xl p-3">
             <p class="text-xs text-slate-500 mb-0.5">อุปกรณ์</p>
-            <p class="font-medium">${d.equipment || '-'}</p>
+            <p class="font-medium">${escHtml(d.equipment || '-')}</p>
           </div>
           <div class="sm:col-span-2 bg-slate-50 rounded-xl p-3">
             <p class="text-xs text-slate-500 mb-0.5">สถานที่</p>
-            <p class="font-medium">${d.location || '-'}</p>
+            <p class="font-medium">${escHtml(d.location || '-')}</p>
           </div>
           <div class="sm:col-span-2 bg-slate-50 rounded-xl p-3">
             <p class="text-xs text-slate-500 mb-0.5">อาการ / ปัญหา</p>
-            <p class="font-medium">${d.description || '-'}</p>
+            <p class="font-medium">${escHtml(d.description || '-')}</p>
           </div>
         ` : `
           <div class="bg-slate-50 rounded-xl p-3">
             <p class="text-xs text-slate-500 mb-0.5">ห้อง</p>
-            <p class="font-medium">${d.room || '-'}</p>
+            <p class="font-medium">${escHtml(d.room || '-')}</p>
           </div>
           <div class="bg-slate-50 rounded-xl p-3">
             <p class="text-xs text-slate-500 mb-0.5">วันที่ / เวลา</p>
-            <p class="font-medium">${d.date ? formatDateTH(d.date) : '-'}<br>${d.startTime || ''} – ${d.endTime || ''} น.</p>
+            <p class="font-medium">${d.date ? formatDateTH(d.date) : '-'}<br>${escHtml(d.startTime || '')} – ${escHtml(d.endTime || '')} น.</p>
           </div>
         `}
       </div>
@@ -752,17 +760,20 @@ function filterRoom(room) {
   renderCalendar();
 }
 
+let _modalBookings = [];
+
 function showDayDetail(dateStr, bookings) {
+  _modalBookings = bookings;
   document.getElementById('modalTitle').textContent = `รายการจอง — ${formatDateTH(dateStr)}`;
-  document.getElementById('modalContent').innerHTML = bookings.map(b => `
+  document.getElementById('modalContent').innerHTML = bookings.map((b, i) => `
     <div class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer mb-2"
-         onclick="showEventDetail(${JSON.stringify(b).replace(/"/g, '&quot;')})">
+         onclick="showEventDetail(_modalBookings[${i}])">
       <div class="booking-event ${getRoomClass(b.room)} shrink-0" style="margin:0;white-space:nowrap">
-        ${b.startTime}–${b.endTime}
+        ${escHtml(b.startTime)}–${escHtml(b.endTime)}
       </div>
       <div class="min-w-0">
-        <p class="font-semibold text-sm truncate">${b.room}</p>
-        <p class="text-xs text-slate-500 truncate">${b.name}</p>
+        <p class="font-semibold text-sm truncate">${escHtml(b.room)}</p>
+        <p class="text-xs text-slate-500 truncate">${escHtml(b.name)}</p>
       </div>
     </div>`).join('');
   document.getElementById('eventModal').classList.remove('hidden');
@@ -773,7 +784,7 @@ function showEventDetail(b) {
   document.getElementById('modalContent').innerHTML = `
     <div class="flex items-center gap-2 text-slate-500 text-xs mb-3">
       <span class="inline-block w-3 h-3 rounded-full ${getRoomClass(b.room)}"></span>
-      <span>${b.room}</span>
+      <span>${escHtml(b.room)}</span>
     </div>
     <div class="grid grid-cols-2 gap-3">
       <div class="bg-slate-50 rounded-lg p-3">
@@ -782,11 +793,11 @@ function showEventDetail(b) {
       </div>
       <div class="bg-slate-50 rounded-lg p-3">
         <p class="text-xs text-slate-500">เวลา</p>
-        <p class="font-semibold">${b.startTime} – ${b.endTime} น.</p>
+        <p class="font-semibold">${escHtml(b.startTime)} – ${escHtml(b.endTime)} น.</p>
       </div>
       <div class="col-span-2 bg-slate-50 rounded-lg p-3">
         <p class="text-xs text-slate-500">ผู้จอง</p>
-        <p class="font-semibold">${b.name}</p>
+        <p class="font-semibold">${escHtml(b.name)}</p>
       </div>
     </div>`;
   document.getElementById('eventModal').classList.remove('hidden');
@@ -842,8 +853,8 @@ function renderSlotsPanel(panel, bookings) {
         ${bookings.sort((a,b) => a.startTime.localeCompare(b.startTime)).map(b => `
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-clock text-red-400 text-xs flex-shrink-0"></i>
-            <span class="font-semibold text-red-700">${b.startTime} – ${b.endTime} น.</span>
-            <span class="text-slate-500">· ${b.name}</span>
+            <span class="font-semibold text-red-700">${escHtml(b.startTime)} – ${escHtml(b.endTime)} น.</span>
+            <span class="text-slate-500">· ${escHtml(b.name)}</span>
           </div>`).join('')}
       </div>`;
   }
@@ -902,7 +913,7 @@ function showToast(msg, type = 'info') {
   const icons = { success: 'fa-circle-check', error: 'fa-triangle-exclamation', info: 'fa-circle-info' };
   const item = document.createElement('div');
   item.className = `toast-item toast-${type}`;
-  item.innerHTML = `<i class="fa-solid ${icons[type]}"></i><span>${msg}</span>`;
+  item.innerHTML = `<i class="fa-solid ${icons[type]}"></i><span>${escHtml(msg)}</span>`;
   toast.classList.remove('hidden');
   toast.appendChild(item);
   setTimeout(() => { item.remove(); if (!toast.children.length) toast.classList.add('hidden'); }, 4000);

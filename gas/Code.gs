@@ -17,12 +17,16 @@
 // ============================================================
 
 // ============================================================
-// CONFIG — คัดลอกค่าจาก assets/js/config.js มาใส่ที่นี่
-// (GAS ทำงานบน server ของ Google จึงอ่าน config.js ไม่ได้โดยตรง)
+// CONFIG — ค่าจาก GAS Script Properties (Project Settings > Script Properties)
+// ⚠️  SECURITY: ตั้งค่าต่อไปนี้ใน Script Properties แล้วลบ fallback ออก:
+//     SPREADSHEET_ID, LINE_TOKEN
+//     หลังตั้งค่าแล้วให้ rotate LINE_TOKEN ใน LINE Developers Console ด้วย
+//     (LINE Developers > Messaging API > Channel access token > Issue new token)
 // ============================================================
+const _props = PropertiesService.getScriptProperties().getProperties();
 const CONFIG = {
-  SPREADSHEET_ID: '1rHGjwT6ZBf0qryjXahaw1RUve3ozvbIB89u3gSYzhbU',
-  LINE_TOKEN:     'kZDmkCpgVMDKGFDn3u0doCpZ9IiqpK4TvzULDxa9Sw7N02Btc/0MRxViBHBR6xMwsOO7kWeQWoEwCwwPctm/o+wKFDJp1J+BySHDDj9PDiq5jyMYqPa6+h7WCJCNYTU3kSljs22vMdFZTV5yVz1/hAdB04t89/1O/w1cDnyilFU=',
+  SPREADSHEET_ID: _props.SPREADSHEET_ID || '1rHGjwT6ZBf0qryjXahaw1RUve3ozvbIB89u3gSYzhbU',
+  LINE_TOKEN:     _props.LINE_TOKEN     || 'kZDmkCpgVMDKGFDn3u0doCpZ9IiqpK4TvzULDxa9Sw7N02Btc/0MRxViBHBR6xMwsOO7kWeQWoEwCwwPctm/o+wKFDJp1J+BySHDDj9PDiq5jyMYqPa6+h7WCJCNYTU3kSljs22vMdFZTV5yVz1/hAdB04t89/1O/w1cDnyilFU=',
   REPAIR_SHEET:   'แจ้งซ่อม',
   BOOKING_SHEET:  'จองห้องประชุม',
   SHEET_URL:      'https://docs.google.com/spreadsheets/d/1rHGjwT6ZBf0qryjXahaw1RUve3ozvbIB89u3gSYzhbU/edit',
@@ -44,6 +48,10 @@ const CONFIG = {
 // ============================================================
 // doGet — อัปเดตสถานะผ่าน LIFF (กดปุ่มใน LINE card)
 // ============================================================
+function htmlEscape(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
 function doGet(e) {
   let params = e.parameter || {};
 
@@ -90,15 +98,15 @@ function doGet(e) {
          .hint{margin-top:1.25rem;font-size:.72rem;color:#9ca3af}</style></head>
          <body><div class="card">
          <div class="icon">✅</div>
-         <div class="ticket">${params.ticket}</div>
-         <div class="status">${statusConfig.label}</div>
+         <div class="ticket">${htmlEscape(params.ticket)}</div>
+         <div class="status">${htmlEscape(statusConfig.label)}</div>
          <p class="hint">${CONFIG.MINI_APP_ID ? 'กำลังปิดหน้าต่าง...' : 'ปิดหน้าต่างนี้ได้เลย'}</p>
          </div></body></html>`
       : `<!doctype html><html><head><meta charset="utf-8">${liffScript}</head>
          <body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fef2f2">
          <div style="text-align:center;padding:2rem;background:#fff;border-radius:1rem;box-shadow:0 4px 12px rgba(0,0,0,.1)">
          <div style="font-size:2.5rem">❌</div><p style="color:#dc2626;font-weight:600">ไม่พบ Ticket</p>
-         <p style="color:#6b7280;font-size:.85rem">${params.ticket}</p></div></body></html>`;
+         <p style="color:#6b7280;font-size:.85rem">${htmlEscape(params.ticket)}</p></div></body></html>`;
 
     return HtmlService.createHtmlOutput(html);
   }
@@ -168,14 +176,17 @@ function handlePostback(ev) {
 }
 
 function updateRepairStatus(ticket, newStatus) {
-  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(CONFIG.REPAIR_SHEET);
+  const ss        = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  const isRepair  = String(ticket).startsWith('REP');
+  const sheetName = isRepair ? CONFIG.REPAIR_SHEET : CONFIG.BOOKING_SHEET;
+  const statusCol = isRepair ? 9 : 13; // repair=I(9), booking=M(13)
+  const sheet     = ss.getSheetByName(sheetName);
   if (!sheet) return false;
 
   const values = sheet.getDataRange().getValues();
   for (let i = 1; i < values.length; i++) {
-    if (values[i][0] === ticket) {
-      sheet.getRange(i + 1, 9).setValue(newStatus); // col I = สถานะ
+    if (String(values[i][0]) === String(ticket)) {
+      sheet.getRange(i + 1, statusCol).setValue(newStatus);
       return true;
     }
   }
@@ -544,24 +555,52 @@ function flexRow(label, value) {
 }
 
 // ============================================================
-// GET TICKET DATA (repair: A:I → status = col I = index 8)
+// GET TICKET DATA — รองรับทั้ง REP (repair) และ BK (booking)
 // ============================================================
 function getTicketData(ticket) {
-  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
-  const sheet = ss.getSheetByName(CONFIG.REPAIR_SHEET);
-  if (!sheet) return null;
-  const values = sheet.getDataRange().getValues();
-  for (let i = 1; i < values.length; i++) {
-    if (values[i][0] === ticket) {
-      return {
-        ticket:      values[i][0], // A
-        name:        values[i][2], // C
-        phone:       values[i][3], // D
-        equipment:   values[i][4], // E
-        location:    values[i][5], // F
-        description: values[i][6], // G
-        status:      values[i][8], // I
-      };
+  const ss       = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  const isRepair = String(ticket).startsWith('REP');
+
+  if (isRepair) {
+    const sheet = ss.getSheetByName(CONFIG.REPAIR_SHEET);
+    if (!sheet) return null;
+    const values = sheet.getDataRange().getValues();
+    for (let i = 1; i < values.length; i++) {
+      if (String(values[i][0]) === String(ticket)) {
+        return {
+          ticket:      values[i][0],
+          name:        values[i][2],
+          phone:       values[i][3],
+          equipment:   values[i][4],
+          location:    values[i][5],
+          description: values[i][6],
+          status:      values[i][8],
+        };
+      }
+    }
+  } else {
+    const sheet = ss.getSheetByName(CONFIG.BOOKING_SHEET);
+    if (!sheet) return null;
+    const tz     = Session.getScriptTimeZone();
+    const values = sheet.getDataRange().getValues();
+    for (let i = 1; i < values.length; i++) {
+      if (String(values[i][0]) === String(ticket)) {
+        const rawDate = values[i][3];
+        const dateStr = rawDate instanceof Date
+          ? Utilities.formatDate(rawDate, tz, 'yyyy-MM-dd')
+          : String(rawDate).slice(0, 10);
+        return {
+          ticket:    values[i][0],
+          name:      values[i][6],
+          phone:     values[i][7],
+          room:      values[i][2],
+          date:      dateStr,
+          startTime: normalizeTimeStr(values[i][4]),
+          endTime:   normalizeTimeStr(values[i][5]),
+          purpose:   values[i][9],
+          status:    values[i][12],
+        };
+      }
     }
   }
   return null;
@@ -622,15 +661,27 @@ function buildStatusUpdateFlex(d) {
         layout: 'vertical',
         paddingAll: 'xl',
         spacing: 'md',
-        contents: [
-          flexRow('👤 ผู้แจ้ง',  d.name        || '-'),
-          { type: 'separator', margin: 'sm' },
-          flexRow('📞 เบอร์',    d.phone       || '-'),
-          { type: 'separator', margin: 'sm' },
-          flexRow('🛠️ อุปกรณ์', d.equipment   || '-'),
-          { type: 'separator', margin: 'sm' },
-          flexRow('📍 สถานที่',  d.location    || '-'),
-        ],
+        contents: d.ticket && d.ticket.startsWith('REP')
+          ? [
+              flexRow('👤 ผู้แจ้ง',  d.name      || '-'),
+              { type: 'separator', margin: 'sm' },
+              flexRow('📞 เบอร์',    d.phone     || '-'),
+              { type: 'separator', margin: 'sm' },
+              flexRow('🛠️ อุปกรณ์', d.equipment || '-'),
+              { type: 'separator', margin: 'sm' },
+              flexRow('📍 สถานที่',  d.location  || '-'),
+            ]
+          : [
+              flexRow('👤 ผู้จอง',  d.name     || '-'),
+              { type: 'separator', margin: 'sm' },
+              flexRow('📞 เบอร์',   d.phone    || '-'),
+              { type: 'separator', margin: 'sm' },
+              flexRow('🏢 ห้อง',    d.room     || '-'),
+              { type: 'separator', margin: 'sm' },
+              flexRow('📅 วันที่',  d.date     || '-'),
+              { type: 'separator', margin: 'sm' },
+              flexRow('🕐 เวลา',    `${d.startTime || ''} – ${d.endTime || ''} น.`),
+            ],
       },
       footer: {
         type: 'box',
