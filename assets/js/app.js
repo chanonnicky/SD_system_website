@@ -8,16 +8,15 @@ const _cfg = window.APP_CONFIG || {
   REPAIR_SHEET:   'แจ้งซ่อม',
   BOOKING_SHEET:  'จองห้องประชุม',
 };
-const { GAS_URL, SPREADSHEET_ID, GOOGLE_API_KEY } = _cfg;
 
-const SHEETS_BASE = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values`;
+const SHEETS_BASE = `https://sheets.googleapis.com/v4/spreadsheets/${_cfg.SPREADSHEET_ID}/values`;
 
 // ============================================================
 // SHEETS API HELPER — อ่านข้อมูลตรงจาก Google Sheets
 // ============================================================
 async function fetchSheetData(sheetName, range = 'A:H') {
   const encoded = encodeURIComponent(`${sheetName}!${range}`);
-  const res = await fetch(`${SHEETS_BASE}/${encoded}?key=${GOOGLE_API_KEY}`);
+  const res = await fetch(`${SHEETS_BASE}/${encoded}?key=${_cfg.GOOGLE_API_KEY}`);
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error?.message || `HTTP ${res.status}`);
@@ -177,7 +176,7 @@ async function submitBooking(e) {
 // GAS API CALL
 // ============================================================
 async function submitToGAS(data) {
-  if (GAS_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
+  if (_cfg.GAS_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL') {
     // Demo mode — simulate a response
     await new Promise(r => setTimeout(r, 1200));
     const prefix = data.type === 'repair' ? 'REP' : 'BK';
@@ -190,7 +189,7 @@ async function submitToGAS(data) {
     return ticket;
   }
 
-  const res = await fetch(GAS_URL, {
+  const res = await fetch(_cfg.GAS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' }, // text/plain หลีกเลี่ยง CORS preflight
     body: JSON.stringify(data),
@@ -204,7 +203,7 @@ async function submitToGAS(data) {
 // แจ้งซ่อม:  A=เลขที่(0) B=วันที่(1) C=ชื่อ(2) D=อุปกรณ์(3) E=สถานที่(4) F=อาการ(5) G=รูปภาพ(6) H=สถานะ(7)
 // จองห้อง:   A=เลขที่(0) B=วันที่จอง(1) C=ห้อง(2) D=วันที่ใช้(3) E=เวลา(4) F=ชื่อ(5) G=สถานะ(6)
 async function fetchStatus(ticket) {
-  if (GOOGLE_API_KEY === 'YOUR_GOOGLE_API_KEY') {
+  if (_cfg.GOOGLE_API_KEY === 'YOUR_GOOGLE_API_KEY') {
     await new Promise(r => setTimeout(r, 800));
     return getDemoStatus(ticket);
   }
@@ -255,7 +254,7 @@ async function fetchByName(name) {
 }
 
 async function fetchBookings(year, month) {
-  if (GOOGLE_API_KEY === 'YOUR_GOOGLE_API_KEY') {
+  if (_cfg.GOOGLE_API_KEY === 'YOUR_GOOGLE_API_KEY') {
     return getDemoBookings();
   }
   const rows = await fetchSheetData(_cfg.BOOKING_SHEET, 'A:G');
