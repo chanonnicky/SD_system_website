@@ -458,25 +458,63 @@ function renderNameResults(results) {
 function renderStatusCard(d) {
   const s = statusStyle(d.status);
   const isRepair = d.ticket?.startsWith('REP');
-  const isActive = d.status !== 'เสร็จสิ้น' && d.status !== 'ยกเลิก';
 
-  const steps = isRepair
-    ? ['รับเรื่อง', 'กำลังดำเนินการ', 'เสร็จแล้ว']
-    : ['รับจอง', 'ยืนยัน', 'เสร็จแล้ว'];
+  const allSteps = isRepair
+    ? [
+        { label: 'รับเรื่อง',       desc: 'ได้รับ Ticket แล้ว'        },
+        { label: 'กำลังดำเนินการ', desc: 'ทีมงานกำลังดำเนินการซ่อม'  },
+        { label: 'เสร็จสิ้น',       desc: 'ซ่อมเรียบร้อยแล้ว'          },
+      ]
+    : [
+        { label: 'รับเรื่อง',  desc: 'ได้รับคำขอจองแล้ว'       },
+        { label: 'ยืนยัน',     desc: 'ทีมงานกำลังตรวจสอบ'       },
+        { label: 'เสร็จสิ้น',  desc: 'ยืนยันการจองแล้ว'          },
+      ];
 
-  const stepIdx = isRepair
-    ? { 'รับเรื่อง': 1, 'กำลังดำเนินการ': 2, 'เสร็จสิ้น': 3, 'ยกเลิก': 0 }[d.status] ?? 1
-    : { 'รับเรื่อง': 1, 'กำลังดำเนินการ': 2, 'เสร็จสิ้น': 3, 'ยกเลิก': 0 }[d.status] ?? 1;
+  const currentStep = { 'รับเรื่อง': 0, 'กำลังดำเนินการ': 1, 'เสร็จสิ้น': 2, 'ยกเลิก': -1 }[d.status] ?? 0;
+  const isCancelled = d.status === 'ยกเลิก';
+  const isComplete  = d.status === 'เสร็จสิ้น';
 
-  const stepsHTML = steps.map((step, i) => `
-    <div class="flex flex-col items-center gap-1 flex-1">
-      <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${i < stepIdx ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-400'}">
-        ${i < stepIdx ? '<i class="fa-solid fa-check text-xs"></i>' : i + 1}
+  const stepsHTML = allSteps.map((step, i) => {
+    const done   = isComplete || i < currentStep;
+    const active = !isCancelled && !isComplete && i === currentStep;
+
+    const circleCls = done
+      ? 'bg-blue-600 border-blue-600 text-white'
+      : active
+        ? 'bg-white border-blue-500 text-blue-600'
+        : isCancelled
+          ? 'bg-white border-red-300 text-red-300'
+          : 'bg-white border-slate-300 text-slate-400';
+
+    const ringCls   = active ? 'ring-4 ring-blue-100' : '';
+    const iconInner = done
+      ? '<i class="fa-solid fa-check text-xs"></i>'
+      : isCancelled
+        ? '<i class="fa-solid fa-xmark text-xs"></i>'
+        : `<span class="text-xs font-bold">${i + 1}</span>`;
+
+    const labelCls = done ? 'text-blue-700 font-semibold' : active ? 'text-blue-600 font-semibold' : isCancelled ? 'text-red-400' : 'text-slate-400';
+    const descCls  = done ? 'text-slate-500' : active ? 'text-slate-500' : 'text-slate-300';
+    const lineCls  = done ? 'bg-blue-500' : isCancelled ? 'bg-red-200' : 'bg-slate-200';
+
+    return `
+      <div class="flex flex-col items-center flex-1 gap-1 min-w-0">
+        <div class="w-9 h-9 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${circleCls} ${ringCls}">
+          ${iconInner}
+        </div>
+        <p class="text-xs font-medium text-center leading-tight ${labelCls}">${step.label}</p>
+        <p class="text-xs text-center leading-tight ${descCls}">${step.desc}</p>
       </div>
-      <span class="text-xs text-center ${i < stepIdx ? 'text-blue-700 font-medium' : 'text-slate-400'}">${step}</span>
-    </div>
-    ${i < steps.length - 1 ? `<div class="flex-1 h-0.5 mt-4 ${i < stepIdx - 1 ? 'bg-blue-600' : 'bg-slate-200'}"></div>` : ''}
-  `).join('');
+      ${i < allSteps.length - 1 ? `<div class="h-0.5 mt-4 flex-shrink-0 w-6 sm:w-10 ${lineCls}"></div>` : ''}
+    `;
+  }).join('');
+
+  const cancelledBanner = isCancelled
+    ? `<div class="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-center gap-2 text-red-700 text-sm font-medium">
+        <i class="fa-solid fa-ban"></i>Ticket นี้ถูกยกเลิกแล้ว
+       </div>`
+    : '';
 
   return `
     <div class="card">
@@ -491,9 +529,10 @@ function renderStatusCard(d) {
         </span>
       </div>
 
-      <div class="flex items-center mb-6">${stepsHTML}</div>
+      <div class="flex items-start justify-center mb-2">${stepsHTML}</div>
+      ${cancelledBanner}
 
-      <div class="grid sm:grid-cols-2 gap-3 text-sm">
+      <div class="grid sm:grid-cols-2 gap-3 text-sm mt-5">
         ${isRepair ? `
           <div class="sm:col-span-2 bg-slate-50 rounded-xl p-3">
             <p class="text-xs text-slate-500 mb-0.5">อุปกรณ์</p>
