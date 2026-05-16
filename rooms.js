@@ -15,7 +15,7 @@ const ROOMS = [
     iconBg:     'bg-blue-100',
     features:   ['🪑 ชั้นลอย','📺 จอ LED', '🎤 ระบบเครื่องเสียง', '🔦 ระบบไฟคอนเสิร์ต','📹 ระบบ Live'],
     sheetColor: '#dbeafe',
-    calClass:   'หอประชุมซาวีโอ',
+    calClass:   'room-savio',
   },
   {
     id:         'ห้องประชุมอัลเบรา',
@@ -28,7 +28,7 @@ const ROOMS = [
     iconBg:     'bg-green-100',
     features:   ['📽️ Projector ×3', '🎤 ระบบเครื่องเสียง'],
     sheetColor: '#d1fae5',
-    calClass:   'ห้องประชุมอัลเบรา',
+    calClass:   'room-albera',
   },
   {
     id:         'ห้องประชุมรีกัลโดเน',
@@ -41,11 +41,11 @@ const ROOMS = [
     iconBg:     'bg-purple-100',
     features:   ['📽️ Projector', '🎤 ระบบเครื่องเสียง'],
     sheetColor: '#ede9fe',
-    calClass:   'ห้องประชุมรีกัลโดเน',
+    calClass:   'room-regaldon',
   },
   {
     id:         'Auditorium',
-    label:      'ห้องประชุม S.D. Auditorium',
+    label:      'S.D. Auditorium',
     short:      'Auditorium',
     capacity:   150,
     floor:      'ชั้น 3 อาคารยอห์น บอสโก อนุสรณ์ 200 ปีชาตกาล',
@@ -54,6 +54,6 @@ const ROOMS = [
     iconBg:     'bg-orange-100',
     features:   ['📺 จอ LED', '🎤 ระบบเครื่องเสียง', '🔦 ระบบไฟคอนเสิร์ต'],
     sheetColor: '#ffedd5',
-    calClass:   'auditorium',
+    calClass:   'room-auditorium',
   },
 ];
