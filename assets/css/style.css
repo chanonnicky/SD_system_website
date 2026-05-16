@@ -228,10 +228,9 @@ select.form-input { cursor: pointer; }
 .cal-day.saturday .day-num { color: #2563eb; }
 
 .booking-event {
-  font-size: 0.68rem;
-  padding: 0.18rem 0.45rem;
+  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem 0.2rem 0.5rem;
   border-radius: 0.3rem;
-  color: white;
   font-weight: 700;
   margin-bottom: 0.15rem;
   white-space: nowrap;
@@ -239,16 +238,16 @@ select.form-input { cursor: pointer; }
   text-overflow: ellipsis;
   cursor: pointer;
   transition: filter 0.15s, transform 0.1s;
-  line-height: 1.4;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+  line-height: 1.5;
+  border-left: 3px solid transparent;
 }
-.booking-event:hover { filter: brightness(1.1); transform: scale(1.02); }
+.booking-event:hover { filter: brightness(0.93); transform: scale(1.02); }
 
-/* Room colors — distinct, high-contrast backgrounds with white text */
-.room-savio      { background: #1d4ed8; }  /* blue */
-.room-albera     { background: #16a34a; }  /* green */
-.room-regaldon   { background: #9333ea; }  /* purple */
-.room-auditorium { background: #ea580c; }  /* orange */
+/* Room colors — pastel bg + dark text (Google Calendar style) */
+.room-savio      { background: #dbeafe; color: #1e3a8a; border-left-color: #2563eb; }
+.room-albera     { background: #dcfce7; color: #14532d; border-left-color: #16a34a; }
+.room-regaldon   { background: #f3e8ff; color: #581c87; border-left-color: #9333ea; }
+.room-auditorium { background: #ffedd5; color: #7c2d12; border-left-color: #ea580c; }
 
 /* === TOAST === */
 .toast-item {

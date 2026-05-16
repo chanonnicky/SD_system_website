@@ -587,8 +587,7 @@ function initRooms() {
   if (legendEl) {
     legendEl.innerHTML = ROOMS.map(r => `
       <div class="flex items-center gap-2 text-sm">
-        <div class="w-4 h-4 rounded booking-event ${r.calClass}" style="padding:0"></div>
-        <span class="text-slate-600">${r.label}</span>
+        <div class="booking-event ${r.calClass}" style="padding:0 0.4rem;flex-shrink:0;font-size:0.6rem;white-space:nowrap">${r.short}</div>
       </div>`).join('');
   }
 }
