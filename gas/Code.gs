@@ -301,14 +301,21 @@ function handleBooking(data) {
 function checkBookingConflict(sheet, room, date, startTime, endTime) {
   if (sheet.getLastRow() <= 1) return null;
 
-  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 13).getValues();
-  for (const row of data) {
+  const tz = Session.getScriptTimeZone();
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 13).getValues();
+  for (const row of rows) {
     const [ticket, , rowRoom, rowDate, rowStart, rowEnd, , , , , , , rowStatus] = row;
     if (rowStatus === 'ยกเลิก' || rowStatus === 'เสร็จสิ้น') continue;
     if (rowRoom !== room) continue;
-    if (String(rowDate) !== date) continue;
-    if (startTime < rowEnd && endTime > rowStart) {
-      return `${rowStart}–${rowEnd} น. (${ticket})`;
+    // Sheets อาจ auto-convert "2026-05-16" เป็น Date object
+    const rowDateStr = rowDate instanceof Date
+      ? Utilities.formatDate(rowDate, tz, 'yyyy-MM-dd')
+      : String(rowDate).slice(0, 10);
+    if (rowDateStr !== date) continue;
+    const rs = String(rowStart).trim();
+    const re = String(rowEnd).trim();
+    if (startTime < re && endTime > rs) {
+      return `${rs}–${re} น. (${ticket})`;
     }
   }
   return null;

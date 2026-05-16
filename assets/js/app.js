@@ -147,6 +147,19 @@ async function submitBooking(e) {
     return;
   }
 
+  // Pre-check conflict against cached bookings (best-effort; GAS ตรวจซ้ำอีกครั้ง)
+  const selectedRoom = form.room.value;
+  const selectedDate = `${form.bookingYear.value}-${form.bookingMonth.value}-${form.bookingDay.value}`;
+  const cached = allBookings.find(b =>
+    b.room === selectedRoom &&
+    b.date === selectedDate &&
+    startTime < b.endTime && endTime > b.startTime
+  );
+  if (cached) {
+    showToast(`ห้องนี้ถูกจองแล้วในช่วง ${cached.startTime}–${cached.endTime} น. โดย ${cached.name}`, 'error');
+    return;
+  }
+
   const dateValue = `${form.bookingYear.value}-${form.bookingMonth.value}-${form.bookingDay.value}`;
   const bookingDate = new Date(dateValue + 'T00:00:00');
   const today = new Date(); today.setHours(0,0,0,0);
@@ -190,7 +203,10 @@ async function submitBooking(e) {
       'ทีมงานจะยืนยันการจองผ่าน LINE Official Account'
     );
   } catch (err) {
-    showToast('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง', 'error');
+    const msg = err.message && err.message !== 'Unknown error'
+      ? err.message
+      : 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+    showToast(msg, 'error');
     console.error(err);
   } finally {
     setLoading(btn, false, '<i class="fa-solid fa-calendar-check mr-2"></i>ยืนยันการจอง');
