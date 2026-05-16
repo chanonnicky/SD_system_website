@@ -288,9 +288,8 @@ function handleBooking(data) {
   if (roomColors[data.room]) sheet.getRange(newRow, 3).setBackground(roomColors[data.room]);
 
   const dateParts = (data.date || '').split('-');
-  const thYear = parseInt(dateParts[0]) + 543;
   const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-  const dateDisplay = `${dateParts[2]} ${months[parseInt(dateParts[1])-1]} ${thYear}`;
+  const dateDisplay = `${dateParts[2]} ${months[parseInt(dateParts[1])-1]} ${dateParts[0]} (ค.ศ.)`;
 
   sendLineFlex(buildBookingFlex(data, ticket, createdAt, dateDisplay));
   return { success: true, ticket };

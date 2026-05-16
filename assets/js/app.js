@@ -149,6 +149,10 @@ async function submitBooking(e) {
 
   const bookingDate = new Date(form.date.value);
   const today = new Date(); today.setHours(0,0,0,0);
+  if (bookingDate.getFullYear() > 2400) {
+    showToast('กรุณากรอกปี ค.ศ. ไม่ใช่ พ.ศ. (เช่น 2026 ไม่ใช่ 2569)', 'error');
+    return;
+  }
   if (bookingDate < today) {
     showToast('ไม่สามารถจองย้อนหลังได้', 'error');
     return;
@@ -478,7 +482,7 @@ async function loadCalendarBookings() {
 async function renderCalendar() {
   if (!allBookings.length) await loadCalendarBookings();
 
-  const title = `${monthNamesTH[currentMonth]} ${currentYear + 543}`;
+  const title = `${monthNamesTH[currentMonth]} ${currentYear}`;
   document.getElementById('calendarTitle').textContent = title;
 
   const grid = document.getElementById('calendarGrid');
@@ -730,7 +734,7 @@ function previewImage(input, previewId) {
 function formatDateTH(dateStr) {
   if (!dateStr) return '';
   const [y, m, d] = dateStr.split('-').map(Number);
-  return `${d} ${monthNamesTH[m - 1]} ${y + 543}`;
+  return `${d} ${monthNamesTH[m - 1]} ${y}`;
 }
 
 // ============================================================
