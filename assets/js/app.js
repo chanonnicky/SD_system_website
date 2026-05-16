@@ -534,8 +534,9 @@ async function renderCalendar() {
       });
       if (dayBookings.length > 3) {
         const more = document.createElement('div');
-        more.className = 'text-xs text-slate-400 pl-1 mt-0.5';
+        more.className = 'text-xs text-blue-500 font-semibold pl-1 mt-0.5 cursor-pointer hover:underline';
         more.textContent = `+${dayBookings.length - 3} รายการ`;
+        more.onclick = (e) => { e.stopPropagation(); showDayDetail(dateStr, dayBookings); };
         cell.appendChild(more);
       }
     }
@@ -623,6 +624,22 @@ function filterRoom(room) {
     btn.classList.toggle('active', btn.dataset.room === room);
   });
   renderCalendar();
+}
+
+function showDayDetail(dateStr, bookings) {
+  document.getElementById('modalTitle').textContent = `รายการจอง — ${formatDateTH(dateStr)}`;
+  document.getElementById('modalContent').innerHTML = bookings.map(b => `
+    <div class="flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer mb-2"
+         onclick="showEventDetail(${JSON.stringify(b).replace(/"/g, '&quot;')})">
+      <div class="booking-event ${getRoomClass(b.room)} shrink-0" style="margin:0;white-space:nowrap">
+        ${b.startTime}–${b.endTime}
+      </div>
+      <div class="min-w-0">
+        <p class="font-semibold text-sm truncate">${b.room}</p>
+        <p class="text-xs text-slate-500 truncate">${b.name}</p>
+      </div>
+    </div>`).join('');
+  document.getElementById('eventModal').classList.remove('hidden');
 }
 
 function showEventDetail(b) {
