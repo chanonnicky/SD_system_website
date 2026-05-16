@@ -651,19 +651,17 @@ async function renderCalendar() {
 
     if (isCurrent && dateStr) {
       const dayBookings = allBookings.filter(b => b.date === dateStr && (activeRoomFilter === 'all' || b.room === activeRoomFilter));
-      dayBookings.slice(0, 3).forEach(b => {
-        const ev = document.createElement('div');
-        ev.className = `booking-event ${getRoomClass(b.room)}`;
-        ev.textContent = `${b.startTime} ${b.room.replace('ห้องประชุม ', 'ห้อง ')}`;
-        ev.onclick = () => showEventDetail(b);
-        cell.appendChild(ev);
-      });
-      if (dayBookings.length > 3) {
-        const more = document.createElement('div');
-        more.className = 'text-xs text-blue-500 font-semibold pl-1 mt-0.5 cursor-pointer hover:underline';
-        more.textContent = `+${dayBookings.length - 3} รายการ`;
-        more.onclick = (e) => { e.stopPropagation(); showDayDetail(dateStr, dayBookings); };
-        cell.appendChild(more);
+      if (dayBookings.length > 0) {
+        const eventsWrap = document.createElement('div');
+        eventsWrap.className = 'events-scroll';
+        dayBookings.forEach(b => {
+          const ev = document.createElement('div');
+          ev.className = `booking-event ${getRoomClass(b.room)}`;
+          ev.textContent = `${b.startTime} ${b.room.replace('ห้องประชุม ', 'ห้อง ')}`;
+          ev.onclick = () => showEventDetail(b);
+          eventsWrap.appendChild(ev);
+        });
+        cell.appendChild(eventsWrap);
       }
     }
 
