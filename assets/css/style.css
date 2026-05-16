@@ -1,0 +1,309 @@
+/* === GLOBAL === */
+* { box-sizing: border-box; }
+body { font-family: 'Sarabun', sans-serif; }
+
+/* === TAB BUTTONS === */
+.tab-btn {
+  display: flex;
+  align-items: center;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+  transition: all 0.2s;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  cursor: pointer;
+}
+.tab-btn:hover { color: white; background: rgba(255,255,255,0.1); }
+.tab-btn.active { color: white; border-bottom-color: #38bdf8; }
+
+/* === CARDS === */
+.card {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.04);
+  transition: box-shadow 0.2s;
+}
+.card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+/* === SECTION HEADER === */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.section-icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* === FORM === */
+.form-group { display: flex; flex-direction: column; gap: 0.375rem; }
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+}
+.form-label.required::after { content: ' *'; color: #ef4444; }
+.form-input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.625rem;
+  font-size: 0.9rem;
+  font-family: 'Sarabun', sans-serif;
+  color: #1e293b;
+  background: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+}
+.form-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+}
+.form-input::placeholder { color: #94a3b8; }
+textarea.form-input { resize: vertical; }
+select.form-input { cursor: pointer; }
+
+/* === BUTTONS === */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem 1.5rem;
+  background: #1d4ed8;
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+.btn-primary:hover { background: #1e40af; }
+.btn-primary:active { transform: scale(0.98); }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.7rem 1.5rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-secondary:hover { background: #e2e8f0; }
+
+/* === ROOM CARDS === */
+.room-card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.room-card:hover {
+  border-color: #3b82f6;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59,130,246,0.15);
+}
+.room-card.selected { border-color: #1d4ed8; background: #eff6ff; }
+.room-card-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+.room-features { display: flex; flex-wrap: wrap; gap: 0.25rem; justify-content: center; margin-top: 0.75rem; }
+.feature-tag {
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.65rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+}
+
+/* === CHECKBOX === */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  color: #475569;
+  padding: 0.5rem 0.75rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.checkbox-label:hover { border-color: #3b82f6; background: #eff6ff; }
+.checkbox-label input[type="checkbox"] { accent-color: #1d4ed8; }
+
+/* === STEP NUMBER === */
+.step-num {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: #1d4ed8;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* === ROOM FILTER === */
+.room-filter {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 2px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Sarabun', sans-serif;
+}
+.room-filter:hover { border-color: #3b82f6; color: #1d4ed8; }
+.room-filter.active { border-color: #1d4ed8; background: #1d4ed8; color: white; }
+
+/* === CALENDAR === */
+.cal-day {
+  min-height: 5rem;
+  border-radius: 0.5rem;
+  padding: 0.375rem;
+  border: 1px solid #f1f5f9;
+  transition: background 0.15s;
+}
+.cal-day:hover { background: #f8fafc; }
+.cal-day.today { background: #eff6ff; border-color: #bfdbfe; }
+.cal-day.other-month { opacity: 0.35; }
+.cal-day .day-num {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #475569;
+  text-align: right;
+  margin-bottom: 0.25rem;
+}
+.cal-day.today .day-num {
+  background: #1d4ed8;
+  color: white;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  font-size: 0.7rem;
+}
+.cal-day.sunday .day-num { color: #ef4444; }
+.cal-day.saturday .day-num { color: #3b82f6; }
+
+.booking-event {
+  font-size: 0.6rem;
+  padding: 0.15rem 0.375rem;
+  border-radius: 0.25rem;
+  color: white;
+  font-weight: 600;
+  margin-bottom: 0.125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.booking-event:hover { opacity: 0.85; }
+
+/* Room colors */
+.room-a { background: #3b82f6; }
+.room-b { background: #22c55e; }
+.room-c { background: #a855f7; }
+.room-training { background: #f97316; }
+
+/* === TOAST === */
+.toast-item {
+  padding: 1rem 1.25rem;
+  border-radius: 0.75rem;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  animation: slideIn 0.3s ease;
+}
+.toast-success { background: #16a34a; }
+.toast-error { background: #dc2626; }
+.toast-info { background: #1d4ed8; }
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* === STATUS BADGE === */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.status-pending { background: #fef3c7; color: #92400e; }
+.status-inprogress { background: #dbeafe; color: #1e40af; }
+.status-done { background: #d1fae5; color: #065f46; }
+.status-cancelled { background: #fee2e2; color: #991b1b; }
+
+/* === LOADING === */
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 3px solid #e2e8f0;
+  border-top-color: #1d4ed8;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* === SCROLLBAR HIDE === */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* === RESPONSIVE === */
+@media (max-width: 640px) {
+  .cal-day { min-height: 3.5rem; padding: 0.25rem; }
+  .booking-event { font-size: 0.5rem; padding: 0.1rem 0.25rem; }
+  .section-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+}

@@ -1,0 +1,738 @@
+// ============================================================
+// Google Apps Script — AV Department Web App Backend
+// ============================================================
+// หน้าที่: รับ POST (บันทึกข้อมูลลง Sheets + ส่ง LINE Flex Message)
+// การอ่านข้อมูล (ติดตามสถานะ / ปฏิทิน) ทำผ่าน Google Sheets API v4
+// โดยตรงจาก frontend ด้วย API Key แทน
+//
+// วิธีติดตั้ง:
+// 1. ไปที่ script.google.com > New Project
+// 2. วางโค้ดนี้ แล้วแก้ไขค่าใน CONFIG ด้านล่าง
+// 3. Deploy > New Deployment > Web App
+//    - Execute as: Me
+//    - Who has access: Anyone
+// 4. คัดลอก Web App URL ไปใส่ใน assets/js/config.js → GAS_URL
+// 5. ตั้งค่า Spreadsheet เป็น "Anyone with the link can view"
+//    เพื่อให้ Google Sheets API Key อ่านได้
+// ============================================================
+
+// ============================================================
+// CONFIG — คัดลอกค่าจาก assets/js/config.js มาใส่ที่นี่
+// (GAS ทำงานบน server ของ Google จึงอ่าน config.js ไม่ได้โดยตรง)
+// ============================================================
+const CONFIG = {
+  SPREADSHEET_ID: '1rHGjwT6ZBf0qryjXahaw1RUve3ozvbIB89u3gSYzhbU', // ← APP_CONFIG.SPREADSHEET_ID
+  LINE_TOKEN:     'kZDmkCpgVMDKGFDn3u0doCpZ9IiqpK4TvzULDxa9Sw7N02Btc/0MRxViBHBR6xMwsOO7kWeQWoEwCwwPctm/o+wKFDJp1J+BySHDDj9PDiq5jyMYqPa6+h7WCJCNYTU3kSljs22vMdFZTV5yVz1/hAdB04t89/1O/w1cDnyilFU=', // ← APP_CONFIG.LINE_TOKEN
+  REPAIR_SHEET:   'แจ้งซ่อม',        // ← APP_CONFIG.REPAIR_SHEET
+  BOOKING_SHEET:  'จองห้องประชุม',   // ← APP_CONFIG.BOOKING_SHEET
+  SHEET_URL:      'https://docs.google.com/spreadsheets/d/1rHGjwT6ZBf0qryjXahaw1RUve3ozvbIB89u3gSYzhbU/edit',
+  MINI_APP_ID:    '2010102800-8WvwvjA4', // Developing environment
+};
+
+// ============================================================
+// doGet — อัปเดตสถานะผ่าน LIFF (กดปุ่มใน LINE card)
+// ============================================================
+function doGet(e) {
+  let params = e.parameter || {};
+
+  // LINE Mini App wraps original query string inside liff.state
+  // e.g. liff.state = "/?action=updateStatus&ticket=REP-001&status=..."
+  if (!params.action && params['liff.state']) {
+    try {
+      const liffState = decodeURIComponent(params['liff.state']);
+      const qs = liffState.slice(liffState.indexOf('?') + 1);
+      const parsed = {};
+      qs.split('&').forEach(pair => {
+        const [k, v] = pair.split('=');
+        if (k) parsed[decodeURIComponent(k)] = decodeURIComponent(v || '');
+      });
+      params = Object.assign({}, params, parsed);
+    } catch (_) {}
+  }
+
+  if (params.action === 'updateStatus' && params.ticket && params.status) {
+    const updated = updateRepairStatus(params.ticket, params.status);
+
+    if (updated) {
+      const ticketData = getTicketData(params.ticket);
+      if (ticketData) sendLineFlex(buildStatusUpdateFlex(ticketData));
+    }
+
+    const statusConfig = {
+      'รับเรื่อง':        { label: '🟡 รับเรื่อง',        color: '#d97706', bg: '#fffbeb' },
+      'กำลังดำเนินการ':  { label: '🔵 กำลังดำเนินการ',  color: '#1d4ed8', bg: '#eff6ff' },
+      'เสร็จสิ้น':        { label: '✅ เสร็จสิ้น',        color: '#059669', bg: '#f0fdf4' },
+      'ยกเลิก':           { label: '❌ ยกเลิก',           color: '#dc2626', bg: '#fef2f2' },
+    }[params.status] || { label: params.status, color: '#6b7280', bg: '#f9fafb' };
+
+    const liffScript = CONFIG.MINI_APP_ID
+      ? `<script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+         <script>liff.init({liffId:'${CONFIG.MINI_APP_ID}'}).then(()=>setTimeout(()=>liff.closeWindow(),1200)).catch(()=>{});</script>`
+      : '';
+
+    const html = updated
+      ? `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+         ${liffScript}
+         <style>*{box-sizing:border-box}body{font-family:'Helvetica Neue',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:${statusConfig.bg}}
+         .card{text-align:center;padding:2rem 1.5rem;background:#fff;border-radius:1.25rem;box-shadow:0 8px 24px rgba(0,0,0,.08);max-width:300px;width:90%}
+         .icon{font-size:3.5rem;margin-bottom:.5rem}.ticket{font-size:.8rem;color:#9ca3af;margin-bottom:.75rem}
+         .status{font-size:1.1rem;font-weight:700;color:${statusConfig.color};background:${statusConfig.bg};border:2px solid ${statusConfig.color}33;border-radius:.75rem;padding:.5rem 1rem;display:inline-block}
+         .hint{margin-top:1.25rem;font-size:.72rem;color:#9ca3af}</style></head>
+         <body><div class="card">
+         <div class="icon">✅</div>
+         <div class="ticket">${params.ticket}</div>
+         <div class="status">${statusConfig.label}</div>
+         <p class="hint">${CONFIG.MINI_APP_ID ? 'กำลังปิดหน้าต่าง...' : 'ปิดหน้าต่างนี้ได้เลย'}</p>
+         </div></body></html>`
+      : `<!doctype html><html><head><meta charset="utf-8">${liffScript}</head>
+         <body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#fef2f2">
+         <div style="text-align:center;padding:2rem;background:#fff;border-radius:1rem;box-shadow:0 4px 12px rgba(0,0,0,.1)">
+         <div style="font-size:2.5rem">❌</div><p style="color:#dc2626;font-weight:600">ไม่พบ Ticket</p>
+         <p style="color:#6b7280;font-size:.85rem">${params.ticket}</p></div></body></html>`;
+
+    return HtmlService.createHtmlOutput(html);
+  }
+
+  return HtmlService.createHtmlOutput('<p>AV Web App — GAS Backend</p>');
+}
+
+// ============================================================
+// HANDLE POST REQUESTS (repair, booking, LINE webhook)
+// ============================================================
+function doPost(e) {
+  let result;
+
+  try {
+    const body = JSON.parse(e.postData.contents);
+
+    if (body.events) {
+      handleLineWebhook(body.events);
+      return ContentService.createTextOutput('OK').setMimeType(ContentService.MimeType.TEXT);
+    }
+
+    if (body.type === 'repair') {
+      result = handleRepair(body);
+    } else if (body.type === 'booking') {
+      result = handleBooking(body);
+    } else {
+      result = { success: false, error: 'Unknown type' };
+    }
+  } catch (err) {
+    result = { success: false, error: err.message };
+  }
+
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// ============================================================
+// LINE WEBHOOK — จัดการ postback (อัปเดตสถานะ) และ log event
+// ============================================================
+function handleLineWebhook(events) {
+  for (const ev of events) {
+    if (ev.type === 'postback') {
+      handlePostback(ev);
+    }
+  }
+}
+
+function handlePostback(ev) {
+  const params = Object.fromEntries(ev.postback.data.split('&').map(p => p.split('=')));
+  if (params.action !== 'updateStatus') return;
+
+  const { ticket, status } = params;
+  const updated = updateRepairStatus(ticket, status);
+
+  const statusLabel = {
+    'รับเรื่อง':       '🟡 รับเรื่อง',
+    'กำลังดำเนินการ': '🔵 กำลังดำเนินการ',
+    'เสร็จสิ้น':       '✅ เสร็จสิ้น',
+    'ยกเลิก':          '❌ ยกเลิก',
+  }[status] || status;
+
+  const msg = updated
+    ? `อัปเดตสถานะ ${ticket} เป็น ${statusLabel} แล้ว`
+    : `❌ ไม่พบ Ticket ${ticket}`;
+
+  replyLineMessage(ev.replyToken, msg);
+}
+
+function updateRepairStatus(ticket, newStatus) {
+  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(CONFIG.REPAIR_SHEET);
+  if (!sheet) return false;
+
+  const values = sheet.getDataRange().getValues();
+  for (let i = 1; i < values.length; i++) {
+    if (values[i][0] === ticket) {
+      sheet.getRange(i + 1, 8).setValue(newStatus); // col H = สถานะ
+      return true;
+    }
+  }
+  return false;
+}
+
+function replyLineMessage(replyToken, text) {
+  const options = {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { Authorization: `Bearer ${CONFIG.LINE_TOKEN}` },
+    payload: JSON.stringify({ replyToken, messages: [{ type: 'text', text }] }),
+    muteHttpExceptions: true,
+  };
+  try {
+    UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', options);
+  } catch (err) {
+    Logger.log('Reply error: ' + err.message);
+  }
+}
+
+// ============================================================
+// REPAIR HANDLER
+// ============================================================
+function handleRepair(data) {
+  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  let sheet = ss.getSheetByName(CONFIG.REPAIR_SHEET);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG.REPAIR_SHEET);
+    sheet.appendRow(['เลขที่', 'วันที่แจ้ง', 'ชื่อผู้แจ้ง', 'อุปกรณ์', 'สถานที่', 'อาการ', 'รูปภาพ', 'สถานะ']);
+    sheet.getRange(1, 1, 1, 8).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
+    sheet.setFrozenRows(1);
+  }
+
+  const lastRow = sheet.getLastRow();
+  const seq = lastRow;
+  const year = new Date().getFullYear();
+  const ticket = `REP-${year}-${String(seq).padStart(3, '0')}`;
+
+  const now = new Date();
+  const dateStr = Utilities.formatDate(now, 'Asia/Bangkok', 'dd/MM/yyyy HH:mm');
+
+  let imageUrl = '';
+  if (data.imageBase64) {
+    imageUrl = saveImageToDrive(data.imageBase64, ticket);
+  }
+
+  sheet.appendRow([
+    ticket,              // A เลขที่
+    dateStr,             // B วันที่แจ้ง
+    data.name,           // C ชื่อผู้แจ้ง
+    data.equipment,      // D อุปกรณ์
+    data.location || '', // E สถานที่
+    data.description,    // F อาการ
+    imageUrl,            // G รูปภาพ
+    'รับเรื่อง',          // H สถานะ
+  ]);
+
+  sendLineFlex(buildRepairFlex(data, ticket, dateStr, imageUrl));
+
+  return { success: true, ticket };
+}
+
+// ============================================================
+// BOOKING HANDLER
+// ============================================================
+function handleBooking(data) {
+  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  let sheet = ss.getSheetByName(CONFIG.BOOKING_SHEET);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG.BOOKING_SHEET);
+    sheet.appendRow(['เลขที่', 'วันที่จอง', 'ห้อง', 'วันที่ใช้ห้อง', 'เวลา', 'ชื่อผู้จอง', 'สถานะ']);
+    sheet.getRange(1, 1, 1, 7).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
+    sheet.setFrozenRows(1);
+  }
+
+  const conflict = checkBookingConflict(sheet, data.room, data.date, data.startTime, data.endTime);
+  if (conflict) {
+    return { success: false, error: `ห้องนี้ถูกจองในช่วงเวลาดังกล่าวแล้ว (${conflict})` };
+  }
+
+  const lastRow = sheet.getLastRow();
+  const seq = lastRow;
+  const year = new Date().getFullYear();
+  const ticket = `BK-${year}-${String(seq).padStart(3, '0')}`;
+
+  const now = new Date();
+  const createdAt = Utilities.formatDate(now, 'Asia/Bangkok', 'dd/MM/yyyy HH:mm');
+
+  sheet.appendRow([
+    ticket,                                   // A เลขที่
+    createdAt,                                // B วันที่จอง
+    data.room,                                // C ห้อง
+    data.date,                                // D วันที่ใช้ห้อง
+    `${data.startTime}–${data.endTime}`,      // E เวลา
+    data.name,                                // F ชื่อผู้จอง
+    'รับเรื่อง',                               // G สถานะ
+  ]);
+
+  const newRow = sheet.getLastRow();
+  // sync sheetColor กับ rooms.js → sheetColor ของแต่ละห้อง
+  const roomColors = {
+    'ห้องประชุม A':       '#dbeafe',
+    'ห้องประชุม B':       '#d1fae5',
+    'ห้องประชุม C (ใหญ่)':'#ede9fe',
+    'ห้องอบรม':           '#ffedd5',
+  };
+  if (roomColors[data.room]) sheet.getRange(newRow, 3).setBackground(roomColors[data.room]); // col C = ห้อง
+
+  const dateParts = data.date.split('-');
+  const thYear = parseInt(dateParts[0]) + 543;
+  const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const dateDisplay = `${dateParts[2]} ${months[parseInt(dateParts[1])-1]} ${thYear}`;
+
+  sendLineFlex(buildBookingFlex(data, ticket, createdAt, dateDisplay));
+
+  return { success: true, ticket };
+}
+
+// ============================================================
+// CHECK BOOKING CONFLICT
+// ============================================================
+function checkBookingConflict(sheet, room, date, startTime, endTime) {
+  if (sheet.getLastRow() <= 1) return null;
+
+  // cols: A=เลขที่, B=วันที่จอง, C=ห้อง, D=วันที่ใช้ห้อง, E=เวลา(start–end), F=ชื่อผู้จอง, G=สถานะ
+  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 7).getValues();
+  for (const row of data) {
+    const [ticket, , rowRoom, rowDate, rowTime, , rowStatus] = row;
+    if (rowStatus === 'ยกเลิก' || rowStatus === 'เสร็จสิ้น') continue;
+    if (rowRoom !== room) continue;
+    if (String(rowDate) !== date) continue;
+    const [rowStart, rowEnd] = String(rowTime).split('–');
+    if (startTime < rowEnd && endTime > rowStart) {
+      return `${rowTime} น. (${ticket})`;
+    }
+  }
+  return null;
+}
+
+// ============================================================
+// SAVE IMAGE TO GOOGLE DRIVE
+// ============================================================
+function saveImageToDrive(base64, ticket) {
+  try {
+    const folder = getOrCreateFolderPath(['ฝ่ายโสต', 'AV_Repair']);
+
+    const blob = Utilities.newBlob(Utilities.base64Decode(base64), 'image/jpeg', `${ticket}.jpg`);
+    const file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+    return `https://lh3.googleusercontent.com/d/${file.getId()}`;
+  } catch (err) {
+    Logger.log('Drive upload error: ' + err.message);
+    return '';
+  }
+}
+
+function getOrCreateFolderPath(pathParts) {
+  let current = DriveApp.getRootFolder();
+  for (const name of pathParts) {
+    const found = current.getFoldersByName(name);
+    current = found.hasNext() ? found.next() : current.createFolder(name);
+  }
+  return current;
+}
+
+// ============================================================
+// FLEX MESSAGE BUILDER — แจ้งซ่อม
+// ============================================================
+function buildRepairFlex(data, ticket, dateStr, imageUrl) {
+  const gasUrl = ScriptApp.getService().getUrl();
+  const makeStatusUri = (status) => {
+    const params = `?action=updateStatus&ticket=${encodeURIComponent(ticket)}&status=${encodeURIComponent(status)}`;
+    return CONFIG.MINI_APP_ID
+      ? `https://miniapp.line.me/${CONFIG.MINI_APP_ID}${params}`
+      : `${gasUrl}${params}`;
+  };
+  const bubble = {
+    type: 'bubble',
+    size: 'mega',
+    header: {
+      type: 'box',
+      layout: 'vertical',
+      backgroundColor: '#1d4ed8',
+      paddingAll: 'xl',
+      contents: [
+        { type: 'text', text: '🔧 แจ้งซ่อมใหม่', color: '#ffffff', size: 'xl', weight: 'bold' },
+        { type: 'text', text: ticket, color: '#bfdbfe', size: 'md', margin: 'sm' },
+        {
+          type: 'box',
+          layout: 'vertical',
+          backgroundColor: '#1e40af',
+          cornerRadius: 'md',
+          paddingAll: 'sm',
+          margin: 'lg',
+          contents: [
+            { type: 'text', text: '🟡 รับเรื่อง', color: '#fde68a', size: 'md', weight: 'bold', align: 'center' },
+          ],
+        },
+      ],
+    },
+    body: {
+      type: 'box',
+      layout: 'vertical',
+      spacing: 'md',
+      paddingAll: 'xl',
+      contents: [
+        ...(imageUrl ? [{
+          type: 'image',
+          url: imageUrl,
+          size: 'full',
+          aspectRatio: '20:13',
+          aspectMode: 'cover',
+          margin: 'none',
+        }, { type: 'separator', margin: 'lg' }] : []),
+        flexRow('👤 ผู้แจ้ง', data.name),
+        { type: 'separator', margin: 'sm' },
+        flexRow('🛠️ อุปกรณ์', data.equipment),
+        { type: 'separator', margin: 'sm' },
+        flexRow('📍 สถานที่', data.location || '-'),
+        { type: 'separator', margin: 'sm' },
+        flexRow('📝 อาการ', data.description),
+        { type: 'separator', margin: 'sm' },
+        flexRow('🕐 เวลา', dateStr),
+      ],
+    },
+    footer: {
+      type: 'box',
+      layout: 'vertical',
+      paddingAll: 'lg',
+      spacing: 'md',
+      contents: [
+        {
+          type: 'box',
+          layout: 'horizontal',
+          spacing: 'md',
+          contents: [
+            {
+              type: 'button',
+              action: { type: 'uri', label: '🔵 กำลังดำเนินการ', uri: makeStatusUri('กำลังดำเนินการ') },
+              style: 'secondary',
+              height: 'md',
+              flex: 1,
+            },
+            {
+              type: 'button',
+              action: { type: 'uri', label: '✅ เสร็จสิ้น', uri: makeStatusUri('เสร็จสิ้น') },
+              style: 'primary',
+              color: '#059669',
+              height: 'md',
+              flex: 1,
+            },
+          ],
+        },
+        {
+          type: 'button',
+          action: { type: 'uri', label: '❌ ยกเลิกการซ่อม', uri: makeStatusUri('ยกเลิก') },
+          style: 'primary',
+          color: '#dc2626',
+          height: 'md',
+        },
+        {
+          type: 'button',
+          action: { type: 'uri', label: '📊 ดูใน Google Sheets', uri: CONFIG.SHEET_URL },
+          style: 'link',
+          height: 'sm',
+        },
+      ],
+    },
+  };
+
+  return { altText: `🔧 แจ้งซ่อมใหม่ ${ticket}`, contents: bubble };
+}
+
+// ============================================================
+// FLEX MESSAGE BUILDER — จองห้องประชุม
+// ============================================================
+function buildBookingFlex(data, ticket, createdAt, dateDisplay) {
+  return {
+    altText: `📅 จองห้องประชุม ${ticket}`,
+    contents: {
+      type: 'bubble',
+      size: 'mega',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: '#065f46',
+        paddingAll: 'xl',
+        contents: [
+          { type: 'text', text: '📅 จองห้องประชุมใหม่', color: '#ffffff', size: 'xl', weight: 'bold' },
+          { type: 'text', text: ticket, color: '#a7f3d0', size: 'md', margin: 'sm' },
+          {
+            type: 'box',
+            layout: 'vertical',
+            backgroundColor: '#064e3b',
+            cornerRadius: 'md',
+            paddingAll: 'sm',
+            margin: 'lg',
+            contents: [
+              { type: 'text', text: '🟡 รับเรื่อง', color: '#fde68a', size: 'md', weight: 'bold', align: 'center' },
+            ],
+          },
+        ],
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        spacing: 'md',
+        paddingAll: 'xl',
+        contents: [
+          {
+            type: 'box',
+            layout: 'vertical',
+            backgroundColor: '#f0fdf4',
+            cornerRadius: 'lg',
+            paddingAll: 'lg',
+            contents: [
+              { type: 'text', text: data.room, color: '#065f46', size: 'xl', weight: 'bold', align: 'center' },
+              { type: 'text', text: dateDisplay, color: '#059669', size: 'md', align: 'center', margin: 'sm' },
+              { type: 'text', text: `🕐 ${data.startTime} – ${data.endTime} น.`, color: '#374151', size: 'md', align: 'center', margin: 'xs' },
+            ],
+          },
+          { type: 'separator', margin: 'md' },
+          flexRow('👤 ผู้จอง', data.name),
+          flexRow('🏫 แผนก', data.department),
+          flexRow('📞 เบอร์', data.phone),
+          flexRow('👥 ผู้เข้าร่วม', `${data.attendees} คน`),
+          { type: 'separator', margin: 'sm' },
+          flexRow('📌 วัตถุประสงค์', data.purpose),
+          ...(data.equipment ? [flexRow('🎛️ อุปกรณ์', data.equipment)] : []),
+          ...(data.note ? [flexRow('💬 หมายเหตุ', data.note)] : []),
+        ],
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        paddingAll: 'lg',
+        contents: [
+          {
+            type: 'button',
+            action: { type: 'uri', label: '📊 ดูในปฏิทิน Google Sheets', uri: CONFIG.SHEET_URL },
+            style: 'primary',
+            color: '#065f46',
+            height: 'md',
+          },
+        ],
+      },
+    },
+  };
+}
+
+// ============================================================
+// FLEX ROW HELPER — label + value คู่แนวนอน
+// ============================================================
+function flexRow(label, value) {
+  return {
+    type: 'box',
+    layout: 'horizontal',
+    paddingTop: 'xs',
+    paddingBottom: 'xs',
+    contents: [
+      {
+        type: 'text',
+        text: label,
+        size: 'md',
+        color: '#6b7280',
+        flex: 4,
+        wrap: false,
+      },
+      {
+        type: 'text',
+        text: String(value),
+        size: 'md',
+        color: '#111827',
+        flex: 6,
+        wrap: true,
+        weight: 'bold',
+      },
+    ],
+  };
+}
+
+// ============================================================
+// GET TICKET DATA — อ่านข้อมูล ticket จาก Sheet
+// ============================================================
+function getTicketData(ticket) {
+  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(CONFIG.REPAIR_SHEET);
+  if (!sheet) return null;
+  const values = sheet.getDataRange().getValues();
+  for (let i = 1; i < values.length; i++) {
+    if (values[i][0] === ticket) {
+      // cols: A=เลขที่(0), B=วันที่(1), C=ชื่อ(2), D=อุปกรณ์(3), E=สถานที่(4), F=อาการ(5), G=รูปภาพ(6), H=สถานะ(7)
+      return {
+        ticket:      values[i][0],
+        name:        values[i][2],
+        equipment:   values[i][3],
+        location:    values[i][4],
+        description: values[i][5],
+        status:      values[i][7],
+      };
+    }
+  }
+  return null;
+}
+
+// ============================================================
+// BUILD STATUS UPDATE FLEX — card แจ้งสถานะหลังกดปุ่ม
+// ============================================================
+function buildStatusUpdateFlex(d) {
+  const cfg = {
+    'รับเรื่อง':       { emoji: '🟡', color: '#d97706', dark: '#92400e' },
+    'กำลังดำเนินการ': { emoji: '🔵', color: '#1d4ed8', dark: '#1e3a8a' },
+    'เสร็จสิ้น':       { emoji: '✅', color: '#059669', dark: '#065f46' },
+    'ยกเลิก':          { emoji: '❌', color: '#dc2626', dark: '#991b1b' },
+  }[d.status] || { emoji: '⚪', color: '#6b7280', dark: '#374151' };
+
+  return {
+    altText: `🔄 ${d.ticket} → ${d.status}`,
+    contents: {
+      type: 'bubble',
+      size: 'mega',
+      header: {
+        type: 'box',
+        layout: 'vertical',
+        backgroundColor: cfg.color,
+        paddingAll: 'xl',
+        contents: [
+          {
+            type: 'text',
+            text: '🔄 อัปเดตสถานะ',
+            color: '#ffffff',
+            size: 'xl',
+            weight: 'bold',
+          },
+          {
+            type: 'text',
+            text: d.ticket,
+            color: '#ffffff',
+            size: 'md',
+            margin: 'sm',
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            backgroundColor: cfg.dark,
+            cornerRadius: 'md',
+            paddingAll: 'md',
+            margin: 'lg',
+            contents: [
+              {
+                type: 'text',
+                text: `${cfg.emoji}  ${d.status}`,
+                color: '#ffffff',
+                size: 'xxl',
+                weight: 'bold',
+                align: 'center',
+              },
+            ],
+          },
+        ],
+      },
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        paddingAll: 'xl',
+        spacing: 'md',
+        contents: [
+          flexRow('👤 ผู้แจ้ง', d.name),
+          { type: 'separator', margin: 'sm' },
+          flexRow('🛠️ อุปกรณ์', d.equipment),
+          { type: 'separator', margin: 'sm' },
+          flexRow('📍 สถานที่', d.location || '-'),
+        ],
+      },
+      footer: {
+        type: 'box',
+        layout: 'vertical',
+        paddingAll: 'lg',
+        contents: [
+          {
+            type: 'button',
+            action: { type: 'uri', label: 'ดูใน Google Sheets', uri: CONFIG.SHEET_URL },
+            style: 'primary',
+            color: cfg.color,
+            height: 'md',
+          },
+        ],
+      },
+    },
+  };
+}
+
+// ============================================================
+// SEND LINE FLEX MESSAGE — broadcast ถึงทุกคนที่เป็นเพื่อนกับ LINE OA
+// ============================================================
+function sendLineFlex(flex) {
+  if (!CONFIG.LINE_TOKEN) {
+    Logger.log('LINE skipped (no token)');
+    return;
+  }
+
+  const options = {
+    method: 'post',
+    contentType: 'application/json',
+    headers: { Authorization: `Bearer ${CONFIG.LINE_TOKEN}` },
+    payload: JSON.stringify({
+      messages: [{
+        type: 'flex',
+        altText: flex.altText,
+        contents: flex.contents,
+      }],
+    }),
+    muteHttpExceptions: true,
+  };
+
+  try {
+    const res = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/broadcast', options);
+    const code = res.getResponseCode();
+    const body = res.getContentText();
+    if (code !== 200) {
+      Logger.log(`LINE API error ${code}: ${body}`);
+    } else {
+      Logger.log('LINE flex sent OK');
+    }
+  } catch (err) {
+    Logger.log('LINE error: ' + err.message);
+  }
+}
+
+// ============================================================
+// TEST DRIVE — Run once to authorize DriveApp permission
+// ============================================================
+function testDriveAccess() {
+  const folders = DriveApp.getFoldersByName('AV_Repairs');
+  const folder = folders.hasNext() ? folders.next() : DriveApp.createFolder('AV_Repairs');
+  const file = folder.createFile('test.txt', 'DriveApp authorized OK', MimeType.PLAIN_TEXT);
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  Logger.log('Drive OK — folder: ' + folder.getName() + ', file: ' + file.getId());
+}
+
+// ============================================================
+// SETUP FUNCTION — Run once to create sheets & initial data
+// ============================================================
+function setupSpreadsheet() {
+  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+
+  let repairSheet = ss.getSheetByName(CONFIG.REPAIR_SHEET);
+  if (!repairSheet) {
+    repairSheet = ss.insertSheet(CONFIG.REPAIR_SHEET);
+    repairSheet.appendRow(['เลขที่', 'วันที่แจ้ง', 'ชื่อผู้แจ้ง', 'อุปกรณ์', 'สถานที่', 'อาการ', 'รูปภาพ', 'สถานะ']);
+    repairSheet.getRange(1, 1, 1, 8).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
+    repairSheet.setFrozenRows(1);
+    Logger.log('Created repair sheet');
+  }
+
+  let bookingSheet = ss.getSheetByName(CONFIG.BOOKING_SHEET);
+  if (!bookingSheet) {
+    bookingSheet = ss.insertSheet(CONFIG.BOOKING_SHEET);
+    bookingSheet.appendRow(['เลขที่', 'วันที่จอง', 'ห้อง', 'วันที่ใช้ห้อง', 'เวลา', 'ชื่อผู้จอง', 'สถานะ']);
+    bookingSheet.getRange(1, 1, 1, 7).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
+    bookingSheet.setFrozenRows(1);
+    Logger.log('Created booking sheet');
+  }
+
+  Logger.log('Setup complete!');
+}
