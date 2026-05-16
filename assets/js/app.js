@@ -135,13 +135,14 @@ async function submitBooking(e) {
   const form = e.target;
   const btn = form.querySelector('button[type="submit"]');
 
+  // --- Sync validations ---
   if (!validatePhone(form.phone.value.trim())) {
     showToast('เบอร์โทรติดต่อไม่ถูกต้อง กรุณากรอกเบอร์ 9-10 หลัก', 'error');
     return;
   }
 
-  const startTime = `${form.startHour.value}:${form.startMin.value}`;
-  const endTime   = `${form.endHour.value}:${form.endMin.value}`;
+  const startTime  = `${form.startHour.value}:${form.startMin.value}`;
+  const endTime    = `${form.endHour.value}:${form.endMin.value}`;
   if (startTime >= endTime) {
     showToast('เวลาสิ้นสุดต้องมากกว่าเวลาเริ่มต้น', 'error');
     return;
@@ -150,9 +151,19 @@ async function submitBooking(e) {
   const selectedRoom = form.room.value;
   const selectedDate = `${form.bookingYear.value}-${form.bookingMonth.value}-${form.bookingDay.value}`;
 
-  // Fresh conflict check จาก Sheet โดยตรง (authoritative)
-  if (_cfg.GOOGLE_API_KEY !== 'YOUR_GOOGLE_API_KEY') {
-    try {
+  const bookingDate = new Date(selectedDate + 'T00:00:00');
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  if (bookingDate < today) {
+    showToast('ไม่สามารถจองย้อนหลังได้', 'error');
+    return;
+  }
+
+  // --- Lock button before async work ---
+  setLoading(btn, true, 'กำลังตรวจสอบ...');
+
+  try {
+    // Fresh conflict check จาก Sheet โดยตรง
+    if (_cfg.GOOGLE_API_KEY !== 'YOUR_GOOGLE_API_KEY') {
       const rows = await fetchSheetData(_cfg.BOOKING_SHEET, 'A:M');
       const existing = rows.slice(1)
         .map(r => parseBookingRow(r))
@@ -161,28 +172,23 @@ async function submitBooking(e) {
       if (fc) {
         showToast(`ห้องนี้ถูกจองแล้วในช่วง ${fc.startTime}–${fc.endTime} น. โดย ${fc.name}`, 'error');
         renderSlotsPanel(document.getElementById('bookedSlotsPanel'), existing);
+        setLoading(btn, false, '<i class="fa-solid fa-calendar-check mr-2"></i>ยืนยันการจอง');
         return;
       }
-    } catch { /* fall through to GAS check */ }
-  } else {
-    // Demo mode — check against cache
-    const cached = allBookings.find(b =>
-      b.room === selectedRoom && b.date === selectedDate &&
-      startTime < b.endTime && endTime > b.startTime
-    );
-    if (cached) {
-      showToast(`ห้องนี้ถูกจองแล้วในช่วง ${cached.startTime}–${cached.endTime} น. โดย ${cached.name}`, 'error');
-      return;
+    } else {
+      const cached = allBookings.find(b =>
+        b.room === selectedRoom && b.date === selectedDate &&
+        startTime < b.endTime && endTime > b.startTime
+      );
+      if (cached) {
+        showToast(`ห้องนี้ถูกจองแล้วในช่วง ${cached.startTime}–${cached.endTime} น. โดย ${cached.name}`, 'error');
+        setLoading(btn, false, '<i class="fa-solid fa-calendar-check mr-2"></i>ยืนยันการจอง');
+        return;
+      }
     }
-  }
+  } catch { /* network error — fall through, GAS will re-check */ }
 
-  const dateValue = `${form.bookingYear.value}-${form.bookingMonth.value}-${form.bookingDay.value}`;
-  const bookingDate = new Date(dateValue + 'T00:00:00');
-  const today = new Date(); today.setHours(0,0,0,0);
-  if (bookingDate < today) {
-    showToast('ไม่สามารถจองย้อนหลังได้', 'error');
-    return;
-  }
+  setLoading(btn, true, 'กำลังจอง...');
 
   const otherEquipment = form.equipmentOther?.value.trim();
   const checkedEquipment = [...form.querySelectorAll('input[name="equipment"]:checked')]
@@ -194,8 +200,8 @@ async function submitBooking(e) {
     name: form.name.value.trim(),
     phone: form.phone.value.trim(),
     attendees: form.attendees.value,
-    room: form.room.value,
-    date: dateValue,
+    room: selectedRoom,
+    date: selectedDate,
     startTime,
     endTime,
     purpose: form.purpose.value.trim(),
@@ -203,8 +209,6 @@ async function submitBooking(e) {
     note: form.note.value.trim(),
     timestamp: new Date().toISOString(),
   };
-
-  setLoading(btn, true, 'กำลังจอง...');
 
   try {
     const ticket = await submitToGAS(data);

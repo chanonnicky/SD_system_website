@@ -219,7 +219,7 @@
                 <div class="form-group">
                   <label class="form-label required">วันที่ใช้ห้อง <span class="text-slate-400 font-normal">(วว/ดด/ปปปป ค.ศ.)</span></label>
                   <div class="flex gap-1 items-center flex-wrap">
-                    <select name="bookingDay" id="bookingDay" class="pick-sel pick-sel-sm" required></select>
+                    <select name="bookingDay" id="bookingDay" class="pick-sel pick-sel-sm" onchange="refreshBookedSlots()" required></select>
                     <span class="text-slate-400 font-bold">/</span>
                     <select name="bookingMonth" id="bookingMonth" class="pick-sel pick-sel-lg" onchange="updateDays()" required></select>
                     <span class="text-slate-400 font-bold">/</span>
