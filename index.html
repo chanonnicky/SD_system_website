@@ -210,7 +210,7 @@
                 </div>
                 <div class="form-group sm:col-span-2">
                   <label class="form-label required">ห้องประชุม</label>
-                  <select name="room" id="roomSelect" class="form-input" required>
+                  <select name="room" id="roomSelect" class="form-input" required onchange="updateEquipmentOptions(this.value)">
                     <option value="">-- เลือกห้องประชุม --</option>
                   </select>
                 </div>
@@ -232,13 +232,8 @@
                 </div>
                 <div class="form-group sm:col-span-2">
                   <label class="form-label">อุปกรณ์ที่ต้องการใช้</label>
-                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
-                    <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" name="equipment" value="ไมโครโฟน" class="accent-blue-600" />🎤 ไมโครโฟน</label>
-                    <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" name="equipment" value="ลำโพง / เครื่องเสียง" class="accent-blue-600" />🔊 ลำโพง / เครื่องเสียง</label>
-                    <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" name="equipment" value="โปรเจกเตอร์" class="accent-blue-600" />📽️ โปรเจกเตอร์</label>
-                    <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" name="equipment" value="จอ LED / TV" class="accent-blue-600" />📺 จอ LED / TV</label>
-                    <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" name="equipment" value="กล้องบันทึก / Live" class="accent-blue-600" />📹 กล้องบันทึก / Live</label>
-                    <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" name="equipment" value="ระบบไฟ" class="accent-blue-600" />🔦 ระบบไฟ</label>
+                  <div id="equipmentCheckboxes" class="mt-1">
+                    <p class="text-slate-400 text-sm italic">กรุณาเลือกห้องประชุมก่อน</p>
                   </div>
                 </div>
                 <div class="form-group sm:col-span-2">

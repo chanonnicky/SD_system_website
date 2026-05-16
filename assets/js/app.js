@@ -135,8 +135,10 @@ async function submitBooking(e) {
     return;
   }
 
+  const otherEquipment = form.equipmentOther?.value.trim();
   const checkedEquipment = [...form.querySelectorAll('input[name="equipment"]:checked')]
-    .map(el => el.value).join(', ');
+    .map(el => el.value === 'อื่นๆ' && otherEquipment ? `อื่นๆ (${otherEquipment})` : el.value)
+    .join(', ');
 
   const data = {
     type: 'booking',
@@ -632,11 +634,39 @@ function closeModal(e) {
 // ============================================================
 // HELPERS
 // ============================================================
+function updateEquipmentOptions(roomId) {
+  const container = document.getElementById('equipmentCheckboxes');
+  if (!container) return;
+  const room = ROOMS.find(r => r.id === roomId);
+  if (!room) {
+    container.innerHTML = '<p class="text-slate-400 text-sm italic">กรุณาเลือกห้องประชุมก่อน</p>';
+    return;
+  }
+  const checkboxes = room.features.map(f => `
+    <label class="flex items-center gap-2 text-sm cursor-pointer">
+      <input type="checkbox" name="equipment" value="${f}" class="accent-blue-600" />${f}
+    </label>`).join('');
+  container.innerHTML = `
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${checkboxes}
+      <label class="flex items-center gap-2 text-sm cursor-pointer">
+        <input type="checkbox" name="equipment" value="อื่นๆ" class="accent-blue-600" onchange="toggleEquipmentOtherBooking(this)" />⚙️ อื่นๆ
+      </label>
+    </div>
+    <input type="text" id="equipmentOtherBooking" name="equipmentOther" class="form-input mt-2 hidden" placeholder="ระบุอุปกรณ์เพิ่มเติม" />`;
+}
+
+function toggleEquipmentOtherBooking(cb) {
+  const el = document.getElementById('equipmentOtherBooking');
+  el.classList.toggle('hidden', !cb.checked);
+  el.required = cb.checked;
+}
+
 function selectRoom(roomName) {
   document.querySelectorAll('.room-card').forEach(c => c.classList.remove('selected'));
   event.currentTarget.classList.add('selected');
   document.getElementById('roomSelect').value = roomName;
   document.getElementById('tab-booking').querySelector('[name="room"]').value = roomName;
+  updateEquipmentOptions(roomName);
 }
 
 function clearRoomSelection() {
