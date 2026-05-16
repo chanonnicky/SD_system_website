@@ -445,6 +445,14 @@ function buildRepairFlex(data, ticket, dateStr, imageUrl) {
 // FLEX MESSAGE BUILDER — จองห้องประชุม
 // ============================================================
 function buildBookingFlex(data, ticket, createdAt, dateDisplay) {
+  const gasUrl = ScriptApp.getService().getUrl();
+  const makeStatusUri = (status) => {
+    const params = `?action=updateStatus&ticket=${encodeURIComponent(ticket)}&status=${encodeURIComponent(status)}`;
+    return CONFIG.MINI_APP_ID
+      ? `https://miniapp.line.me/${CONFIG.MINI_APP_ID}${params}`
+      : `${gasUrl}${params}`;
+  };
+
   return {
     altText: `📅 จองห้องประชุม ${ticket}`,
     contents: {
@@ -453,12 +461,12 @@ function buildBookingFlex(data, ticket, createdAt, dateDisplay) {
       header: {
         type: 'box',
         layout: 'vertical',
-        backgroundColor: '#065f46',
+        backgroundColor: '#1d4ed8',
         paddingAll: 'xl',
         contents: [
           { type: 'text', text: '📅 จองห้องประชุมใหม่', color: '#ffffff', size: 'xl', weight: 'bold' },
-          { type: 'text', text: ticket, color: '#a7f3d0', size: 'md', margin: 'sm' },
-          { type: 'box', layout: 'vertical', backgroundColor: '#064e3b', cornerRadius: 'md', paddingAll: 'sm', margin: 'lg',
+          { type: 'text', text: ticket, color: '#bfdbfe', size: 'md', margin: 'sm' },
+          { type: 'box', layout: 'vertical', backgroundColor: '#1e40af', cornerRadius: 'md', paddingAll: 'sm', margin: 'lg',
             contents: [{ type: 'text', text: '🟡 รับเรื่อง', color: '#fde68a', size: 'md', weight: 'bold', align: 'center' }] },
         ],
       },
@@ -468,10 +476,10 @@ function buildBookingFlex(data, ticket, createdAt, dateDisplay) {
         spacing: 'md',
         paddingAll: 'xl',
         contents: [
-          { type: 'box', layout: 'vertical', backgroundColor: '#f0fdf4', cornerRadius: 'lg', paddingAll: 'lg',
+          { type: 'box', layout: 'vertical', backgroundColor: '#eff6ff', cornerRadius: 'lg', paddingAll: 'lg',
             contents: [
-              { type: 'text', text: data.room, color: '#065f46', size: 'xl', weight: 'bold', align: 'center' },
-              { type: 'text', text: dateDisplay, color: '#059669', size: 'md', align: 'center', margin: 'sm' },
+              { type: 'text', text: data.room, color: '#1e3a8a', size: 'xl', weight: 'bold', align: 'center' },
+              { type: 'text', text: dateDisplay, color: '#1d4ed8', size: 'md', align: 'center', margin: 'sm' },
               { type: 'text', text: `🕐 ${data.startTime} – ${data.endTime} น.`, color: '#374151', size: 'md', align: 'center', margin: 'xs' },
             ],
           },
@@ -489,8 +497,14 @@ function buildBookingFlex(data, ticket, createdAt, dateDisplay) {
         type: 'box',
         layout: 'vertical',
         paddingAll: 'lg',
+        spacing: 'md',
         contents: [
-          { type: 'button', action: { type: 'uri', label: '📊 ดูในปฏิทิน Google Sheets', uri: CONFIG.SHEET_URL }, style: 'primary', color: '#065f46', height: 'md' },
+          { type: 'box', layout: 'horizontal', spacing: 'md', contents: [
+            { type: 'button', action: { type: 'uri', label: '🔵 กำลังดำเนินการ', uri: makeStatusUri('กำลังดำเนินการ') }, style: 'secondary', height: 'md', flex: 1 },
+            { type: 'button', action: { type: 'uri', label: '✅ เสร็จสิ้น',       uri: makeStatusUri('เสร็จสิ้น')      }, style: 'primary', color: '#059669', height: 'md', flex: 1 },
+          ]},
+          { type: 'button', action: { type: 'uri', label: '❌ ยกเลิกการจอง', uri: makeStatusUri('ยกเลิก') }, style: 'primary', color: '#dc2626', height: 'md' },
+          { type: 'button', action: { type: 'uri', label: '📊 ดูใน Google Sheets', uri: CONFIG.SHEET_URL }, style: 'link', height: 'sm' },
         ],
       },
     },
