@@ -1,7 +1,7 @@
 // ============================================================
 // CONFIG — โหลดจาก assets/js/config.js (fallback demo mode ถ้าไม่มีไฟล์)
 // ============================================================
-const _cfg = (typeof APP_CONFIG !== 'undefined') ? APP_CONFIG : {
+const _cfg = window.APP_CONFIG || {
   GAS_URL:        'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL',
   SPREADSHEET_ID: 'YOUR_SPREADSHEET_ID',
   GOOGLE_API_KEY: 'YOUR_GOOGLE_API_KEY',

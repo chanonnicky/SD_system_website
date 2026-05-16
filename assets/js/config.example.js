@@ -2,7 +2,7 @@
 // CONFIG EXAMPLE — template สำหรับ commit ขึ้น Git
 // คัดลอกไฟล์นี้ → ตั้งชื่อว่า config.js → ใส่ค่าจริง
 // ============================================================
-const APP_CONFIG = {
+window.APP_CONFIG = {
 
   // 1. Google Apps Script Web App URL
   GAS_URL: '',
