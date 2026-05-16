@@ -80,10 +80,21 @@ function doGet(e) {
       );
     }
     const updated = updateRepairStatus(params.ticket, params.status);
+    Logger.log('updated=' + updated + ' ticket=' + params.ticket + ' status=' + params.status);
 
     if (updated) {
       const ticketData = getTicketData(params.ticket);
-      if (ticketData) sendLineFlex(buildStatusUpdateFlex(ticketData));
+      Logger.log('ticketData=' + JSON.stringify(ticketData));
+      if (ticketData) {
+        try {
+          sendLineFlex(buildStatusUpdateFlex(ticketData));
+          Logger.log('sendLineFlex called OK');
+        } catch (flexErr) {
+          Logger.log('buildStatusUpdateFlex error: ' + flexErr.message);
+        }
+      } else {
+        Logger.log('getTicketData returned null — LINE not sent');
+      }
     }
 
     const statusConfig = {
