@@ -228,7 +228,7 @@ async function submitBooking(e) {
       'จองห้องสำเร็จ!',
       `ห้อง "${data.room}" วันที่ ${formatDateTH(data.date)} เวลา ${data.startTime}–${data.endTime} น.`,
       ticket,
-      'ทีมงานจะยืนยันการจองผ่าน LINE Official Account'
+      'กรุณาบันทึกเลขที่ Ticket ไว้ติดตามสถานะ ทีมงานจะติดต่อกลับภายใน 24 ชั่วโมง'
     );
   } catch (err) {
     const msg = err.message && err.message !== 'Unknown error'

@@ -38,6 +38,9 @@ const CONFIG = {
   NOTIFY_USER_IDS:  _props.NOTIFY_USER_IDS  || '',
 };
 
+// status ที่ถือว่า "ค้างอยู่" — ใช้กับระบบค้นหางาน
+const PENDING_STATUSES = ['รับเรื่อง', 'รอดำเนินการ', 'กำลังดำเนินการ'];
+
 // ============================================================
 // แจ้งซ่อม — Column layout (A:I)
 // A=เลขที่  B=วันที่แจ้ง  C=ชื่อผู้แจ้ง  D=เบอร์โทร
@@ -191,10 +194,44 @@ function handleLineWebhook(events) {
 }
 
 function handleTextMessage(ev) {
-  const text = (ev.message.text || '').trim();
+  const text   = (ev.message.text || '').trim();
   const userId = ev.source.userId;
+
   if (text === '/myid') {
     replyLineMessage(ev.replyToken, `🪪 LINE User ID ของคุณ:\n${userId}\n\nคัดลอกไปใส่ใน Script Properties → NOTIFY_USER_IDS`);
+    return;
+  }
+  if (text === '/งาน' || text === 'งาน') {
+    replyPendingTasks(ev.replyToken, 'all');
+    return;
+  }
+  if (text === '/ซ่อม' || text === 'ซ่อม') {
+    replyPendingTasks(ev.replyToken, 'repair');
+    return;
+  }
+  if (text === '/จอง' || text === 'จอง') {
+    replyPendingTasks(ev.replyToken, 'booking');
+    return;
+  }
+  if (text === '/quota' || text === 'quota') {
+    replyLineQuota(ev.replyToken);
+    return;
+  }
+  if (text === '/sheet' || text === 'sheet') {
+    replySheetLink(ev.replyToken);
+    return;
+  }
+  if (text === '/ช่วย' || text === '/help') {
+    replyLineMessage(ev.replyToken,
+      '📌 คำสั่งที่ใช้ได้:\n\n' +
+      '/งาน — ดูงานทั้งหมดที่ค้างอยู่\n' +
+      '/ซ่อม — ดูงานซ่อมที่ค้างอยู่\n' +
+      '/จอง — ดูงานจองที่ค้างอยู่\n' +
+      '/quota — ตรวจสอบ quota การส่ง LINE\n' +
+      '/sheet — เปิด Google Sheets\n' +
+      '/myid — ดู LINE User ID ของคุณ'
+    );
+    return;
   }
 }
 
@@ -260,6 +297,202 @@ function handleUpdateStatus(data) {
     }
   }
   return { success: false, error: `ไม่พบ Ticket ${ticket}` };
+}
+
+// ============================================================
+// PENDING TASKS — Reply API (ฟรี ไม่นับ quota)
+// คำสั่ง: /งาน  /ซ่อม  /จอง
+// ============================================================
+function getPendingRepairs() {
+  const ss    = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(CONFIG.REPAIR_SHEET);
+  if (!sheet || sheet.getLastRow() <= 1) return [];
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 9).getValues()
+    .filter(r => PENDING_STATUSES.includes(String(r[8])))
+    .map(r => ({
+      ticket:      String(r[0]),
+      name:        String(r[2]),
+      phone:       String(r[3]),
+      equipment:   String(r[4]),
+      location:    String(r[5]),
+      description: String(r[6]),
+      status:      String(r[8]),
+    }));
+}
+
+function getPendingBookings() {
+  const ss    = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(CONFIG.BOOKING_SHEET);
+  if (!sheet || sheet.getLastRow() <= 1) return [];
+  const tz = Session.getScriptTimeZone();
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 13).getValues()
+    .filter(r => PENDING_STATUSES.includes(String(r[12])))
+    .map(r => ({
+      ticket:    String(r[0]),
+      room:      String(r[2]),
+      date:      r[3] instanceof Date ? Utilities.formatDate(r[3], tz, 'yyyy-MM-dd') : String(r[3]).slice(0, 10),
+      startTime: normalizeTimeStr(r[4]),
+      endTime:   normalizeTimeStr(r[5]),
+      name:      String(r[6]),
+      phone:     String(r[7]),
+      attendees: String(r[8]),
+      purpose:   String(r[9]),
+      status:    String(r[12]),
+    }));
+}
+
+function pendingStatusCfg(status) {
+  return {
+    'รับเรื่อง':       { emoji: '🟡', color: '#d97706' },
+    'รอดำเนินการ':    { emoji: '🟠', color: '#ea580c' },
+    'กำลังดำเนินการ': { emoji: '🔵', color: '#1d4ed8' },
+  }[status] || { emoji: '⚪', color: '#6b7280' };
+}
+
+function makeStatusUriFor(ticket) {
+  const gasUrl = ScriptApp.getService().getUrl();
+  return function(status) {
+    const secret = CONFIG.WEBHOOK_SECRET ? `&secret=${encodeURIComponent(CONFIG.WEBHOOK_SECRET)}` : '';
+    const params = `?action=updateStatus&ticket=${encodeURIComponent(ticket)}&status=${encodeURIComponent(status)}${secret}`;
+    return CONFIG.MINI_APP_ID
+      ? `https://miniapp.line.me/${CONFIG.MINI_APP_ID}${params}`
+      : `${gasUrl}${params}`;
+  };
+}
+
+function buildPendingRepairBubble(t) {
+  const cfg = pendingStatusCfg(t.status);
+  const uri = makeStatusUriFor(t.ticket);
+  return {
+    type: 'bubble', size: 'mega',
+    header: {
+      type: 'box', layout: 'vertical', backgroundColor: cfg.color, paddingAll: 'lg',
+      contents: [
+        { type: 'text', text: '🔧 ' + t.ticket, color: '#ffffff', size: 'lg', weight: 'bold' },
+        { type: 'text', text: cfg.emoji + ' ' + t.status, color: '#ffffff', size: 'sm', margin: 'xs' },
+      ],
+    },
+    body: {
+      type: 'box', layout: 'vertical', spacing: 'sm', paddingAll: 'lg',
+      contents: [
+        flexRow('👤 ผู้แจ้ง',  t.name        || '-'),
+        { type: 'separator', margin: 'sm' },
+        flexRow('🛠️ อุปกรณ์', t.equipment   || '-'),
+        { type: 'separator', margin: 'sm' },
+        flexRow('📍 สถานที่',  t.location    || '-'),
+        { type: 'separator', margin: 'sm' },
+        flexRow('📝 อาการ',    t.description || '-'),
+      ],
+    },
+    footer: {
+      type: 'box', layout: 'vertical', spacing: 'sm', paddingAll: 'md',
+      contents: [
+        { type: 'box', layout: 'horizontal', spacing: 'sm', contents: [
+          { type: 'button', action: { type: 'uri', label: '🔵 ดำเนินการ', uri: uri('กำลังดำเนินการ') }, style: 'secondary', height: 'sm', flex: 1 },
+          { type: 'button', action: { type: 'uri', label: '✅ เสร็จสิ้น',  uri: uri('เสร็จสิ้น')      }, style: 'primary', color: '#059669', height: 'sm', flex: 1 },
+        ]},
+        { type: 'button', action: { type: 'uri', label: '❌ ยกเลิก', uri: uri('ยกเลิก') }, style: 'primary', color: '#dc2626', height: 'sm' },
+      ],
+    },
+  };
+}
+
+function buildPendingBookingBubble(t) {
+  const cfg    = pendingStatusCfg(t.status);
+  const uri    = makeStatusUriFor(t.ticket);
+  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const dp     = (t.date || '').split('-');
+  const dateTh = dp.length === 3 ? `${parseInt(dp[2])} ${months[parseInt(dp[1]) - 1]} ${dp[0]}` : t.date;
+  return {
+    type: 'bubble', size: 'mega',
+    header: {
+      type: 'box', layout: 'vertical', backgroundColor: cfg.color, paddingAll: 'lg',
+      contents: [
+        { type: 'text', text: '📅 ' + t.ticket, color: '#ffffff', size: 'lg', weight: 'bold' },
+        { type: 'text', text: cfg.emoji + ' ' + t.status, color: '#ffffff', size: 'sm', margin: 'xs' },
+      ],
+    },
+    body: {
+      type: 'box', layout: 'vertical', spacing: 'sm', paddingAll: 'lg',
+      contents: [
+        flexRow('🏢 ห้อง',   t.room    || '-'),
+        { type: 'separator', margin: 'sm' },
+        flexRow('📅 วันที่', dateTh),
+        { type: 'separator', margin: 'sm' },
+        flexRow('🕐 เวลา',   `${t.startTime} – ${t.endTime} น.`),
+        { type: 'separator', margin: 'sm' },
+        flexRow('👤 ผู้จอง', t.name    || '-'),
+        ...(t.purpose ? [{ type: 'separator', margin: 'sm' }, flexRow('📌 วัตถุประสงค์', t.purpose)] : []),
+      ],
+    },
+    footer: {
+      type: 'box', layout: 'vertical', spacing: 'sm', paddingAll: 'md',
+      contents: [
+        { type: 'box', layout: 'horizontal', spacing: 'sm', contents: [
+          { type: 'button', action: { type: 'uri', label: '🔵 ดำเนินการ', uri: uri('กำลังดำเนินการ') }, style: 'secondary', height: 'sm', flex: 1 },
+          { type: 'button', action: { type: 'uri', label: '✅ เสร็จสิ้น',  uri: uri('เสร็จสิ้น')      }, style: 'primary', color: '#059669', height: 'sm', flex: 1 },
+        ]},
+        { type: 'button', action: { type: 'uri', label: '❌ ยกเลิก', uri: uri('ยกเลิก') }, style: 'primary', color: '#dc2626', height: 'sm' },
+      ],
+    },
+  };
+}
+
+function replyPendingTasks(replyToken, mode) {
+  const repairs  = mode !== 'booking' ? getPendingRepairs()  : [];
+  const bookings = mode !== 'repair'  ? getPendingBookings() : [];
+
+  if (repairs.length === 0 && bookings.length === 0) {
+    const label = mode === 'repair' ? 'งานซ่อม' : mode === 'booking' ? 'งานจอง' : 'งาน';
+    replyLineMessage(replyToken, `✅ ไม่มี${label}ที่ค้างอยู่ในขณะนี้`);
+    return;
+  }
+
+  const messages = [];
+
+  // summary text เมื่อแสดงทั้ง 2 ประเภท
+  if (mode === 'all' && repairs.length > 0 && bookings.length > 0) {
+    messages.push({
+      type: 'text',
+      text: `📋 งานค้างอยู่\n🔧 ซ่อม: ${repairs.length} รายการ\n📅 จอง: ${bookings.length} รายการ`,
+    });
+  }
+
+  if (repairs.length > 0) {
+    const bubbles = repairs.slice(0, 12).map(buildPendingRepairBubble);
+    messages.push({
+      type: 'flex',
+      altText: `🔧 งานซ่อมค้างอยู่ ${repairs.length} รายการ`,
+      contents: bubbles.length === 1 ? bubbles[0] : { type: 'carousel', contents: bubbles },
+    });
+  }
+
+  if (bookings.length > 0) {
+    const bubbles = bookings.slice(0, 12).map(buildPendingBookingBubble);
+    messages.push({
+      type: 'flex',
+      altText: `📅 งานจองค้างอยู่ ${bookings.length} รายการ`,
+      contents: bubbles.length === 1 ? bubbles[0] : { type: 'carousel', contents: bubbles },
+    });
+  }
+
+  replyWithMessages(replyToken, messages.slice(0, 5)); // LINE reply รองรับสูงสุด 5 messages
+}
+
+function replyWithMessages(replyToken, messages) {
+  try {
+    const res = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/reply', {
+      method: 'post',
+      contentType: 'application/json',
+      headers: { Authorization: `Bearer ${CONFIG.LINE_TOKEN}` },
+      payload: JSON.stringify({ replyToken, messages }),
+      muteHttpExceptions: true,
+    });
+    const code = res.getResponseCode();
+    if (code !== 200) Logger.log('replyWithMessages error ' + code + ': ' + res.getContentText());
+  } catch (err) {
+    Logger.log('replyWithMessages error: ' + err.message);
+  }
 }
 
 function replyLineMessage(replyToken, text) {
@@ -775,23 +1008,12 @@ function buildStatusUpdateFlex(d) {
 function sendLineFlex(flex) {
   if (!CONFIG.LINE_TOKEN) { Logger.log('LINE skipped (no token)'); return; }
 
-  const userIds = CONFIG.NOTIFY_USER_IDS
-    ? CONFIG.NOTIFY_USER_IDS.split(',').map(s => s.trim()).filter(Boolean)
-    : [];
+  const body = { messages: [{ type: 'flex', altText: flex.altText, contents: flex.contents }] };
 
-  // ใช้ multicast ถ้ากำหนด userId ไว้ → ประหยัด quota กว่า broadcast มาก
-  const endpoint = userIds.length > 0
-    ? 'https://api.line.me/v2/bot/message/multicast'
-    : 'https://api.line.me/v2/bot/message/broadcast';
-
-  const body = userIds.length > 0
-    ? { to: userIds, messages: [{ type: 'flex', altText: flex.altText, contents: flex.contents }] }
-    : { messages: [{ type: 'flex', altText: flex.altText, contents: flex.contents }] };
-
-  Logger.log('sendLineFlex → ' + (userIds.length > 0 ? 'multicast to ' + userIds.length + ' users' : 'broadcast'));
+  Logger.log('sendLineFlex → broadcast');
 
   try {
-    const res = UrlFetchApp.fetch(endpoint, {
+    const res = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/broadcast', {
       method: 'post',
       contentType: 'application/json',
       headers: { Authorization: `Bearer ${CONFIG.LINE_TOKEN}` },
@@ -807,6 +1029,166 @@ function sendLineFlex(flex) {
 }
 
 // ============================================================
+// CHECK LINE QUOTA
+// ============================================================
+function replySheetLink(replyToken) {
+  const base   = `https://docs.google.com/spreadsheets/d/${CONFIG.SPREADSHEET_ID}/edit#gid=`;
+  const ss     = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  const repairGid  = ss.getSheetByName(CONFIG.REPAIR_SHEET)  ? ss.getSheetByName(CONFIG.REPAIR_SHEET).getSheetId()  : 0;
+  const bookingGid = ss.getSheetByName(CONFIG.BOOKING_SHEET) ? ss.getSheetByName(CONFIG.BOOKING_SHEET).getSheetId() : 0;
+
+  const flex = {
+    altText: '📊 เปิด Google Sheets',
+    contents: {
+      type: 'bubble', size: 'mega',
+      header: {
+        type: 'box', layout: 'vertical', backgroundColor: '#1d4ed8', paddingAll: 'lg',
+        contents: [
+          { type: 'text', text: '📊 Google Sheets', color: '#ffffff', size: 'lg', weight: 'bold' },
+          { type: 'text', text: 'ระบบ AV ฝ่ายโสตทัศนูปกรณ์', color: '#bfdbfe', size: 'sm', margin: 'xs' },
+        ],
+      },
+      body: {
+        type: 'box', layout: 'vertical', spacing: 'md', paddingAll: 'xl',
+        contents: [
+          { type: 'text', text: 'เลือกชีทที่ต้องการดู', size: 'sm', color: '#6b7280' },
+        ],
+      },
+      footer: {
+        type: 'box', layout: 'vertical', spacing: 'md', paddingAll: 'lg',
+        contents: [
+          { type: 'button', action: { type: 'uri', label: '🔧 ชีทแจ้งซ่อม',      uri: base + repairGid  }, style: 'primary', color: '#1d4ed8', height: 'md' },
+          { type: 'button', action: { type: 'uri', label: '📅 ชีทจองห้องประชุม', uri: base + bookingGid }, style: 'primary', color: '#059669', height: 'md' },
+          { type: 'button', action: { type: 'uri', label: '📂 เปิดทั้งหมด',       uri: CONFIG.SHEET_URL  }, style: 'secondary', height: 'md' },
+        ],
+      },
+    },
+  };
+
+  replyWithMessages(replyToken, [{ type: 'flex', altText: flex.altText, contents: flex.contents }]);
+}
+
+function replyLineQuota(replyToken) {
+  try {
+    const headers = { Authorization: `Bearer ${CONFIG.LINE_TOKEN}` };
+
+    const [quotaRes, usageRes, botRes] = [
+      'https://api.line.me/v2/bot/message/quota',
+      'https://api.line.me/v2/bot/message/quota/consumption',
+      'https://api.line.me/v2/bot/info',
+    ].map(url => UrlFetchApp.fetch(url, { method: 'get', headers, muteHttpExceptions: true }));
+
+    const quota    = JSON.parse(quotaRes.getContentText());
+    const usage    = JSON.parse(usageRes.getContentText());
+    const botInfo  = JSON.parse(botRes.getContentText());
+
+    const total     = quota.type === 'limited' ? quota.value : null;
+    const used      = usage.totalUsage ?? 0;
+    const left      = total !== null ? total - used : null;
+    const followers = Math.max(botInfo.followersCount ?? 0, 20);
+    const casesLeft = left !== null ? Math.floor(left / followers) : null;
+    const pct       = total ? Math.round((used / total) * 100) : 0;
+
+    const resetDate = new Date();
+    resetDate.setMonth(resetDate.getMonth() + 1, 1);
+    const resetStr  = Utilities.formatDate(resetDate, 'Asia/Bangkok', 'dd/MM/yyyy');
+
+    const caseColor = casesLeft === null ? '#059669'
+                    : casesLeft <= 5     ? '#dc2626'
+                    : casesLeft <= 15    ? '#d97706'
+                    : '#059669';
+
+    const bodyContents = total !== null
+      ? [
+          // ส่วนสำคัญ — จำนวนเคสที่ส่งได้
+          { type: 'box', layout: 'vertical', backgroundColor: '#f0fdf4', cornerRadius: 'lg', paddingAll: 'lg', margin: 'none',
+            contents: [
+              { type: 'text', text: 'ส่ง Broadcast ได้อีก', size: 'sm', color: '#6b7280', align: 'center' },
+              { type: 'text', text: casesLeft !== null ? `${casesLeft} ครั้ง` : '∞', size: 'xxl', weight: 'bold', color: caseColor, align: 'center', margin: 'sm' },
+              { type: 'text', text: `(${left} msg ÷ ${followers} followers)`, size: 'xs', color: '#9ca3af', align: 'center', margin: 'xs' },
+            ],
+          },
+          { type: 'separator', margin: 'lg' },
+          // รายละเอียด
+          { type: 'box', layout: 'horizontal', margin: 'md', contents: [
+            { type: 'text', text: 'Followers', size: 'sm', color: '#6b7280', flex: 5 },
+            { type: 'text', text: `${followers} คน`, size: 'sm', color: '#111827', flex: 5, weight: 'bold', align: 'end' },
+          ]},
+          { type: 'box', layout: 'horizontal', contents: [
+            { type: 'text', text: 'Quota ใช้ไปแล้ว', size: 'sm', color: '#6b7280', flex: 5 },
+            { type: 'text', text: `${used} / ${total} msg`, size: 'sm', color: '#111827', flex: 5, weight: 'bold', align: 'end' },
+          ]},
+          { type: 'box', layout: 'vertical', margin: 'sm', contents: [
+            { type: 'box', layout: 'vertical', backgroundColor: '#e5e7eb', cornerRadius: 'md', height: '10px', contents: [
+              { type: 'box', layout: 'vertical', backgroundColor: pct >= 90 ? '#dc2626' : pct >= 70 ? '#d97706' : '#059669',
+                cornerRadius: 'md', width: `${pct}%`, height: '10px', contents: [] },
+            ]},
+          ]},
+          { type: 'text', text: `${pct}%`, size: 'xs', color: '#9ca3af', margin: 'xs', align: 'end' },
+          { type: 'separator', margin: 'sm' },
+          { type: 'box', layout: 'horizontal', margin: 'sm', contents: [
+            { type: 'text', text: 'Reset วันที่', size: 'sm', color: '#6b7280', flex: 5 },
+            { type: 'text', text: resetStr, size: 'sm', color: '#111827', flex: 5, weight: 'bold', align: 'end' },
+          ]},
+        ]
+      : [
+          { type: 'text', text: '∞ Unlimited Plan', size: 'xl', weight: 'bold', color: '#059669', align: 'center' },
+        ];
+
+    const flex = {
+      altText: `📊 Broadcast ได้อีก ${casesLeft !== null ? casesLeft + ' ครั้ง' : '∞'}`,
+      contents: {
+        type: 'bubble', size: 'mega',
+        header: {
+          type: 'box', layout: 'vertical', backgroundColor: '#1d4ed8', paddingAll: 'lg',
+          contents: [
+            { type: 'text', text: '📊 LINE Broadcast Quota', color: '#ffffff', size: 'lg', weight: 'bold' },
+            { type: 'text', text: quota.type === 'limited' ? 'Free Plan' : 'Paid Plan', color: '#bfdbfe', size: 'sm', margin: 'xs' },
+          ],
+        },
+        body: {
+          type: 'box', layout: 'vertical', spacing: 'sm', paddingAll: 'xl',
+          contents: bodyContents,
+        },
+      },
+    };
+
+    replyWithMessages(replyToken, [{ type: 'flex', altText: flex.altText, contents: flex.contents }]);
+  } catch (err) {
+    replyLineMessage(replyToken, '❌ ไม่สามารถดึงข้อมูล quota ได้: ' + err.message);
+  }
+}
+
+function buildProgressBar(pct) {
+  const filled = Math.round(pct / 10);
+  return '█'.repeat(filled) + '░'.repeat(10 - filled);
+}
+
+function checkLineQuota() {
+  const headers = { Authorization: `Bearer ${CONFIG.LINE_TOKEN}` };
+
+  const quotaRes = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/quota', {
+    method: 'get', headers, muteHttpExceptions: true,
+  });
+  const usageRes = UrlFetchApp.fetch('https://api.line.me/v2/bot/message/quota/consumption', {
+    method: 'get', headers, muteHttpExceptions: true,
+  });
+
+  const quota = JSON.parse(quotaRes.getContentText());
+  const usage = JSON.parse(usageRes.getContentText());
+
+  const total = quota.type === 'limited' ? quota.value : '∞ (unlimited)';
+  const used  = usage.totalUsage ?? 0;
+  const left  = quota.type === 'limited' ? quota.value - used : '∞';
+
+  Logger.log('====== LINE Broadcast Quota ======');
+  Logger.log(`ประเภท Plan : ${quota.type}`);
+  Logger.log(`Quota/เดือน : ${total} messages`);
+  Logger.log(`ใช้ไปแล้ว   : ${used} messages`);
+  Logger.log(`คงเหลือ     : ${left} messages`);
+  Logger.log('==================================');
+}
+
 // TEST LINE CONNECTION — Run this manually from GAS Editor
 // ============================================================
 function testLineConnection() {
