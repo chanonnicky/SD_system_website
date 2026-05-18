@@ -248,6 +248,7 @@ select.form-input { cursor: pointer; }
 .room-albera     { background: #a7f3d0; color: #064e3b; border-left-color: #059669; } /* Teal   */
 .room-regaldon   { background: #ddd6fe; color: #4c1d95; border-left-color: #7c3aed; } /* Violet */
 .room-auditorium { background: #fecaca; color: #7f1d1d; border-left-color: #ef4444; } /* Red    */
+.room-pending    { background: #f3f4f6; color: #6b7280; border-left-color: #9ca3af; border-style: dashed; opacity: 0.85; } /* Grey — รับเรื่อง */
 
 /* === TOAST === */
 .toast-item {

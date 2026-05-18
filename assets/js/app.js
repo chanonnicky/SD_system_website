@@ -658,11 +658,14 @@ async function renderCalendar() {
     cell.appendChild(dayNum);
 
     if (isCurrent && dateStr) {
-      const dayBookings = allBookings.filter(b => b.date === dateStr && (activeRoomFilter === 'all' || b.room === activeRoomFilter));
+      const dayBookings = allBookings.filter(b => b.date === dateStr && b.status !== 'ยกเลิก' && (activeRoomFilter === 'all' || b.room === activeRoomFilter));
       dayBookings.slice(0, 3).forEach(b => {
+        const isPending = b.status === 'รับเรื่อง';
         const ev = document.createElement('div');
-        ev.className = `booking-event ${getRoomClass(b.room)}`;
-        ev.textContent = `${b.startTime} ${b.room.replace('ห้องประชุม ', 'ห้อง ')}`;
+        ev.className = `booking-event ${isPending ? 'room-pending' : getRoomClass(b.room)}`;
+        ev.textContent = isPending
+          ? `${b.startTime} กำลังจะจอง`
+          : `${b.startTime} ${b.room.replace('ห้องประชุม ', 'ห้อง ')}`;
         ev.onclick = () => showEventDetail(b);
         cell.appendChild(ev);
       });

@@ -88,7 +88,7 @@ function doGet(e) {
     const updated = updateRepairStatus(params.ticket, params.status);
     Logger.log('updated=' + updated + ' ticket=' + params.ticket + ' status=' + params.status);
 
-    if (updated) {
+    if (updated && params.status === 'เสร็จสิ้น') {
       const ticketData = getTicketData(params.ticket);
       Logger.log('ticketData=' + JSON.stringify(ticketData));
       if (ticketData) {
