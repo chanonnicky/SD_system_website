@@ -303,17 +303,23 @@ function updateRepairStatus(ticket, newStatus) {
 }
 
 function handleUpdateStatus(data) {
-  const ticket   = String(data.ticket  || '').trim();
-  const newStatus = String(data.status || '').trim();
-  const allowed  = ['รับเรื่อง', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก'];
+  const ticket    = String(data.ticket  || '').trim();
+  const newStatus = String(data.status  || '').trim();
+  const allowed   = ['รับเรื่อง', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก'];
   if (!ticket || !allowed.includes(newStatus)) {
     return { success: false, error: 'ข้อมูลไม่ถูกต้อง' };
   }
 
+  const admin     = verifyAdmin(data.username);
+  const updatedBy = admin
+    ? admin.name + ' (' + Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yy HH:mm') + ')'
+    : '';
+
   const ss        = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   const isRepair  = ticket.startsWith('REP');
   const sheetName = isRepair ? CONFIG.REPAIR_SHEET : CONFIG.BOOKING_SHEET;
-  const statusCol = isRepair ? 9 : 13; // repair=I(9), booking=M(13)
+  const statusCol    = isRepair ? 9  : 13; // repair=I(9), booking=M(13)
+  const updatedByCol = isRepair ? 10 : 14; // repair=J(10), booking=N(14)
   const sheet     = ss.getSheetByName(sheetName);
   if (!sheet) return { success: false, error: 'ไม่พบ Sheet' };
 
@@ -321,6 +327,7 @@ function handleUpdateStatus(data) {
   for (let i = 1; i < values.length; i++) {
     if (String(values[i][0]) === ticket) {
       sheet.getRange(i + 1, statusCol).setValue(newStatus);
+      if (updatedBy) sheet.getRange(i + 1, updatedByCol).setValue(updatedBy);
       return { success: true };
     }
   }
@@ -335,7 +342,7 @@ function getAllRepairs() {
   const ss    = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   const sheet = ss.getSheetByName(CONFIG.REPAIR_SHEET);
   if (!sheet || sheet.getLastRow() <= 1) return [];
-  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 9).getValues()
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 10).getValues()
     .filter(r => r[0])
     .map(r => ({
       ticket:      String(r[0]),
@@ -346,6 +353,7 @@ function getAllRepairs() {
       description: String(r[6]),
       image:       String(r[7] || ''),
       status:      String(r[8]),
+      updatedBy:   String(r[9] || ''),
     }));
 }
 
@@ -354,7 +362,7 @@ function getAllBookings() {
   const sheet = ss.getSheetByName(CONFIG.BOOKING_SHEET);
   if (!sheet || sheet.getLastRow() <= 1) return [];
   const tz = Session.getScriptTimeZone();
-  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 13).getValues()
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 14).getValues()
     .filter(r => r[0])
     .map(r => ({
       ticket:    String(r[0]),
@@ -367,6 +375,7 @@ function getAllBookings() {
       attendees: String(r[8]),
       purpose:   String(r[9]),
       status:    String(r[12]),
+      updatedBy: String(r[13] || ''),
     }));
 }
 
@@ -379,7 +388,7 @@ function getPendingRepairs() {
   const ss    = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   const sheet = ss.getSheetByName(CONFIG.REPAIR_SHEET);
   if (!sheet || sheet.getLastRow() <= 1) return [];
-  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 9).getValues()
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 10).getValues()
     .filter(r => PENDING_STATUSES.includes(String(r[8])))
     .map(r => ({
       ticket:      String(r[0]),
@@ -390,6 +399,7 @@ function getPendingRepairs() {
       description: String(r[6]),
       image:       String(r[7] || ''),
       status:      String(r[8]),
+      updatedBy:   String(r[9] || ''),
     }));
 }
 
@@ -398,7 +408,7 @@ function getPendingBookings() {
   const sheet = ss.getSheetByName(CONFIG.BOOKING_SHEET);
   if (!sheet || sheet.getLastRow() <= 1) return [];
   const tz = Session.getScriptTimeZone();
-  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 13).getValues()
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 14).getValues()
     .filter(r => PENDING_STATUSES.includes(String(r[12])))
     .map(r => ({
       ticket:    String(r[0]),
@@ -411,6 +421,7 @@ function getPendingBookings() {
       attendees: String(r[8]),
       purpose:   String(r[9]),
       status:    String(r[12]),
+      updatedBy: String(r[13] || ''),
     }));
 }
 
