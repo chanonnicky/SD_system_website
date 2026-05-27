@@ -995,7 +995,7 @@
       const res = await fetch(window.APP_CONFIG.GAS_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ type: 'registerFCMToken', token, userAgent: navigator.userAgent }),
+        body: JSON.stringify({ type: 'registerFCMToken', token, userAgent: navigator.userAgent, secret: (window.APP_CONFIG||{}).CLIENT_SECRET||'' }),
       });
       const data = await res.json().catch(() => ({}));
       if (data.success === false) {
@@ -1073,7 +1073,7 @@
         const res = await fetch(window.APP_CONFIG.GAS_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ type: 'registerFCMToken', token, userAgent: navigator.userAgent }),
+          body: JSON.stringify({ type: 'registerFCMToken', token, userAgent: navigator.userAgent, secret: (window.APP_CONFIG||{}).CLIENT_SECRET||'' }),
         });
         const data = await res.json().catch(() => ({}));
         step(data.success !== false ? 'บันทึก token ใน Sheets แล้ว ✅' : `บันทึก token ล้มเหลว: ${data.error}`, data.success !== false);
