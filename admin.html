@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — งานโสตทัศนูปกรณ์ โรงเรียนเซนต์ดอมินิก</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Sarabun', 'sans-serif'] },
+          colors: { primary: { DEFAULT: '#1d4ed8', light: '#3b82f6', dark: '#1e3a8a' } }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800">
+
+  <!-- ===== LOGIN SCREEN ===== -->
+  <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 to-blue-700 p-4">
+    <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full">
+      <div class="text-center mb-6">
+        <img src="assets/img/school_logo.webp" alt="logo" class="h-16 w-16 mx-auto mb-3 rounded-xl object-contain" />
+        <h1 class="text-xl font-bold text-slate-800">Admin Panel</h1>
+        <p class="text-slate-500 text-sm">งานโสตทัศนูปกรณ์ โรงเรียนเซนต์ดอมินิก</p>
+      </div>
+      <div id="loginError" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm text-center"></div>
+      <div class="space-y-3">
+        <div class="form-group">
+          <label class="form-label">ชื่อผู้ใช้</label>
+          <input type="text" id="usernameInput" class="form-input" placeholder="Username"
+            autocomplete="username" onkeydown="if(event.key==='Enter') document.getElementById('passwordInput').focus()" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">รหัสผ่าน</label>
+          <input type="password" id="passwordInput" class="form-input" placeholder="Password"
+            autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()" />
+        </div>
+      </div>
+      <button onclick="doLogin()" id="loginBtn" class="btn-primary w-full mt-4">
+        <i class="fa-solid fa-unlock mr-2"></i>เข้าสู่ระบบ Admin
+      </button>
+      <div class="text-center mt-4">
+        <a href="index.html" class="text-blue-600 text-sm hover:underline">
+          <i class="fa-solid fa-arrow-left mr-1"></i>กลับหน้าหลัก
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== DASHBOARD ===== -->
+  <div id="dashboard" class="hidden">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 text-white shadow-xl sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img src="assets/img/school_logo.webp" alt="logo" class="h-10 w-10 rounded-xl object-contain bg-white p-1" />
+          <div>
+            <h1 class="text-lg font-bold leading-tight">Admin Panel</h1>
+            <p class="text-blue-200 text-xs">สวัสดี, <span id="adminNameDisplay">—</span></p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="loadData()" class="p-2 hover:bg-blue-700 rounded-lg transition-colors" title="รีเฟรช">
+            <i class="fa-solid fa-rotate-right text-white"></i>
+          </button>
+          <a href="index.html" class="p-2 hover:bg-blue-700 rounded-lg transition-colors" title="หน้าหลัก">
+            <i class="fa-solid fa-house text-white"></i>
+          </a>
+          <button onclick="doLogout()" class="px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm transition-colors font-medium">
+            <i class="fa-solid fa-right-from-bracket mr-1"></i>ออก
+          </button>
+        </div>
+      </div>
+      <div class="max-w-7xl mx-auto px-4 pb-0">
+        <nav class="flex gap-1 overflow-x-auto scrollbar-hide" id="adminTabNav">
+          <button onclick="showAdminTab('pending')" class="tab-btn active" data-tab="pending">
+            <i class="fa-solid fa-list-check mr-2"></i>งานค้างอยู่
+          </button>
+          <button onclick="showAdminTab('admins')" class="tab-btn" data-tab="admins">
+            <i class="fa-solid fa-users-gear mr-2"></i>จัดการ Admin
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+
+      <!-- Stats -->
+      <div class="grid grid-cols-3 gap-3 mb-6">
+        <div class="card text-center p-4">
+          <div class="text-3xl font-bold text-orange-600" id="statRepairs">—</div>
+          <div class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-screwdriver-wrench mr-1"></i>ซ่อมค้าง</div>
+        </div>
+        <div class="card text-center p-4">
+          <div class="text-3xl font-bold text-blue-600" id="statBookings">—</div>
+          <div class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-calendar mr-1"></i>จองค้าง</div>
+        </div>
+        <div class="card text-center p-4">
+          <div class="text-3xl font-bold text-green-600" id="statAdmins">—</div>
+          <div class="text-xs text-slate-500 mt-1"><i class="fa-solid fa-user-shield mr-1"></i>ผู้ดูแล</div>
+        </div>
+      </div>
+
+      <!-- ===== TAB: งานค้างอยู่ ===== -->
+      <section id="tab-pending" class="tab-content">
+        <div class="flex flex-wrap gap-2 mb-4">
+          <button onclick="filterPending('all')"     class="room-filter active" data-f="all"><i class="fa-solid fa-layer-group mr-1"></i>ทั้งหมด</button>
+          <button onclick="filterPending('repair')"  class="room-filter" data-f="repair"><i class="fa-solid fa-screwdriver-wrench mr-1"></i>แจ้งซ่อม</button>
+          <button onclick="filterPending('booking')" class="room-filter" data-f="booking"><i class="fa-solid fa-calendar mr-1"></i>จองห้อง</button>
+        </div>
+        <div id="loadingPending" class="text-center py-16 text-slate-400">
+          <i class="fa-solid fa-spinner fa-spin text-4xl mb-3"></i>
+          <p class="text-sm">กำลังโหลดข้อมูล...</p>
+        </div>
+        <div id="pendingList" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+        <div id="emptyPending" class="hidden text-center py-16">
+          <i class="fa-solid fa-circle-check text-green-400 text-5xl mb-4"></i>
+          <p class="text-slate-700 font-semibold text-lg">ไม่มีงานค้างอยู่</p>
+          <p class="text-slate-400 text-sm mt-1">เรียบร้อยทุกอย่าง 🎉</p>
+        </div>
+      </section>
+
+      <!-- ===== TAB: จัดการ Admin ===== -->
+      <section id="tab-admins" class="tab-content hidden">
+        <div class="card mb-6">
+          <h3 class="font-semibold text-slate-700 mb-4">
+            <i class="fa-solid fa-user-plus mr-2 text-blue-600"></i>เพิ่มผู้ดูแลใหม่
+          </h3>
+          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="form-group">
+              <label class="form-label required">ชื่อ-นามสกุล</label>
+              <input type="text" id="newAdminName" class="form-input" placeholder="สมชาย ใจดี" />
+            </div>
+            <div class="form-group">
+              <label class="form-label required">ชื่อผู้ใช้ (username)</label>
+              <input type="text" id="newAdminUsername" class="form-input" placeholder="somchai" autocomplete="off" />
+            </div>
+            <div class="form-group">
+              <label class="form-label required">รหัสผ่าน</label>
+              <input type="password" id="newAdminPassword" class="form-input" placeholder="••••••" autocomplete="new-password" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">บทบาท</label>
+              <input type="text" id="newAdminRole" class="form-input" placeholder="ช่างเทคนิค" />
+            </div>
+          </div>
+          <button onclick="addAdmin()" class="btn-primary mt-3 px-6">
+            <i class="fa-solid fa-plus mr-2"></i>เพิ่มผู้ดูแล
+          </button>
+        </div>
+
+        <div id="loadingAdmins" class="text-center py-10 text-slate-400">
+          <i class="fa-solid fa-spinner fa-spin text-3xl"></i>
+        </div>
+        <div id="adminList" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
+        <div id="emptyAdmins" class="hidden text-center py-10 text-slate-400">
+          <i class="fa-solid fa-users-slash text-4xl mb-3"></i>
+          <p>ยังไม่มีผู้ดูแลในระบบ</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="hidden fixed bottom-6 right-6 z-50 max-w-sm"></div>
+
+  <script src="assets/js/config.js"></script>
+  <script>
+  // ============================================================
+  // STATE
+  // ============================================================
+  let _session = null; // { username, password, name }
+  let _pendingRepairs = [], _pendingBookings = [], _pendingFilter = 'all';
+
+  // ============================================================
+  // AUTH
+  // ============================================================
+  function doLogin() {
+    const username = document.getElementById('usernameInput').value.trim();
+    const password = document.getElementById('passwordInput').value;
+    if (!username || !password) { showLoginError('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน'); return; }
+
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังตรวจสอบ...';
+    document.getElementById('loginError').classList.add('hidden');
+
+    fetch(window.APP_CONFIG.GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'adminLogin', username, password }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          _session = { username, password, name: data.name };
+          sessionStorage.setItem('adminSession', JSON.stringify(_session));
+          document.getElementById('loginScreen').classList.add('hidden');
+          document.getElementById('dashboard').classList.remove('hidden');
+          document.getElementById('adminNameDisplay').textContent = data.name || username;
+          fetchPending();
+          loadAdmins();
+        } else {
+          showLoginError(data.error || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+        }
+      })
+      .catch(() => showLoginError('ไม่สามารถเชื่อมต่อกับระบบได้'))
+      .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-unlock mr-2"></i>เข้าสู่ระบบ Admin';
+      });
+  }
+
+  function doLogout() {
+    sessionStorage.removeItem('adminSession');
+    _session = null;
+    _pendingRepairs = []; _pendingBookings = [];
+    document.getElementById('dashboard').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('usernameInput').value = '';
+    document.getElementById('passwordInput').value = '';
+  }
+
+  function showLoginError(msg) {
+    const el = document.getElementById('loginError');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  function authBody(extra) {
+    return Object.assign({ username: _session.username, password: _session.password }, extra);
+  }
+
+  // ============================================================
+  // TABS
+  // ============================================================
+  function showAdminTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
+    document.querySelectorAll('#adminTabNav .tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.remove('hidden');
+    document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+    if (tab === 'admins') loadAdmins();
+  }
+
+  // ============================================================
+  // PENDING DATA
+  // ============================================================
+  function loadData() { fetchPending(); }
+
+  function fetchPending() {
+    document.getElementById('loadingPending').classList.remove('hidden');
+    document.getElementById('pendingList').innerHTML = '';
+    document.getElementById('emptyPending').classList.add('hidden');
+
+    fetch(window.APP_CONFIG.GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(authBody({ type: 'adminGetData' })),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          _pendingRepairs  = data.repairs  || [];
+          _pendingBookings = data.bookings || [];
+          renderPending();
+          updateStats();
+        } else showToast('error', data.error || 'โหลดข้อมูลไม่สำเร็จ');
+      })
+      .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'))
+      .finally(() => document.getElementById('loadingPending').classList.add('hidden'));
+  }
+
+  function filterPending(f) {
+    _pendingFilter = f;
+    document.querySelectorAll('[data-f]').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-f="${f}"]`).classList.add('active');
+    renderPending();
+  }
+
+  function renderPending() {
+    const list = document.getElementById('pendingList');
+    list.innerHTML = '';
+    document.getElementById('loadingPending').classList.add('hidden');
+    const repairs  = _pendingFilter !== 'booking' ? _pendingRepairs  : [];
+    const bookings = _pendingFilter !== 'repair'  ? _pendingBookings : [];
+    if (!repairs.length && !bookings.length) {
+      document.getElementById('emptyPending').classList.remove('hidden');
+      return;
+    }
+    document.getElementById('emptyPending').classList.add('hidden');
+    repairs.forEach(r  => list.insertAdjacentHTML('beforeend', repairCard(r)));
+    bookings.forEach(b => list.insertAdjacentHTML('beforeend', bookingCard(b)));
+  }
+
+  function updateStats() {
+    document.getElementById('statRepairs').textContent  = _pendingRepairs.length;
+    document.getElementById('statBookings').textContent = _pendingBookings.length;
+  }
+
+  // ============================================================
+  // CARD BUILDERS
+  // ============================================================
+  const S = {
+    'รับเรื่อง':       'bg-yellow-100 text-yellow-700',
+    'รอดำเนินการ':    'bg-orange-100 text-orange-700',
+    'กำลังดำเนินการ': 'bg-blue-100 text-blue-700',
+    'เสร็จสิ้น':       'bg-green-100 text-green-700',
+    'ยกเลิก':          'bg-red-100 text-red-700',
+  };
+  function badge(s)   { return `<span class="inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${S[s]||'bg-slate-100 text-slate-700'}">${esc(s)}</span>`; }
+  function btns(t)    {
+    return `<div class="grid grid-cols-2 gap-1 mt-3 pt-3 border-t border-slate-100">
+      <button onclick="updateStatus('${t}','กำลังดำเนินการ')" class="text-xs px-2 py-1.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors font-medium">🔵 ดำเนินการ</button>
+      <button onclick="updateStatus('${t}','เสร็จสิ้น')"      class="text-xs px-2 py-1.5 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors font-medium">✅ เสร็จสิ้น</button>
+      <button onclick="updateStatus('${t}','รับเรื่อง')"       class="text-xs px-2 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors font-medium">🟡 รับเรื่อง</button>
+      <button onclick="updateStatus('${t}','ยกเลิก')"          class="text-xs px-2 py-1.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-medium">❌ ยกเลิก</button>
+    </div>`;
+  }
+
+  function repairCard(r) {
+    return `<div class="card" id="card-${r.ticket}">
+      <div class="flex justify-between items-start mb-2">
+        <span class="font-bold text-blue-700 text-sm font-mono">${esc(r.ticket)}</span>
+        <span id="badge-${r.ticket}">${badge(r.status)}</span>
+      </div>
+      <div class="space-y-1.5 text-sm text-slate-600">
+        <div class="flex gap-2"><i class="fa-solid fa-user w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(r.name)}</span></div>
+        <div class="flex gap-2"><i class="fa-solid fa-phone w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(r.phone)}</span></div>
+        <div class="flex gap-2"><i class="fa-solid fa-wrench w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><strong>${esc(r.equipment)}</strong></div>
+        <div class="flex gap-2"><i class="fa-solid fa-location-dot w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(r.location)}</span></div>
+        <div class="flex gap-2 text-xs text-slate-400"><i class="fa-solid fa-comment w-4 mt-0.5 flex-shrink-0"></i><span>${esc(r.description)}</span></div>
+      </div>
+      ${btns(r.ticket)}
+    </div>`;
+  }
+
+  function bookingCard(b) {
+    return `<div class="card" id="card-${b.ticket}">
+      <div class="flex justify-between items-start mb-2">
+        <span class="font-bold text-blue-700 text-sm font-mono">${esc(b.ticket)}</span>
+        <span id="badge-${b.ticket}">${badge(b.status)}</span>
+      </div>
+      <div class="bg-blue-50 rounded-xl p-3 mb-2 text-center">
+        <div class="font-bold text-blue-800">${esc(b.room)}</div>
+        <div class="text-sm text-blue-600">${esc(b.date)}</div>
+        <div class="text-sm text-slate-600">${esc(b.startTime)} – ${esc(b.endTime)} น.</div>
+      </div>
+      <div class="space-y-1.5 text-sm text-slate-600">
+        <div class="flex gap-2"><i class="fa-solid fa-user w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(b.name)}</span></div>
+        <div class="flex gap-2"><i class="fa-solid fa-phone w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(b.phone)}</span></div>
+        <div class="flex gap-2"><i class="fa-solid fa-users w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(b.attendees)} คน</span></div>
+        <div class="flex gap-2 text-xs text-slate-400"><i class="fa-solid fa-comment w-4 mt-0.5 flex-shrink-0"></i><span>${esc(b.purpose)}</span></div>
+      </div>
+      ${btns(b.ticket)}
+    </div>`;
+  }
+
+  // ============================================================
+  // STATUS UPDATE
+  // ============================================================
+  function updateStatus(ticket, status) {
+    fetch(window.APP_CONFIG.GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'updateStatus', ticket, status }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          showToast('success', `${ticket} → ${status}`);
+          const PENDING = ['รับเรื่อง', 'รอดำเนินการ', 'กำลังดำเนินการ'];
+          if (!PENDING.includes(status)) {
+            document.getElementById('card-' + ticket)?.remove();
+            _pendingRepairs  = _pendingRepairs.filter(r => r.ticket !== ticket);
+            _pendingBookings = _pendingBookings.filter(b => b.ticket !== ticket);
+            updateStats();
+            if (!_pendingRepairs.length && !_pendingBookings.length)
+              document.getElementById('emptyPending').classList.remove('hidden');
+          } else {
+            const el = document.getElementById('badge-' + ticket);
+            if (el) el.innerHTML = badge(status);
+          }
+        } else showToast('error', data.error || 'อัปเดตไม่สำเร็จ');
+      })
+      .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
+  }
+
+  // ============================================================
+  // ADMIN MANAGEMENT
+  // ============================================================
+  function loadAdmins() {
+    document.getElementById('loadingAdmins').classList.remove('hidden');
+    document.getElementById('adminList').innerHTML = '';
+    document.getElementById('emptyAdmins').classList.add('hidden');
+
+    fetch(window.APP_CONFIG.GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(authBody({ type: 'getAdmins' })),
+    })
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('loadingAdmins').classList.add('hidden');
+        if (data.success) {
+          document.getElementById('statAdmins').textContent = data.admins.length;
+          renderAdmins(data.admins);
+        }
+      })
+      .catch(() => document.getElementById('loadingAdmins').classList.add('hidden'));
+  }
+
+  function renderAdmins(admins) {
+    const list = document.getElementById('adminList');
+    list.innerHTML = '';
+    if (!admins.length) { document.getElementById('emptyAdmins').classList.remove('hidden'); return; }
+    admins.forEach((a, i) => {
+      list.insertAdjacentHTML('beforeend', `
+        <div class="card flex items-center gap-3">
+          <div class="w-11 h-11 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-user text-blue-600"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold text-slate-800">${esc(a.name)}</div>
+            <div class="text-xs text-slate-500 font-mono">@${esc(a.username)}</div>
+            <div class="text-xs text-slate-500 mt-0.5">
+              ${a.role ? `<span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-md mr-1">${esc(a.role)}</span>` : ''}
+              เพิ่มเมื่อ ${esc(a.addedAt)}
+            </div>
+          </div>
+          ${a.username !== _session.username ? `
+          <button onclick="removeAdmin(${i},'${esc(a.name)}')"
+            class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0" title="ลบ">
+            <i class="fa-solid fa-trash text-sm"></i>
+          </button>` : `<span class="text-xs text-slate-400 flex-shrink-0">(คุณ)</span>`}
+        </div>
+      `);
+    });
+  }
+
+  function addAdmin() {
+    const name        = document.getElementById('newAdminName').value.trim();
+    const newUsername = document.getElementById('newAdminUsername').value.trim();
+    const newPassword = document.getElementById('newAdminPassword').value;
+    const role        = document.getElementById('newAdminRole').value.trim();
+    if (!name || !newUsername || !newPassword) { showToast('error', 'กรุณากรอก ชื่อ, username และ password'); return; }
+
+    fetch(window.APP_CONFIG.GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(authBody({ type: 'addAdmin', name, newUsername, newPassword, role })),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          showToast('success', `เพิ่ม "${name}" แล้ว ✅`);
+          ['newAdminName','newAdminUsername','newAdminPassword','newAdminRole'].forEach(id => document.getElementById(id).value = '');
+          loadAdmins();
+        } else showToast('error', data.error || 'เพิ่มไม่สำเร็จ');
+      })
+      .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
+  }
+
+  function removeAdmin(rowIndex, name) {
+    if (!confirm(`ต้องการลบ "${name}" ออกจากผู้ดูแลหรือไม่?`)) return;
+    fetch(window.APP_CONFIG.GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(authBody({ type: 'removeAdmin', rowIndex })),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) { showToast('success', `ลบ "${name}" แล้ว`); loadAdmins(); }
+        else showToast('error', data.error || 'ลบไม่สำเร็จ');
+      })
+      .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
+  }
+
+  // ============================================================
+  // UTILITIES
+  // ============================================================
+  function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  function showToast(type, msg) {
+    const t = document.getElementById('toast');
+    t.className = `fixed bottom-6 right-6 z-50 max-w-sm px-4 py-3 rounded-xl shadow-lg text-sm font-medium text-white ${type==='success'?'bg-green-600':'bg-red-600'}`;
+    t.innerHTML = `<i class="fa-solid fa-${type==='success'?'check':'exclamation-triangle'} mr-2"></i>${esc(msg)}`;
+    clearTimeout(window._tt);
+    window._tt = setTimeout(() => t.className = 'hidden', 3000);
+  }
+
+  // ============================================================
+  // INIT
+  // ============================================================
+  window.addEventListener('load', () => {
+    const saved = sessionStorage.getItem('adminSession');
+    if (saved) {
+      try {
+        const s = JSON.parse(saved);
+        document.getElementById('usernameInput').value = s.username;
+        document.getElementById('passwordInput').value = s.password;
+        doLogin();
+      } catch (_) {}
+    }
+  });
+  </script>
+</body>
+</html>

@@ -42,7 +42,8 @@ const CONFIG = {
   FCM_PRIVATE_KEY:  (_props.FCM_PRIVATE_KEY  || '').replace(/\\n/g, '\n'),
   FCM_CLIENT_EMAIL: _props.FCM_CLIENT_EMAIL  || 'firebase-adminsdk-fbsvc@sd-av-website.iam.gserviceaccount.com',
   FCM_PROJECT_ID:   'sd-av-website',
-  FCM_TOKENS_SHEET: 'FCMTokens',
+  FCM_TOKENS_SHEET:   'FCMTokens',
+  ADMIN_USERS_SHEET:  'Admin User',
 };
 
 // status ที่ถือว่า "ค้างอยู่" — ใช้กับระบบค้นหางาน
@@ -179,6 +180,16 @@ function doPost(e) {
       result = handleUpdateStatus(body);
     } else if (body.type === 'registerFCMToken') {
       result = handleRegisterFCMToken(body);
+    } else if (body.type === 'adminLogin') {
+      result = handleAdminLogin(body);
+    } else if (body.type === 'adminGetData') {
+      result = handleAdminGetData(body);
+    } else if (body.type === 'getAdmins') {
+      result = handleGetAdmins(body);
+    } else if (body.type === 'addAdmin') {
+      result = handleAddAdmin(body);
+    } else if (body.type === 'removeAdmin') {
+      result = handleRemoveAdmin(body);
     } else {
       result = { success: false, error: 'Unknown type' };
     }
@@ -1200,6 +1211,98 @@ function checkLineQuota() {
   Logger.log(`ใช้ไปแล้ว   : ${used} messages`);
   Logger.log(`คงเหลือ     : ${left} messages`);
   Logger.log('==================================');
+}
+
+// ============================================================
+// ADMIN PANEL — อ่าน/เขียนข้อมูลจาก Sheet "Admin User"
+// Sheet columns: A=username | B=password | C=ชื่อ | D=บทบาท | E=วันที่เพิ่ม
+// ============================================================
+function getAdminUsersSheet() {
+  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  let sheet = ss.getSheetByName(CONFIG.ADMIN_USERS_SHEET);
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG.ADMIN_USERS_SHEET);
+    sheet.appendRow(['username', 'password', 'ชื่อ-นามสกุล', 'บทบาท', 'วันที่เพิ่ม']);
+    sheet.getRange(1, 1, 1, 5).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
+    sheet.getRange('B:B').setNumberFormat('@'); // password เป็น text
+    sheet.setFrozenRows(1);
+    // ซ่อน column password ป้องกันดูง่ายๆ
+    sheet.hideColumns(2);
+  }
+  return sheet;
+}
+
+function verifyAdmin(username, password) {
+  if (!username || !password) return null;
+  const sheet = getAdminUsersSheet();
+  if (sheet.getLastRow() <= 1) return null;
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 3).getValues();
+  for (const r of rows) {
+    if (String(r[0]).trim() === String(username).trim() &&
+        String(r[1]).trim() === String(password).trim()) {
+      return { username: String(r[0]), name: String(r[2]) };
+    }
+  }
+  return null;
+}
+
+function handleAdminLogin(data) {
+  const admin = verifyAdmin(data.username, data.password);
+  if (!admin) return { success: false, error: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' };
+  return { success: true, name: admin.name };
+}
+
+function handleAdminGetData(data) {
+  if (!verifyAdmin(data.username, data.password)) return { success: false, error: 'Unauthorized' };
+  return { success: true, repairs: getPendingRepairs(), bookings: getPendingBookings() };
+}
+
+function handleGetAdmins(data) {
+  if (!verifyAdmin(data.username, data.password)) return { success: false, error: 'Unauthorized' };
+  const sheet = getAdminUsersSheet();
+  if (sheet.getLastRow() <= 1) return { success: true, admins: [] };
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues();
+  const admins = rows.filter(r => r[0]).map(r => ({
+    username: String(r[0]),
+    name:     String(r[2]),
+    role:     String(r[3]),
+    addedAt:  String(r[4]),
+  }));
+  return { success: true, admins };
+}
+
+function handleAddAdmin(data) {
+  if (!verifyAdmin(data.username, data.password)) return { success: false, error: 'Unauthorized' };
+  const nm  = String(data.name        || '').trim();
+  const usr = String(data.newUsername || '').trim();
+  const pwd = String(data.newPassword || '').trim();
+  const rol = String(data.role        || '').trim();
+  if (!nm || !usr || !pwd) return { success: false, error: 'กรุณากรอก ชื่อ, username และ password ครบ' };
+
+  const sheet = getAdminUsersSheet();
+  // ตรวจ username ซ้ำ
+  if (sheet.getLastRow() > 1) {
+    const existing = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues().flat();
+    if (existing.map(u => String(u).trim()).includes(usr)) {
+      return { success: false, error: `username "${usr}" มีอยู่แล้ว` };
+    }
+  }
+  const ts = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm');
+  sheet.appendRow([usr, pwd, nm, rol, ts]);
+  return { success: true };
+}
+
+function handleRemoveAdmin(data) {
+  if (!verifyAdmin(data.username, data.password)) return { success: false, error: 'Unauthorized' };
+  const rowIndex = parseInt(data.rowIndex);
+  if (isNaN(rowIndex) || rowIndex < 0) return { success: false, error: 'rowIndex ไม่ถูกต้อง' };
+  const sheet = getAdminUsersSheet();
+  if (!sheet || rowIndex + 2 > sheet.getLastRow()) return { success: false, error: 'ไม่พบแถวนี้' };
+  // ป้องกันลบตัวเอง
+  const targetUsername = String(sheet.getRange(rowIndex + 2, 1).getValue()).trim();
+  if (targetUsername === String(data.username).trim()) return { success: false, error: 'ไม่สามารถลบตัวเองได้' };
+  sheet.deleteRow(rowIndex + 2);
+  return { success: true };
 }
 
 // ============================================================
