@@ -103,9 +103,9 @@ function doGet(e) {
         try {
           const isRepair = String(params.ticket).startsWith('REP');
           const detail = isRepair
-            ? `อุปกรณ์: ${ticketData.equipment || ''} | สถานที่: ${ticketData.location || ''}`
-            : `ห้อง: ${ticketData.room || ''} | ผู้จอง: ${ticketData.name || ''}`;
-          sendFCMPush(`✅ ${params.ticket} เสร็จสิ้น`, detail, params.ticket);
+            ? `📋 ${params.ticket}\n🔧 ${ticketData.equipment || '-'}\n📍 ${ticketData.location || '-'}`
+            : `📋 ${params.ticket}\n🚪 ${ticketData.room || '-'}\n👤 ${ticketData.name || '-'}`;
+          sendFCMPush('✅ งานเสร็จสิ้นแล้ว', detail, params.ticket);
           Logger.log('sendFCMPush called OK');
         } catch (flexErr) {
           Logger.log('sendFCMPush error: ' + flexErr.message);
@@ -640,7 +640,10 @@ function handleRepair(data) {
     'รับเรื่อง',           // I สถานะ
   ]);
 
-  try { sendFCMPush(`🔧 แจ้งซ่อมใหม่ ${ticket}`, `อุปกรณ์: ${data.equipment || ''} | สถานที่: ${data.location || ''}`, ticket); } catch (_) {}
+  try {
+    const repairBody = `📋 ${ticket}\n🔧 ${data.equipment || '-'}\n📍 ${data.location || '-'}\n👤 ${data.name || '-'}`;
+    sendFCMPush('🔧 มีงานแจ้งซ่อมใหม่', repairBody, ticket);
+  } catch (_) {}
   return { success: true, ticket };
 }
 
@@ -723,7 +726,10 @@ function handleBooking(data) {
   const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
   const dateDisplay = `${dateParts[2]} ${months[parseInt(dateParts[1])-1]} ${dateParts[0]} (ค.ศ.)`;
 
-  try { sendFCMPush(`📅 จองห้องใหม่ ${ticket}`, `ห้อง: ${data.room || ''} | วันที่: ${dateDisplay}`, ticket); } catch (_) {}
+  try {
+    const bookingBody = `📋 ${ticket}\n🚪 ${data.room || '-'}\n📅 ${dateDisplay}\n⏰ ${data.startTime || '-'} – ${data.endTime || '-'}\n👤 ${data.name || '-'}`;
+    sendFCMPush('📅 มีการจองห้องประชุมใหม่', bookingBody, ticket);
+  } catch (_) {}
   return { success: true, ticket };
 }
 
