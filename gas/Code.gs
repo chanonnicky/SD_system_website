@@ -344,6 +344,7 @@ function getAllRepairs() {
       equipment:   String(r[4]),
       location:    String(r[5]),
       description: String(r[6]),
+      image:       String(r[7] || ''),
       status:      String(r[8]),
     }));
 }
@@ -387,6 +388,7 @@ function getPendingRepairs() {
       equipment:   String(r[4]),
       location:    String(r[5]),
       description: String(r[6]),
+      image:       String(r[7] || ''),
       status:      String(r[8]),
     }));
 }

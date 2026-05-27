@@ -612,7 +612,12 @@
         <div class="flex gap-3"><i class="fa-solid fa-wrench w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><strong>${esc(job.equipment)}</strong></div>
         <div class="flex gap-3"><i class="fa-solid fa-location-dot w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(job.location)}</span></div>
         <div class="flex gap-3 text-xs text-slate-400"><i class="fa-solid fa-comment w-4 mt-0.5 flex-shrink-0"></i><span>${esc(job.description)}</span></div>
-      </div>` : `
+      </div>
+      ${job.image ? `<a href="${esc(job.image)}" target="_blank" rel="noopener">
+        <img src="${esc(job.image)}" alt="รูปแนบ"
+          class="mt-4 w-full rounded-xl object-cover max-h-64 border border-slate-200 hover:opacity-90 transition-opacity"
+          onerror="this.parentElement.innerHTML='<p class=\'text-xs text-slate-400 mt-3\'><i class=\'fa-solid fa-image mr-1\'></i>ไม่สามารถโหลดรูปได้</p>'" />
+      </a>` : ''}` : `
       <div class="bg-blue-50 rounded-xl p-3 mb-4 text-center">
         <div class="font-bold text-blue-800">${esc(job.room)}</div>
         <div class="text-sm text-blue-600">${esc(job.date)}</div>
