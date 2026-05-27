@@ -189,7 +189,7 @@
 
     fetch(window.APP_CONFIG.GAS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ type: 'adminLogin', username }),
     })
       .then(r => r.json())
@@ -256,7 +256,7 @@
 
     fetch(window.APP_CONFIG.GAS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(authBody({ type: 'adminGetData' })),
     })
       .then(r => r.json())
@@ -363,7 +363,7 @@
   function updateStatus(ticket, status) {
     fetch(window.APP_CONFIG.GAS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ type: 'updateStatus', ticket, status }),
     })
       .then(r => r.json())
@@ -397,7 +397,7 @@
 
     fetch(window.APP_CONFIG.GAS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(authBody({ type: 'getAdmins' })),
     })
       .then(r => r.json())
@@ -447,7 +447,7 @@
 
     fetch(window.APP_CONFIG.GAS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(authBody({ type: 'addAdmin', name, newUsername, role })),
     })
       .then(r => r.json())
@@ -465,7 +465,7 @@
     if (!confirm(`ต้องการลบ "${name}" ออกจากผู้ดูแลหรือไม่?`)) return;
     fetch(window.APP_CONFIG.GAS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(authBody({ type: 'removeAdmin', rowIndex })),
     })
       .then(r => r.json())
@@ -527,7 +527,7 @@
       if (!token) return;
       await fetch(window.APP_CONFIG.GAS_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ type: 'registerFCMToken', token, userAgent: navigator.userAgent }),
       });
     } catch (err) { console.warn('[Notif] token error:', err); }
