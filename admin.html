@@ -1107,6 +1107,8 @@
     checks.push(window.APP_CONFIG?.FIREBASE ? ok('FIREBASE config มี') : err('FIREBASE config ไม่มีใน APP_CONFIG'));
     checks.push(window.APP_CONFIG?.FIREBASE_VAPID ? ok('FIREBASE_VAPID มี') : err('FIREBASE_VAPID ไม่มีใน APP_CONFIG'));
     checks.push(window.APP_CONFIG?.GAS_URL ? ok('GAS_URL มี') : err('GAS_URL ไม่มี'));
+    const cs = window.APP_CONFIG?.CLIENT_SECRET || '';
+    checks.push(cs ? ok(`CLIENT_SECRET มี (ขึ้นต้นด้วย "${cs.substring(0,4)}...")`) : err('CLIENT_SECRET ว่าง — GitHub Secret อาจยังไม่ได้ตั้ง'));
 
     const perm = ('Notification' in window) ? Notification.permission : 'unsupported';
     const permLabel = { granted: 'อนุญาต ✅', denied: 'ปฏิเสธ ❌', default: 'ยังไม่ได้ตั้งค่า' };
