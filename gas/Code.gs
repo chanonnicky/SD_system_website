@@ -105,7 +105,7 @@ function doGet(e) {
           const detail = isRepair
             ? `อุปกรณ์: ${ticketData.equipment || ''} | สถานที่: ${ticketData.location || ''}`
             : `ห้อง: ${ticketData.room || ''} | ผู้จอง: ${ticketData.name || ''}`;
-          sendFCMPush(`✅ ${params.ticket} เสร็จสิ้น`, detail);
+          sendFCMPush(`✅ ${params.ticket} เสร็จสิ้น`, detail, params.ticket);
           Logger.log('sendFCMPush called OK');
         } catch (flexErr) {
           Logger.log('sendFCMPush error: ' + flexErr.message);
@@ -640,7 +640,7 @@ function handleRepair(data) {
     'รับเรื่อง',           // I สถานะ
   ]);
 
-  try { sendFCMPush(`🔧 แจ้งซ่อมใหม่ ${ticket}`, `อุปกรณ์: ${data.equipment || ''} | สถานที่: ${data.location || ''}`); } catch (_) {}
+  try { sendFCMPush(`🔧 แจ้งซ่อมใหม่ ${ticket}`, `อุปกรณ์: ${data.equipment || ''} | สถานที่: ${data.location || ''}`, ticket); } catch (_) {}
   return { success: true, ticket };
 }
 
@@ -723,7 +723,7 @@ function handleBooking(data) {
   const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
   const dateDisplay = `${dateParts[2]} ${months[parseInt(dateParts[1])-1]} ${dateParts[0]} (ค.ศ.)`;
 
-  try { sendFCMPush(`📅 จองห้องใหม่ ${ticket}`, `ห้อง: ${data.room || ''} | วันที่: ${dateDisplay}`); } catch (_) {}
+  try { sendFCMPush(`📅 จองห้องใหม่ ${ticket}`, `ห้อง: ${data.room || ''} | วันที่: ${dateDisplay}`, ticket); } catch (_) {}
   return { success: true, ticket };
 }
 
@@ -1456,7 +1456,7 @@ function getServiceAccountAccessToken() {
   }
 }
 
-function sendFCMPush(title, body) {
+function sendFCMPush(title, body, ticket) {
   if (!CONFIG.FCM_PRIVATE_KEY) return;
   const tokens = getFCMTokens();
   if (tokens.length === 0) return;
@@ -1464,10 +1464,12 @@ function sendFCMPush(title, body) {
   const accessToken = getServiceAccountAccessToken();
   if (!accessToken) return;
 
-  const icon   = 'https://chanonnicky.github.io/SD_AV_website/assets/img/school_logo.webp';
-  const fcmUrl = 'https://fcm.googleapis.com/v1/projects/' + CONFIG.FCM_PROJECT_ID + '/messages:send';
-  const stale  = [];
-  let sent     = 0;
+  const icon    = 'https://chanonnicky.github.io/SD_AV_website/assets/img/school_logo.webp';
+  const baseUrl = 'https://chanonnicky.github.io/SD_AV_website/admin.html';
+  const link    = ticket ? baseUrl + '?ticket=' + encodeURIComponent(ticket) : baseUrl;
+  const fcmUrl  = 'https://fcm.googleapis.com/v1/projects/' + CONFIG.FCM_PROJECT_ID + '/messages:send';
+  const stale   = [];
+  let sent      = 0;
 
   for (const token of tokens) {
     try {
@@ -1481,7 +1483,8 @@ function sendFCMPush(title, body) {
             notification: { title: title, body: body },
             webpush: {
               notification: { icon: icon, badge: icon },
-              fcm_options: { link: 'https://chanonnicky.github.io/SD_AV_website/admin.html' },
+              fcm_options: { link: link },
+              data: ticket ? { ticket: ticket, url: link } : {},
             },
           },
         }),

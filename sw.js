@@ -14,19 +14,27 @@ const messaging = firebase.messaging();
 
 // รับ push เมื่อแอปอยู่ background
 messaging.onBackgroundMessage((payload) => {
-  const n = payload.notification || {};
+  const n    = payload.notification || {};
+  const data = payload.data || {};
+  const url  = data.url || 'https://chanonnicky.github.io/SD_AV_website/admin.html';
   self.registration.showNotification(n.title || 'AV โสตทัศนูปกรณ์', {
     body: n.body || '',
     icon: '/SD_AV_website/assets/img/school_logo.webp',
     badge: '/SD_AV_website/assets/img/school_logo.webp',
-    data: { url: 'https://chanonnicky.github.io/SD_AV_website/' },
+    data: { url },
   });
 });
 
-// เมื่อกด notification → เปิดเว็บ
+// เมื่อกด notification → เปิดหน้า admin ตรง job นั้น
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const url = (event.notification.data && event.notification.data.url)
-    || 'https://chanonnicky.github.io/SD_AV_website/';
-  event.waitUntil(clients.openWindow(url));
+    || 'https://chanonnicky.github.io/SD_AV_website/admin.html';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      const match = wins.find(w => w.url.includes('admin.html'));
+      if (match) { match.focus(); match.navigate(url); }
+      else clients.openWindow(url);
+    })
+  );
 });

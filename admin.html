@@ -561,13 +561,15 @@
       .then(data => {
         if (data.success) {
           _session = { username, name: data.name };
-          sessionStorage.setItem('adminSession', JSON.stringify(_session));
+          localStorage.setItem('adminSession', JSON.stringify({ ..._session, expiresAt: Date.now() + 30 * 86400000 }));
           document.getElementById('loginScreen').classList.add('hidden');
           document.getElementById('dashboard').classList.remove('hidden');
           document.getElementById('adminNameDisplay').textContent = data.name || username;
           fetchPending();
+          fetchAll();
           loadAdmins();
           initNotifAfterLogin();
+          handleTicketParam();
         } else {
           showLoginError(data.error || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
         }
@@ -580,7 +582,7 @@
   }
 
   function doLogout() {
-    sessionStorage.removeItem('adminSession');
+    localStorage.removeItem('adminSession');
     _session = null;
     _pendingRepairs = []; _pendingBookings = [];
     document.getElementById('dashboard').classList.add('hidden');
@@ -1276,15 +1278,32 @@
   // INIT
   // ============================================================
   window.addEventListener('load', () => {
-    const saved = sessionStorage.getItem('adminSession');
+    const saved = localStorage.getItem('adminSession');
     if (saved) {
       try {
         const s = JSON.parse(saved);
-        document.getElementById('usernameInput').value = s.username;
-        doLogin();
-      } catch (_) {}
+        if (s.expiresAt && Date.now() > s.expiresAt) {
+          localStorage.removeItem('adminSession');
+        } else {
+          document.getElementById('usernameInput').value = s.username;
+          doLogin();
+        }
+      } catch (_) { localStorage.removeItem('adminSession'); }
     }
   });
+
+  function handleTicketParam() {
+    const ticket = new URLSearchParams(window.location.search).get('ticket');
+    if (!ticket) return;
+    const tryOpen = (attempts) => {
+      if (attempts <= 0) return;
+      const job = [..._pendingRepairs, ..._pendingBookings, ..._allRepairs, ..._allBookings]
+        .find(j => j.ticket === ticket);
+      if (job) { openJobDetail(ticket); }
+      else setTimeout(() => tryOpen(attempts - 1), 800);
+    };
+    setTimeout(() => tryOpen(5), 500);
+  }
   </script>
 </body>
 </html>
