@@ -35,6 +35,15 @@ jobs:
             CLIENT_SECRET:  '${{ secrets.CLIENT_SECRET }}',
             REPAIR_SHEET:   'แจ้งซ่อม',
             BOOKING_SHEET:  'จองห้องประชุม',
+            FIREBASE: {
+              apiKey:            'AIzaSyASQuoat2a3LrbHY1r7_iycoIx-1bLgKxc',
+              authDomain:        'sd-av-website.firebaseapp.com',
+              projectId:         'sd-av-website',
+              storageBucket:     'sd-av-website.firebasestorage.app',
+              messagingSenderId: '134184397016',
+              appId:             '1:134184397016:web:b302bf3862374352044fad',
+            },
+            FIREBASE_VAPID: 'BDfunSXR3MJ9f5KYGhudsAuDNpXxYDNmV3zSxc5p5PyQyck6KhzDimijcmg4Lz8yHc4PjJI9_nNlzqEoBybxv20',
           };
           EOF
 
