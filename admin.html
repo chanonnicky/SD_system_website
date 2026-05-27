@@ -284,6 +284,18 @@
           </ol>
         </div>
 
+        <!-- ตรวจสอบระบบ -->
+        <div class="card border-2 border-purple-100">
+          <h3 class="font-bold text-slate-800 text-base mb-1">
+            <i class="fa-solid fa-stethoscope mr-2 text-purple-600"></i>ตรวจสอบระบบแจ้งเตือน
+          </h3>
+          <p class="text-xs text-slate-400 mb-3">กดเพื่อดูว่าอุปกรณ์นี้พร้อมรับแจ้งเตือนหรือยัง</p>
+          <div id="diagResult" class="mb-3 hidden space-y-1.5 text-xs"></div>
+          <button onclick="runDiag()" class="w-full py-2 px-4 rounded-xl bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors">
+            <i class="fa-solid fa-magnifying-glass mr-2"></i>ตรวจสอบ
+          </button>
+        </div>
+
         <!-- ทดสอบการแจ้งเตือน -->
         <div class="card border-2 border-blue-100">
           <h3 class="font-bold text-slate-800 text-base mb-1">
@@ -945,7 +957,8 @@
     const perm = await Notification.requestPermission();
     updateNotifBtn(perm);
     if (perm === 'granted') {
-      await ensureNotifInit();
+      const ok = await ensureNotifInit();
+      if (!ok) { showToast('error', 'เริ่ม Firebase ไม่ได้ — ดู Console สำหรับรายละเอียด'); return; }
       await registerNotifToken();
     } else if (perm === 'denied') {
       alert('การแจ้งเตือนถูกปิดอยู่\nกรุณาเปิดในการตั้งค่าเบราว์เซอร์');
@@ -953,14 +966,17 @@
   };
 
   async function ensureNotifInit() {
-    if (_notifInited) return;
-    if (!window.firebase || !window.APP_CONFIG || !window.APP_CONFIG.FIREBASE) return;
+    if (_notifInited) return true;
+    if (!window.firebase) { console.error('[Notif] Firebase SDK ไม่โหลด'); return false; }
+    if (!window.APP_CONFIG || !window.APP_CONFIG.FIREBASE) { console.error('[Notif] APP_CONFIG.FIREBASE ไม่มี'); return false; }
+    if (!window.APP_CONFIG.FIREBASE_VAPID) { console.error('[Notif] FIREBASE_VAPID ไม่มี'); return false; }
     try {
       if (!firebase.apps || !firebase.apps.length) firebase.initializeApp(window.APP_CONFIG.FIREBASE);
       _notifMessaging = firebase.messaging();
       if (!_notifSwReg) _notifSwReg = await navigator.serviceWorker.register('./sw.js');
       _notifInited = true;
-    } catch (err) { console.warn('[Notif]', err); }
+      return true;
+    } catch (err) { console.error('[Notif] init error:', err); return false; }
   }
 
   async function registerNotifToken() {
@@ -970,13 +986,22 @@
         vapidKey: window.APP_CONFIG.FIREBASE_VAPID,
         serviceWorkerRegistration: _notifSwReg,
       });
-      if (!token) return;
-      await fetch(window.APP_CONFIG.GAS_URL, {
+      if (!token) { showToast('error', 'ไม่สามารถรับ FCM token ได้ — ตรวจสอบ VAPID key'); return; }
+      const res = await fetch(window.APP_CONFIG.GAS_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ type: 'registerFCMToken', token, userAgent: navigator.userAgent }),
       });
-    } catch (err) { console.warn('[Notif] token error:', err); }
+      const data = await res.json().catch(() => ({}));
+      if (data.success === false) {
+        showToast('error', 'บันทึก token ไม่สำเร็จ: ' + (data.error || 'unknown'));
+      } else {
+        showToast('success', 'เปิดรับการแจ้งเตือนสำเร็จ ✅');
+      }
+    } catch (err) {
+      console.error('[Notif] token error:', err);
+      showToast('error', 'ลงทะเบียนการแจ้งเตือนไม่สำเร็จ: ' + err.message);
+    }
   }
 
   function updateNotifBtn(permission) {
@@ -992,6 +1017,37 @@
       btn.innerHTML = '<i class="fa-solid fa-bell" style="color:white"></i>';
       btn.title = 'กดเพื่อรับการแจ้งเตือนเมื่อมีงานใหม่';
     }
+  }
+
+  async function runDiag() {
+    const box = document.getElementById('diagResult');
+    box.classList.remove('hidden');
+    const checks = [];
+    const ok  = (label) => `<div class="flex items-center gap-2 text-green-700"><i class="fa-solid fa-circle-check w-4"></i>${label}</div>`;
+    const err = (label) => `<div class="flex items-center gap-2 text-red-600"><i class="fa-solid fa-circle-xmark w-4"></i>${label}</div>`;
+    const info = (label) => `<div class="flex items-center gap-2 text-slate-500"><i class="fa-solid fa-circle-info w-4"></i>${label}</div>`;
+
+    checks.push('Notification' in window ? ok('Notification API รองรับ') : err('Notification API ไม่รองรับ (ไม่ใช่ Chrome/Firefox)'));
+    checks.push('serviceWorker' in navigator ? ok('Service Worker รองรับ') : err('Service Worker ไม่รองรับ'));
+    checks.push(window.firebase ? ok('Firebase SDK โหลดแล้ว') : err('Firebase SDK ไม่โหลด'));
+    checks.push(window.APP_CONFIG ? ok('APP_CONFIG โหลดแล้ว') : err('APP_CONFIG ไม่มี — config.js ไม่โหลด'));
+    checks.push(window.APP_CONFIG?.FIREBASE ? ok('FIREBASE config มี') : err('FIREBASE config ไม่มีใน APP_CONFIG'));
+    checks.push(window.APP_CONFIG?.FIREBASE_VAPID ? ok('FIREBASE_VAPID มี') : err('FIREBASE_VAPID ไม่มีใน APP_CONFIG'));
+    checks.push(window.APP_CONFIG?.GAS_URL ? ok('GAS_URL มี') : err('GAS_URL ไม่มี'));
+
+    const perm = ('Notification' in window) ? Notification.permission : 'unsupported';
+    const permLabel = { granted: 'อนุญาต ✅', denied: 'ปฏิเสธ ❌', default: 'ยังไม่ได้ตั้งค่า' };
+    checks.push(info(`สถานะการแจ้งเตือน: <strong>${permLabel[perm] || perm}</strong>`));
+    checks.push(info(`Firebase init: <strong>${_notifInited ? 'แล้ว ✅' : 'ยังไม่ init'}</strong>`));
+
+    if ('serviceWorker' in navigator) {
+      try {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        checks.push(regs.length > 0 ? ok(`Service Worker ลงทะเบียนแล้ว (${regs.length})`) : err('Service Worker ยังไม่ลงทะเบียน — กดปุ่มกระดิ่งก่อน'));
+      } catch (_) { checks.push(err('ตรวจ Service Worker ไม่ได้')); }
+    }
+
+    box.innerHTML = checks.join('');
   }
 
   function testFCM() {
