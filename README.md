@@ -11,12 +11,13 @@
 
 | ฟีเจอร์ | รายละเอียด |
 |---------|-----------|
-| **แจ้งซ่อมอุปกรณ์** | กรอกฟอร์ม → ส่ง GAS → บันทึก Sheets + แจ้งเตือน LINE Bot |
-| **จองห้องประชุม** | เลือกห้อง / วันเวลา → ตรวจ conflict → บันทึก Sheets + แจ้งเตือน LINE Bot |
+| **แจ้งซ่อมอุปกรณ์** | กรอกฟอร์ม → ส่ง GAS → บันทึก Sheets + แจ้งเตือน LINE + FCM Push |
+| **จองห้องประชุม** | เลือกห้อง / วันเวลา → ตรวจ conflict → บันทึก Sheets + แจ้งเตือน LINE + FCM Push |
 | **ติดตามสถานะ** | ค้นหาด้วยเลขที่ Ticket หรือชื่อผู้แจ้ง |
 | **ปฏิทินห้องประชุม** | ดูตารางการจองรายเดือน กรองตามห้อง |
-| **Admin Panel** | Login → ดูงานค้างอยู่ อัปเดตสถานะ จัดการผู้ดูแลระบบ |
-| **Push Notification** | แจ้งเตือนบนเบราว์เซอร์/มือถือผ่าน Firebase Cloud Messaging (เฉพาะ Admin) |
+| **Admin Panel** | Login จำสถานะ 30 วัน, ดูงานค้าง/งานทั้งหมด, อัปเดตสถานะ, จัดการผู้ดูแล |
+| **Push Notification** | แจ้งเตือนมือถือ/เบราว์เซอร์ผ่าน Firebase Cloud Messaging (เฉพาะ Admin) |
+| **กด Notification → เปิด Job** | แตะแจ้งเตือน → เปิดหน้า Admin ตรง modal ของงานนั้นเลย |
 | **PWA** | ติดตั้งเป็น App บนมือถือได้ (Add to Home Screen) |
 | **LINE Bot Commands** | พิมพ์คำสั่งใน LINE OA เพื่อดูข้อมูลและ quota |
 
@@ -28,16 +29,14 @@
 Browser / PWA
   ├── POST (แจ้งซ่อม / จองห้อง) ──→ Google Apps Script Web App
   │                                       ├── บันทึก Google Sheets
-  │                                       └── ส่ง LINE Notification (Reply API)
+  │                                       ├── ส่ง LINE Notification (Broadcast)
+  │                                       └── ส่ง FCM Push ทุก Admin ที่ลงทะเบียน
   │
   ├── GET (ติดตามสถานะ / ปฏิทิน) ──→ Google Sheets API v4
-  │                                       └── อ่านข้อมูลตรงจาก Spreadsheet
   │
   ├── POST (Admin login / จัดการข้อมูล) → Google Apps Script Web App
-  │                                       └── อ่าน/เขียน Google Sheets
   │
-  └── POST (registerFCMToken) ──────────→ Google Apps Script Web App
-                                          └── บันทึก token ลง sheet FCMTokens
+  └── POST (registerFCMToken) ──────────→ GAS → บันทึก token ลง sheet FCMTokens
 
 LINE Chat (Bot Commands)
   └── Webhook ──→ Google Apps Script Web App (Reply API — ฟรี ไม่นับ quota)
@@ -53,17 +52,18 @@ LINE Chat (Bot Commands)
 ```
 SD_AV_website/
 ├── index.html                  ← หน้าเว็บหลัก (แจ้งซ่อม / จอง / ติดตาม / ปฏิทิน)
-├── admin.html                  ← Admin Panel (login, งานค้าง, จัดการ admin)
-├── manifest.json               ← PWA Manifest (ติดตั้งเป็น App บนมือถือ)
+├── admin.html                  ← Admin Panel (login, งานค้าง, งานทั้งหมด, จัดการ admin, คู่มือ)
+├── manifest.json               ← PWA Manifest
 ├── sw.js                       ← Service Worker (รับ Push Notification เบื้องหลัง)
 ├── rooms.js                    ← กำหนดห้องประชุม (แก้ไขเพื่อเพิ่ม/ลดห้อง)
-├── .gitignore
 ├── assets/
-│   ├── css/style.css           ← Custom styles
-│   ├── img/school_logo.webp    ← โลโก้โรงเรียน
+│   ├── css/style.css
+│   ├── img/
+│   │   ├── school_logo.webp    ← โลโก้โรงเรียน (หน้าหลัก)
+│   │   └── app_logo.webp       ← โลโก้แอป (หน้า Admin)
 │   └── js/
 │       ├── app.js              ← JavaScript หลัก (index.html)
-│       ├── config.js           ← ใส่ Token/Key จริง (ไม่ถูก commit)
+│       ├── config.js           ← Token/Key จริง (ไม่ถูก commit)
 │       └── config.example.js  ← Template สำหรับ config.js
 └── gas/
     └── Code.gs                 ← Google Apps Script backend ทั้งหมด
@@ -73,17 +73,36 @@ SD_AV_website/
 
 ## Google Sheets Layout
 
-### ชีทแจ้งซ่อม (A:I)
-`A=เลขที่ | B=วันที่แจ้ง | C=ชื่อผู้แจ้ง | D=เบอร์โทร | E=อุปกรณ์ | F=สถานที่ | G=อาการ | H=รูปภาพ | I=สถานะ`
+### ชีทแจ้งซ่อม (A:J)
+`A=เลขที่ | B=วันที่แจ้ง | C=ชื่อผู้แจ้ง | D=เบอร์โทร | E=อุปกรณ์ | F=สถานที่ | G=อาการ | H=รูปภาพ | I=สถานะ | J=ผู้อัปเดตล่าสุด`
 
-### ชีทจองห้องประชุม (A:M)
-`A=เลขที่ | B=วันที่จอง | C=ห้อง | D=วันที่ใช้ห้อง | E=เวลาเริ่ม | F=เวลาสิ้นสุด | G=ชื่อผู้จอง | H=เบอร์โทร | I=จำนวนผู้เข้าร่วม | J=วัตถุประสงค์ | K=อุปกรณ์ | L=หมายเหตุ | M=สถานะ`
+### ชีทจองห้องประชุม (A:N)
+`A=เลขที่ | B=วันที่จอง | C=ห้อง | D=วันที่ใช้ห้อง | E=เวลาเริ่ม | F=เวลาสิ้นสุด | G=ชื่อผู้จอง | H=เบอร์โทร | I=จำนวนผู้เข้าร่วม | J=วัตถุประสงค์ | K=อุปกรณ์ | L=หมายเหตุ | M=สถานะ | N=ผู้อัปเดตล่าสุด`
 
 ### ชีท FCMTokens (A:C)
-`A=token | B=userAgent | C=วันที่ลงทะเบียน`
+`A=token | B=timestamp | C=userAgent`
 
-### ชีท Admin User (A:E)
-`A=username | B=(ว่าง) | C=ชื่อ | D=บทบาท | E=วันที่เพิ่ม`
+### ชีท Admin User (A:F)
+`A=username | B=(ว่าง) | C=ชื่อ | D=บทบาท | E=วันที่เพิ่ม | F=เบอร์มือถือ`
+
+---
+
+## Admin Panel
+
+| แท็บ | รายละเอียด |
+|------|-----------|
+| **งานค้างอยู่** | งานสถานะ "มีงานใหม่" และ "กำลังดำเนินงาน" — sort/filter ได้ |
+| **งานทั้งหมด** | ทุกสถานะรวมกัน — sort/filter ได้ |
+| **จัดการ Admin** | เพิ่ม/แก้ไข/ลบผู้ดูแล (ชื่อ, username, บทบาท, เบอร์) |
+| **คู่มือ** | วิธีติดตั้ง PWA, เปิดรับแจ้งเตือน, ตรวจสอบระบบ, ทดสอบ notification |
+
+**การแจ้งเตือน:**
+- กดปุ่ม 🔔 ในหน้า Admin → อนุญาตการแจ้งเตือน → ลงทะเบียน FCM token
+- ระบบส่ง push notification ทุกครั้งที่มีงานซ่อม/จองใหม่ และเมื่อสถานะเป็น "เสร็จสิ้น"
+- กดแจ้งเตือน → เปิดหน้า Admin ตรง modal ของงานนั้น
+
+**การ login:**
+- ใช้ localStorage จำ session 30 วัน — ไม่ต้อง login ทุกครั้งที่เปิดแอป
 
 ---
 
@@ -146,14 +165,24 @@ SD_AV_website/
 | `SPREADSHEET_ID` | ID ของ Google Spreadsheet |
 | `FCM_PRIVATE_KEY` | `private_key` จาก Firebase service account JSON |
 | `FCM_CLIENT_EMAIL` | `client_email` จาก Firebase service account JSON |
-| `CLIENT_SECRET` | Secret สำหรับ validate request (กำหนดเองได้) |
+| `CLIENT_SECRET` | Secret สำหรับ validate request (ต้องตรงกับ GitHub Secret) |
 | `WEBHOOK_SECRET` | Secret สำหรับ validate URL ปุ่มใน LINE card |
 
-### 6. Frontend Config
-- Copy `assets/js/config.example.js` เป็น `assets/js/config.js`
-- กรอกค่าทั้งหมดใน `config.js`
+### 6. GitHub Secrets
+ตั้งใน Repository Settings → Secrets and variables → Actions:
 
-### 7. Deploy
+| Secret | Value |
+|--------|-------|
+| `GAS_URL` | Web App URL จาก GAS Deploy |
+| `SPREADSHEET_ID` | ID ของ Google Spreadsheet |
+| `GOOGLE_API_KEY` | Google Sheets API Key |
+| `CLIENT_SECRET` | ต้องตรงกับ GAS Script Property `CLIENT_SECRET` |
+
+### 7. เพิ่ม Admin คนแรก
+เพิ่ม row ใน sheet "Admin User":
+`username | (ว่าง) | ชื่อจริง | บทบาท | วันที่ | เบอร์`
+
+### 8. Deploy
 ```bash
 git push origin main   # GitHub Actions deploy อัตโนมัติ ~1-2 นาที
 ```
@@ -165,8 +194,8 @@ git push origin main   # GitHub Actions deploy อัตโนมัติ ~1-2 
 - **Frontend**: HTML5, [Tailwind CSS](https://tailwindcss.com), Font Awesome, Google Fonts (Sarabun)
 - **Backend**: Google Apps Script (Web App)
 - **Database**: Google Sheets
-- **Push Notification**: Firebase Cloud Messaging (FCM HTTP v1 API)
-- **LINE Integration**: LINE Messaging API (Reply API — bot commands)
+- **Push Notification**: Firebase Cloud Messaging (FCM HTTP v1 API + Service Account JWT)
+- **LINE Integration**: LINE Messaging API (Broadcast + Reply API)
 - **Data Read**: Google Sheets API v4
 - **PWA**: Web App Manifest + Service Worker
 - **Hosting**: GitHub Pages (deploy via GitHub Actions)
@@ -178,5 +207,5 @@ git push origin main   # GitHub Actions deploy อัตโนมัติ ~1-2 
 - `assets/js/config.js` อยู่ใน `.gitignore` — ไม่ถูก commit ขึ้น Git
 - Secrets ฝั่ง GAS เก็บใน **Script Properties** (ไม่ hardcode ใน code)
 - Firebase service account JSON ห้าม commit ขึ้น Git
-- Push Notification และ Admin Panel ใช้ได้เฉพาะผู้ที่ login แล้วเท่านั้น
+- ทุก request จาก frontend ต้องส่ง `CLIENT_SECRET` — GAS ตรวจสอบก่อนประมวลผล
 - XSS prevention: ทุก user-generated content ผ่าน `escHtml()` ก่อน render
