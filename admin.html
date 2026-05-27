@@ -645,7 +645,7 @@
     fetch(window.APP_CONFIG.GAS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ type: 'updateStatus', ticket, status }),
+      body: JSON.stringify(authBody({ type: 'updateStatus', ticket, status })),
     })
       .then(r => r.json())
       .then(data => {
