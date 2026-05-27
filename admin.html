@@ -227,6 +227,26 @@
     </main>
   </div>
 
+  <!-- Job Detail Modal -->
+  <div id="jobModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onclick="if(event.target===this)closeJobModal()">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col">
+      <div class="flex items-start justify-between p-5 border-b border-slate-100 flex-shrink-0">
+        <div>
+          <div class="font-bold text-blue-700 font-mono text-lg" id="modalTicket"></div>
+          <div class="mt-1.5" id="modalStatusBadge"></div>
+        </div>
+        <button onclick="closeJobModal()" class="p-2 hover:bg-slate-100 rounded-xl ml-3 flex-shrink-0">
+          <i class="fa-solid fa-xmark text-slate-500"></i>
+        </button>
+      </div>
+      <div class="overflow-y-auto flex-1 p-5" id="modalBody"></div>
+      <div class="p-5 pt-0 flex-shrink-0">
+        <p class="text-xs text-slate-400 mb-2">เปลี่ยนสถานะเป็น</p>
+        <div class="grid grid-cols-2 gap-2" id="modalBtns"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- Edit Admin Modal -->
   <div id="editModal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
     <div class="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
@@ -529,10 +549,10 @@
   }
 
   function repairCard(r) {
-    return `<div class="card" id="card-${r.ticket}">
+    return `<div class="card cursor-pointer hover:shadow-md hover:border-blue-200 border border-transparent transition-all" onclick="openJobDetail('${esc(r.ticket)}')">
       <div class="flex justify-between items-start mb-2">
         <span class="font-bold text-blue-700 text-sm font-mono">${esc(r.ticket)}</span>
-        <span id="badge-${r.ticket}">${badge(r.status)}</span>
+        <span>${badge(r.status)}</span>
       </div>
       <div class="space-y-1.5 text-sm text-slate-600">
         <div class="flex gap-2"><i class="fa-solid fa-user w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(r.name)}</span></div>
@@ -541,15 +561,17 @@
         <div class="flex gap-2"><i class="fa-solid fa-location-dot w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(r.location)}</span></div>
         <div class="flex gap-2 text-xs text-slate-400"><i class="fa-solid fa-comment w-4 mt-0.5 flex-shrink-0"></i><span>${esc(r.description)}</span></div>
       </div>
-      ${btns(r.ticket)}
+      <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-1">
+        <span>กดเพื่อแก้ไขสถานะ</span><i class="fa-solid fa-chevron-right text-xs"></i>
+      </div>
     </div>`;
   }
 
   function bookingCard(b) {
-    return `<div class="card" id="card-${b.ticket}">
+    return `<div class="card cursor-pointer hover:shadow-md hover:border-blue-200 border border-transparent transition-all" onclick="openJobDetail('${esc(b.ticket)}')">
       <div class="flex justify-between items-start mb-2">
         <span class="font-bold text-blue-700 text-sm font-mono">${esc(b.ticket)}</span>
-        <span id="badge-${b.ticket}">${badge(b.status)}</span>
+        <span>${badge(b.status)}</span>
       </div>
       <div class="bg-blue-50 rounded-xl p-3 mb-2 text-center">
         <div class="font-bold text-blue-800">${esc(b.room)}</div>
@@ -562,8 +584,59 @@
         <div class="flex gap-2"><i class="fa-solid fa-users w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(b.attendees)} คน</span></div>
         <div class="flex gap-2 text-xs text-slate-400"><i class="fa-solid fa-comment w-4 mt-0.5 flex-shrink-0"></i><span>${esc(b.purpose)}</span></div>
       </div>
-      ${btns(b.ticket)}
+      <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-1">
+        <span>กดเพื่อแก้ไขสถานะ</span><i class="fa-solid fa-chevron-right text-xs"></i>
+      </div>
     </div>`;
+  }
+
+  // ============================================================
+  // JOB DETAIL MODAL
+  // ============================================================
+  let _modalJob = null;
+
+  function openJobDetail(ticket) {
+    const job = [..._pendingRepairs, ..._pendingBookings, ..._allRepairs, ..._allBookings]
+      .find(j => j.ticket === ticket);
+    if (!job) return;
+    _modalJob = job;
+    const isRepair = ticket.startsWith('REP');
+
+    document.getElementById('modalTicket').textContent = job.ticket;
+    document.getElementById('modalStatusBadge').innerHTML = badge(job.status);
+
+    document.getElementById('modalBody').innerHTML = isRepair ? `
+      <div class="space-y-3 text-sm text-slate-600">
+        <div class="flex gap-3"><i class="fa-solid fa-user w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(job.name)}</span></div>
+        <div class="flex gap-3"><i class="fa-solid fa-phone w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(job.phone)}</span></div>
+        <div class="flex gap-3"><i class="fa-solid fa-wrench w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><strong>${esc(job.equipment)}</strong></div>
+        <div class="flex gap-3"><i class="fa-solid fa-location-dot w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(job.location)}</span></div>
+        <div class="flex gap-3 text-xs text-slate-400"><i class="fa-solid fa-comment w-4 mt-0.5 flex-shrink-0"></i><span>${esc(job.description)}</span></div>
+      </div>` : `
+      <div class="bg-blue-50 rounded-xl p-3 mb-4 text-center">
+        <div class="font-bold text-blue-800">${esc(job.room)}</div>
+        <div class="text-sm text-blue-600">${esc(job.date)}</div>
+        <div class="text-sm text-slate-600">${esc(job.startTime)} – ${esc(job.endTime)} น.</div>
+      </div>
+      <div class="space-y-3 text-sm text-slate-600">
+        <div class="flex gap-3"><i class="fa-solid fa-user w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(job.name)}</span></div>
+        <div class="flex gap-3"><i class="fa-solid fa-phone w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(job.phone)}</span></div>
+        <div class="flex gap-3"><i class="fa-solid fa-users w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(job.attendees)} คน</span></div>
+        <div class="flex gap-3 text-xs text-slate-400"><i class="fa-solid fa-comment w-4 mt-0.5 flex-shrink-0"></i><span>${esc(job.purpose)}</span></div>
+      </div>`;
+
+    document.getElementById('modalBtns').innerHTML = `
+      <button onclick="updateStatus('${esc(job.ticket)}','รับเรื่อง')"       class="px-3 py-2 bg-yellow-50 text-yellow-700 rounded-xl hover:bg-yellow-100 transition-colors font-medium text-sm">🟡 มีงานใหม่</button>
+      <button onclick="updateStatus('${esc(job.ticket)}','กำลังดำเนินการ')" class="px-3 py-2 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors font-medium text-sm">🔵 กำลังดำเนินงาน</button>
+      <button onclick="updateStatus('${esc(job.ticket)}','เสร็จสิ้น')"       class="px-3 py-2 bg-green-50 text-green-700 rounded-xl hover:bg-green-100 transition-colors font-medium text-sm">✅ เสร็จสิ้น</button>
+      <button onclick="updateStatus('${esc(job.ticket)}','ยกเลิก')"           class="px-3 py-2 bg-red-50 text-red-700 rounded-xl hover:bg-red-100 transition-colors font-medium text-sm">❌ ยกเลิก</button>`;
+
+    document.getElementById('jobModal').classList.remove('hidden');
+  }
+
+  function closeJobModal() {
+    document.getElementById('jobModal').classList.add('hidden');
+    _modalJob = null;
   }
 
   // ============================================================
@@ -578,19 +651,10 @@
       .then(r => r.json())
       .then(data => {
         if (data.success) {
-          showToast('success', `${ticket} → ${status}`);
-          const PENDING = ['รับเรื่อง', 'รอดำเนินการ', 'กำลังดำเนินการ'];
-          if (!PENDING.includes(status)) {
-            document.getElementById('card-' + ticket)?.remove();
-            _pendingRepairs  = _pendingRepairs.filter(r => r.ticket !== ticket);
-            _pendingBookings = _pendingBookings.filter(b => b.ticket !== ticket);
-            updateStats();
-            if (!_pendingRepairs.length && !_pendingBookings.length)
-              document.getElementById('emptyPending').classList.remove('hidden');
-          } else {
-            const el = document.getElementById('badge-' + ticket);
-            if (el) el.innerHTML = badge(status);
-          }
+          showToast('success', `${ticket} → ${STATUS_LABEL[status] || status}`);
+          closeJobModal();
+          fetchPending();
+          if (_allRepairs.length || _allBookings.length) fetchAll();
         } else showToast('error', data.error || 'อัปเดตไม่สำเร็จ');
       })
       .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
