@@ -31,17 +31,10 @@
         <p class="text-slate-500 text-sm">งานโสตทัศนูปกรณ์ โรงเรียนเซนต์ดอมินิก</p>
       </div>
       <div id="loginError" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm text-center"></div>
-      <div class="space-y-3">
-        <div class="form-group">
-          <label class="form-label">ชื่อผู้ใช้</label>
-          <input type="text" id="usernameInput" class="form-input" placeholder="Username"
-            autocomplete="username" onkeydown="if(event.key==='Enter') document.getElementById('passwordInput').focus()" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">รหัสผ่าน</label>
-          <input type="password" id="passwordInput" class="form-input" placeholder="Password"
-            autocomplete="current-password" onkeydown="if(event.key==='Enter') doLogin()" />
-        </div>
+      <div class="form-group">
+        <label class="form-label">ชื่อผู้ใช้</label>
+        <input type="text" id="usernameInput" class="form-input" placeholder="Username"
+          autocomplete="username" onkeydown="if(event.key==='Enter') doLogin()" />
       </div>
       <button onclick="doLogin()" id="loginBtn" class="btn-primary w-full mt-4">
         <i class="fa-solid fa-unlock mr-2"></i>เข้าสู่ระบบ Admin
@@ -134,7 +127,7 @@
           <h3 class="font-semibold text-slate-700 mb-4">
             <i class="fa-solid fa-user-plus mr-2 text-blue-600"></i>เพิ่มผู้ดูแลใหม่
           </h3>
-          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="grid sm:grid-cols-3 gap-3">
             <div class="form-group">
               <label class="form-label required">ชื่อ-นามสกุล</label>
               <input type="text" id="newAdminName" class="form-input" placeholder="สมชาย ใจดี" />
@@ -142,10 +135,6 @@
             <div class="form-group">
               <label class="form-label required">ชื่อผู้ใช้ (username)</label>
               <input type="text" id="newAdminUsername" class="form-input" placeholder="somchai" autocomplete="off" />
-            </div>
-            <div class="form-group">
-              <label class="form-label required">รหัสผ่าน</label>
-              <input type="password" id="newAdminPassword" class="form-input" placeholder="••••••" autocomplete="new-password" />
             </div>
             <div class="form-group">
               <label class="form-label">บทบาท</label>
@@ -186,8 +175,7 @@
   // ============================================================
   function doLogin() {
     const username = document.getElementById('usernameInput').value.trim();
-    const password = document.getElementById('passwordInput').value;
-    if (!username || !password) { showLoginError('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน'); return; }
+    if (!username) { showLoginError('กรุณากรอกชื่อผู้ใช้'); return; }
 
     const btn = document.getElementById('loginBtn');
     btn.disabled = true;
@@ -197,12 +185,12 @@
     fetch(window.APP_CONFIG.GAS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'adminLogin', username, password }),
+      body: JSON.stringify({ type: 'adminLogin', username }),
     })
       .then(r => r.json())
       .then(data => {
         if (data.success) {
-          _session = { username, password, name: data.name };
+          _session = { username, name: data.name };
           sessionStorage.setItem('adminSession', JSON.stringify(_session));
           document.getElementById('loginScreen').classList.add('hidden');
           document.getElementById('dashboard').classList.remove('hidden');
@@ -227,7 +215,6 @@
     document.getElementById('dashboard').classList.add('hidden');
     document.getElementById('loginScreen').classList.remove('hidden');
     document.getElementById('usernameInput').value = '';
-    document.getElementById('passwordInput').value = '';
   }
 
   function showLoginError(msg) {
@@ -237,7 +224,7 @@
   }
 
   function authBody(extra) {
-    return Object.assign({ username: _session.username, password: _session.password }, extra);
+    return Object.assign({ username: _session.username }, extra);
   }
 
   // ============================================================
@@ -449,20 +436,19 @@
   function addAdmin() {
     const name        = document.getElementById('newAdminName').value.trim();
     const newUsername = document.getElementById('newAdminUsername').value.trim();
-    const newPassword = document.getElementById('newAdminPassword').value;
     const role        = document.getElementById('newAdminRole').value.trim();
-    if (!name || !newUsername || !newPassword) { showToast('error', 'กรุณากรอก ชื่อ, username และ password'); return; }
+    if (!name || !newUsername) { showToast('error', 'กรุณากรอกชื่อและ username'); return; }
 
     fetch(window.APP_CONFIG.GAS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(authBody({ type: 'addAdmin', name, newUsername, newPassword, role })),
+      body: JSON.stringify(authBody({ type: 'addAdmin', name, newUsername, role })),
     })
       .then(r => r.json())
       .then(data => {
         if (data.success) {
           showToast('success', `เพิ่ม "${name}" แล้ว ✅`);
-          ['newAdminName','newAdminUsername','newAdminPassword','newAdminRole'].forEach(id => document.getElementById(id).value = '');
+          ['newAdminName','newAdminUsername','newAdminRole'].forEach(id => document.getElementById(id).value = '');
           loadAdmins();
         } else showToast('error', data.error || 'เพิ่มไม่สำเร็จ');
       })
@@ -506,7 +492,6 @@
       try {
         const s = JSON.parse(saved);
         document.getElementById('usernameInput').value = s.username;
-        document.getElementById('passwordInput').value = s.password;
         doLogin();
       } catch (_) {}
     }

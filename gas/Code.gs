@@ -1232,14 +1232,13 @@ function getAdminUsersSheet() {
   return sheet;
 }
 
-function verifyAdmin(username, password) {
-  if (!username || !password) return null;
+function verifyAdmin(username) {
+  if (!username) return null;
   const sheet = getAdminUsersSheet();
   if (sheet.getLastRow() <= 1) return null;
   const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 3).getValues();
   for (const r of rows) {
-    if (String(r[0]).trim() === String(username).trim() &&
-        String(r[1]).trim() === String(password).trim()) {
+    if (String(r[0]).trim() === String(username).trim()) {
       return { username: String(r[0]), name: String(r[2]) };
     }
   }
@@ -1247,18 +1246,18 @@ function verifyAdmin(username, password) {
 }
 
 function handleAdminLogin(data) {
-  const admin = verifyAdmin(data.username, data.password);
-  if (!admin) return { success: false, error: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' };
+  const admin = verifyAdmin(data.username);
+  if (!admin) return { success: false, error: 'ไม่พบชื่อผู้ใช้นี้ในระบบ' };
   return { success: true, name: admin.name };
 }
 
 function handleAdminGetData(data) {
-  if (!verifyAdmin(data.username, data.password)) return { success: false, error: 'Unauthorized' };
+  if (!verifyAdmin(data.username)) return { success: false, error: 'Unauthorized' };
   return { success: true, repairs: getPendingRepairs(), bookings: getPendingBookings() };
 }
 
 function handleGetAdmins(data) {
-  if (!verifyAdmin(data.username, data.password)) return { success: false, error: 'Unauthorized' };
+  if (!verifyAdmin(data.username)) return { success: false, error: 'Unauthorized' };
   const sheet = getAdminUsersSheet();
   if (sheet.getLastRow() <= 1) return { success: true, admins: [] };
   const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues();
@@ -1272,12 +1271,11 @@ function handleGetAdmins(data) {
 }
 
 function handleAddAdmin(data) {
-  if (!verifyAdmin(data.username, data.password)) return { success: false, error: 'Unauthorized' };
+  if (!verifyAdmin(data.username)) return { success: false, error: 'Unauthorized' };
   const nm  = String(data.name        || '').trim();
   const usr = String(data.newUsername || '').trim();
-  const pwd = String(data.newPassword || '').trim();
   const rol = String(data.role        || '').trim();
-  if (!nm || !usr || !pwd) return { success: false, error: 'กรุณากรอก ชื่อ, username และ password ครบ' };
+  if (!nm || !usr) return { success: false, error: 'กรุณากรอกชื่อและ username' };
 
   const sheet = getAdminUsersSheet();
   // ตรวจ username ซ้ำ
@@ -1288,12 +1286,12 @@ function handleAddAdmin(data) {
     }
   }
   const ts = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm');
-  sheet.appendRow([usr, pwd, nm, rol, ts]);
+  sheet.appendRow([usr, '', nm, rol, ts]);
   return { success: true };
 }
 
 function handleRemoveAdmin(data) {
-  if (!verifyAdmin(data.username, data.password)) return { success: false, error: 'Unauthorized' };
+  if (!verifyAdmin(data.username)) return { success: false, error: 'Unauthorized' };
   const rowIndex = parseInt(data.rowIndex);
   if (isNaN(rowIndex) || rowIndex < 0) return { success: false, error: 'rowIndex ไม่ถูกต้อง' };
   const sheet = getAdminUsersSheet();
