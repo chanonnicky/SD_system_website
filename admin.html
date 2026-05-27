@@ -80,6 +80,9 @@
           <button onclick="showAdminTab('pending')" class="tab-btn active" data-tab="pending">
             <i class="fa-solid fa-list-check mr-2"></i>งานค้างอยู่
           </button>
+          <button onclick="showAdminTab('all')" class="tab-btn" data-tab="all">
+            <i class="fa-solid fa-table-list mr-2"></i>งานทั้งหมด
+          </button>
           <button onclick="showAdminTab('admins')" class="tab-btn" data-tab="admins">
             <i class="fa-solid fa-users-gear mr-2"></i>จัดการ Admin
           </button>
@@ -129,7 +132,6 @@
           <div class="flex flex-wrap gap-2 items-center">
             <span class="text-xs text-slate-400">สถานะ:</span>
             <button onclick="toggleStatusFilter('รับเรื่อง')"       class="room-filter active" data-s="รับเรื่อง">🟡 มีงานใหม่</button>
-            <button onclick="toggleStatusFilter('รอดำเนินการ')"     class="room-filter active" data-s="รอดำเนินการ">🟠 รอดำเนินการ</button>
             <button onclick="toggleStatusFilter('กำลังดำเนินการ')" class="room-filter active" data-s="กำลังดำเนินการ">🔵 กำลังดำเนินงาน</button>
           </div>
         </div>
@@ -142,6 +144,44 @@
           <i class="fa-solid fa-circle-check text-green-400 text-5xl mb-4"></i>
           <p class="text-slate-700 font-semibold text-lg">ไม่มีงานค้างอยู่</p>
           <p class="text-slate-400 text-sm mt-1">เรียบร้อยทุกอย่าง 🎉</p>
+        </div>
+      </section>
+
+      <!-- ===== TAB: งานทั้งหมด ===== -->
+      <section id="tab-all" class="tab-content hidden">
+        <div class="space-y-3 mb-5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap gap-2">
+              <button onclick="filterAll('all')"     class="room-filter active" data-af="all"><i class="fa-solid fa-layer-group mr-1"></i>ทั้งหมด</button>
+              <button onclick="filterAll('repair')"  class="room-filter" data-af="repair"><i class="fa-solid fa-screwdriver-wrench mr-1"></i>แจ้งซ่อม</button>
+              <button onclick="filterAll('booking')" class="room-filter" data-af="booking"><i class="fa-solid fa-calendar mr-1"></i>จองห้อง</button>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-400 whitespace-nowrap">เรียงตาม</span>
+              <select onchange="setAllSort(this.value)"
+                class="text-sm border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                <option value="newest">ใหม่สุด</option>
+                <option value="oldest">เก่าสุด</option>
+                <option value="status">สถานะ</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2 items-center">
+            <span class="text-xs text-slate-400">สถานะ:</span>
+            <button onclick="toggleAllStatus('รับเรื่อง')"       class="room-filter active" data-as="รับเรื่อง">🟡 มีงานใหม่</button>
+            <button onclick="toggleAllStatus('กำลังดำเนินการ')" class="room-filter active" data-as="กำลังดำเนินการ">🔵 กำลังดำเนินงาน</button>
+            <button onclick="toggleAllStatus('เสร็จสิ้น')"       class="room-filter active" data-as="เสร็จสิ้น">✅ เสร็จสิ้น</button>
+            <button onclick="toggleAllStatus('ยกเลิก')"           class="room-filter active" data-as="ยกเลิก">❌ ยกเลิก</button>
+          </div>
+        </div>
+        <div id="loadingAll" class="text-center py-16 text-slate-400">
+          <i class="fa-solid fa-spinner fa-spin text-4xl mb-3"></i>
+          <p class="text-sm">กำลังโหลดข้อมูล...</p>
+        </div>
+        <div id="allList" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+        <div id="emptyAll" class="hidden text-center py-16">
+          <i class="fa-solid fa-inbox text-slate-300 text-5xl mb-4"></i>
+          <p class="text-slate-500">ไม่มีข้อมูลที่ตรงกับเงื่อนไข</p>
         </div>
       </section>
 
@@ -227,7 +267,10 @@
   // ============================================================
   let _session = null;
   let _pendingRepairs = [], _pendingBookings = [], _pendingFilter = 'all';
-  let _pendingStatuses = new Set(['รับเรื่อง', 'รอดำเนินการ', 'กำลังดำเนินการ']);
+  let _pendingStatuses = new Set(['รับเรื่อง', 'กำลังดำเนินการ']);
+  let _allRepairs = [], _allBookings = [], _allFilter = 'all';
+  let _allStatuses = new Set(['รับเรื่อง', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก']);
+  let _allSort = 'newest';
   let _pendingSort = 'newest';
 
   // ============================================================
@@ -297,6 +340,7 @@
     document.getElementById('tab-' + tab).classList.remove('hidden');
     document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
     if (tab === 'admins') loadAdmins();
+    if (tab === 'all' && !_allRepairs.length && !_allBookings.length) fetchAll();
   }
 
   // ============================================================
@@ -380,6 +424,77 @@
     bookings.forEach(b => list.insertAdjacentHTML('beforeend', bookingCard(b)));
   }
 
+  // ============================================================
+  // ALL DATA TAB
+  // ============================================================
+  function fetchAll() {
+    document.getElementById('loadingAll').classList.remove('hidden');
+    document.getElementById('allList').innerHTML = '';
+    document.getElementById('emptyAll').classList.add('hidden');
+    fetch(window.APP_CONFIG.GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(authBody({ type: 'adminGetAllData' })),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          _allRepairs  = data.repairs  || [];
+          _allBookings = data.bookings || [];
+          renderAll();
+        } else showToast('error', data.error || 'โหลดข้อมูลไม่สำเร็จ');
+      })
+      .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'))
+      .finally(() => document.getElementById('loadingAll').classList.add('hidden'));
+  }
+
+  function filterAll(f) {
+    _allFilter = f;
+    document.querySelectorAll('[data-af]').forEach(b => b.classList.remove('active'));
+    document.querySelector(`[data-af="${f}"]`).classList.add('active');
+    renderAll();
+  }
+
+  function toggleAllStatus(s) {
+    if (_allStatuses.has(s)) {
+      if (_allStatuses.size <= 1) return;
+      _allStatuses.delete(s);
+    } else {
+      _allStatuses.add(s);
+    }
+    document.querySelectorAll('[data-as]').forEach(b =>
+      b.classList.toggle('active', _allStatuses.has(b.dataset.as))
+    );
+    renderAll();
+  }
+
+  function setAllSort(val) {
+    _allSort = val;
+    renderAll();
+  }
+
+  function renderAll() {
+    const list = document.getElementById('allList');
+    list.innerHTML = '';
+    const sortFn = (a, b) => {
+      if (_allSort === 'oldest') return a.ticket.localeCompare(b.ticket);
+      if (_allSort === 'status') {
+        const order = ['รับเรื่อง', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก'];
+        return order.indexOf(a.status) - order.indexOf(b.status);
+      }
+      return b.ticket.localeCompare(a.ticket);
+    };
+    const repairs  = (_allFilter !== 'booking' ? _allRepairs  : []).filter(r => _allStatuses.has(r.status)).sort(sortFn);
+    const bookings = (_allFilter !== 'repair'  ? _allBookings : []).filter(b => _allStatuses.has(b.status)).sort(sortFn);
+    if (!repairs.length && !bookings.length) {
+      document.getElementById('emptyAll').classList.remove('hidden');
+      return;
+    }
+    document.getElementById('emptyAll').classList.add('hidden');
+    repairs.forEach(r  => list.insertAdjacentHTML('beforeend', repairCard(r)));
+    bookings.forEach(b => list.insertAdjacentHTML('beforeend', bookingCard(b)));
+  }
+
   function updateStats() {
     document.getElementById('statRepairs').textContent  = _pendingRepairs.length;
     document.getElementById('statBookings').textContent = _pendingBookings.length;
@@ -389,15 +504,13 @@
   // CARD BUILDERS
   // ============================================================
   const STATUS_LABEL = {
-    'รับเรื่อง':        'มีงานใหม่',
-    'รอดำเนินการ':     'รอดำเนินการ',
-    'กำลังดำเนินการ':  'กำลังดำเนินงาน',
-    'เสร็จสิ้น':        'เสร็จสิ้น',
-    'ยกเลิก':           'ยกเลิก',
+    'รับเรื่อง':       'มีงานใหม่',
+    'กำลังดำเนินการ': 'กำลังดำเนินงาน',
+    'เสร็จสิ้น':       'เสร็จสิ้น',
+    'ยกเลิก':          'ยกเลิก',
   };
   const S = {
     'รับเรื่อง':       'bg-yellow-100 text-yellow-700',
-    'รอดำเนินการ':    'bg-orange-100 text-orange-700',
     'กำลังดำเนินการ': 'bg-blue-100 text-blue-700',
     'เสร็จสิ้น':       'bg-green-100 text-green-700',
     'ยกเลิก':          'bg-red-100 text-red-700',

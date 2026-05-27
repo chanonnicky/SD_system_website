@@ -47,7 +47,7 @@ const CONFIG = {
 };
 
 // status ที่ถือว่า "ค้างอยู่" — ใช้กับระบบค้นหางาน
-const PENDING_STATUSES = ['รับเรื่อง', 'รอดำเนินการ', 'กำลังดำเนินการ'];
+const PENDING_STATUSES = ['รับเรื่อง', 'กำลังดำเนินการ'];
 
 // ============================================================
 // แจ้งซ่อม — Column layout (A:I)
@@ -184,6 +184,8 @@ function doPost(e) {
       result = handleAdminLogin(body);
     } else if (body.type === 'adminGetData') {
       result = handleAdminGetData(body);
+    } else if (body.type === 'adminGetAllData') {
+      result = handleAdminGetAllData(body);
     } else if (body.type === 'getAdmins') {
       result = handleGetAdmins(body);
     } else if (body.type === 'addAdmin') {
@@ -329,6 +331,49 @@ function handleUpdateStatus(data) {
 // PENDING TASKS — Reply API (ฟรี ไม่นับ quota)
 // คำสั่ง: /งาน  /ซ่อม  /จอง
 // ============================================================
+function getAllRepairs() {
+  const ss    = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(CONFIG.REPAIR_SHEET);
+  if (!sheet || sheet.getLastRow() <= 1) return [];
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 9).getValues()
+    .filter(r => r[0])
+    .map(r => ({
+      ticket:      String(r[0]),
+      name:        String(r[2]),
+      phone:       String(r[3]),
+      equipment:   String(r[4]),
+      location:    String(r[5]),
+      description: String(r[6]),
+      status:      String(r[8]),
+    }));
+}
+
+function getAllBookings() {
+  const ss    = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(CONFIG.BOOKING_SHEET);
+  if (!sheet || sheet.getLastRow() <= 1) return [];
+  const tz = Session.getScriptTimeZone();
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 13).getValues()
+    .filter(r => r[0])
+    .map(r => ({
+      ticket:    String(r[0]),
+      room:      String(r[2]),
+      date:      r[3] instanceof Date ? Utilities.formatDate(r[3], tz, 'yyyy-MM-dd') : String(r[3]).slice(0, 10),
+      startTime: normalizeTimeStr(r[4]),
+      endTime:   normalizeTimeStr(r[5]),
+      name:      String(r[6]),
+      phone:     String(r[7]),
+      attendees: String(r[8]),
+      purpose:   String(r[9]),
+      status:    String(r[12]),
+    }));
+}
+
+function handleAdminGetAllData(data) {
+  if (!verifyAdmin(data.username)) return { success: false, error: 'Unauthorized' };
+  return { success: true, repairs: getAllRepairs(), bookings: getAllBookings() };
+}
+
 function getPendingRepairs() {
   const ss    = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   const sheet = ss.getSheetByName(CONFIG.REPAIR_SHEET);
