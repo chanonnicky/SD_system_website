@@ -291,9 +291,14 @@
           </h3>
           <p class="text-xs text-slate-400 mb-3">กดเพื่อดูว่าอุปกรณ์นี้พร้อมรับแจ้งเตือนหรือยัง</p>
           <div id="diagResult" class="mb-3 hidden space-y-1.5 text-xs"></div>
-          <button onclick="runDiag()" class="w-full py-2 px-4 rounded-xl bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors">
-            <i class="fa-solid fa-magnifying-glass mr-2"></i>ตรวจสอบ
-          </button>
+          <div class="flex gap-2">
+            <button onclick="runDiag()" class="flex-1 py-2 px-4 rounded-xl bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors">
+              <i class="fa-solid fa-magnifying-glass mr-2"></i>ตรวจสอบ
+            </button>
+            <button onclick="registerThisDevice()" id="regDevBtn" class="flex-1 py-2 px-4 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors">
+              <i class="fa-solid fa-mobile-screen mr-2"></i>ลงทะเบียนอุปกรณ์นี้
+            </button>
+          </div>
         </div>
 
         <!-- ทดสอบการแจ้งเตือน -->
@@ -1017,6 +1022,74 @@
       btn.innerHTML = '<i class="fa-solid fa-bell" style="color:white"></i>';
       btn.title = 'กดเพื่อรับการแจ้งเตือนเมื่อมีงานใหม่';
     }
+  }
+
+  async function registerThisDevice() {
+    const btn = document.getElementById('regDevBtn');
+    const box = document.getElementById('diagResult');
+    box.classList.remove('hidden');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังลงทะเบียน...';
+
+    const step = (label, ok) => {
+      const cls = ok ? 'text-green-700' : 'text-red-600';
+      const ico = ok ? 'fa-circle-check' : 'fa-circle-xmark';
+      const el = document.createElement('div');
+      el.className = `flex items-start gap-2 text-xs ${cls}`;
+      el.innerHTML = `<i class="fa-solid ${ico} w-4 mt-0.5"></i><span>${label}</span>`;
+      box.appendChild(el);
+    };
+
+    box.innerHTML = '';
+
+    try {
+      // Step 1: Permission
+      const perm = await Notification.requestPermission();
+      step(`สิทธิ์แจ้งเตือน: ${perm}`, perm === 'granted');
+      if (perm !== 'granted') { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-mobile-screen mr-2"></i>ลงทะเบียนอุปกรณ์นี้'; return; }
+
+      // Step 2: Firebase init
+      const ok = await ensureNotifInit();
+      step(`Firebase init: ${ok ? 'สำเร็จ' : 'ล้มเหลว'}`, ok);
+      if (!ok) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-mobile-screen mr-2"></i>ลงทะเบียนอุปกรณ์นี้'; return; }
+
+      // Step 3: Get FCM token
+      let token = null;
+      try {
+        token = await _notifMessaging.getToken({
+          vapidKey: window.APP_CONFIG.FIREBASE_VAPID,
+          serviceWorkerRegistration: _notifSwReg,
+        });
+        step(token ? `ได้รับ FCM token แล้ว (${token.substring(0,20)}...)` : 'getToken คืนค่า null — VAPID อาจไม่ตรง', !!token);
+      } catch (e) {
+        step(`getToken error: ${e.message}`, false);
+        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-mobile-screen mr-2"></i>ลงทะเบียนอุปกรณ์นี้';
+        return;
+      }
+      if (!token) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-mobile-screen mr-2"></i>ลงทะเบียนอุปกรณ์นี้'; return; }
+
+      // Step 4: Send to GAS
+      try {
+        const res = await fetch(window.APP_CONFIG.GAS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({ type: 'registerFCMToken', token, userAgent: navigator.userAgent }),
+        });
+        const data = await res.json().catch(() => ({}));
+        step(data.success !== false ? 'บันทึก token ใน Sheets แล้ว ✅' : `บันทึก token ล้มเหลว: ${data.error}`, data.success !== false);
+        if (data.success !== false) updateNotifBtn('granted');
+      } catch (e) {
+        step(`ส่ง GAS ล้มเหลว: ${e.message}`, false);
+      }
+    } catch (e) {
+      const el = document.createElement('div');
+      el.className = 'text-xs text-red-600';
+      el.textContent = 'Error: ' + e.message;
+      box.appendChild(el);
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-mobile-screen mr-2"></i>ลงทะเบียนอุปกรณ์นี้';
   }
 
   async function runDiag() {
