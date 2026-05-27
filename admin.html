@@ -61,6 +61,9 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
+          <button id="notifBtn" onclick="requestNotificationPermission()" class="p-2 hover:bg-blue-700 rounded-lg transition-colors" title="กดเพื่อรับการแจ้งเตือนเมื่อมีงานใหม่">
+            <i class="fa-solid fa-bell text-white"></i>
+          </button>
           <button onclick="loadData()" class="p-2 hover:bg-blue-700 rounded-lg transition-colors" title="รีเฟรช">
             <i class="fa-solid fa-rotate-right text-white"></i>
           </button>
@@ -162,6 +165,8 @@
   <!-- Toast -->
   <div id="toast" class="hidden fixed bottom-6 right-6 z-50 max-w-sm"></div>
 
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
   <script src="assets/js/config.js"></script>
   <script>
   // ============================================================
@@ -197,6 +202,7 @@
           document.getElementById('adminNameDisplay').textContent = data.name || username;
           fetchPending();
           loadAdmins();
+          initNotifAfterLogin();
         } else {
           showLoginError(data.error || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
         }
@@ -481,6 +487,71 @@
     t.innerHTML = `<i class="fa-solid fa-${type==='success'?'check':'exclamation-triangle'} mr-2"></i>${esc(msg)}`;
     clearTimeout(window._tt);
     window._tt = setTimeout(() => t.className = 'hidden', 3000);
+  }
+
+  // ============================================================
+  // NOTIFICATIONS — Admin only
+  // ============================================================
+  var _notifMessaging = null, _notifSwReg = null, _notifInited = false;
+
+  window.requestNotificationPermission = async function () {
+    if (!('Notification' in window)) { alert('เบราว์เซอร์นี้ไม่รองรับการแจ้งเตือน'); return; }
+    const perm = await Notification.requestPermission();
+    updateNotifBtn(perm);
+    if (perm === 'granted') {
+      await ensureNotifInit();
+      await registerNotifToken();
+    } else if (perm === 'denied') {
+      alert('การแจ้งเตือนถูกปิดอยู่\nกรุณาเปิดในการตั้งค่าเบราว์เซอร์');
+    }
+  };
+
+  async function ensureNotifInit() {
+    if (_notifInited) return;
+    if (!window.firebase || !window.APP_CONFIG || !window.APP_CONFIG.FIREBASE) return;
+    try {
+      if (!firebase.apps || !firebase.apps.length) firebase.initializeApp(window.APP_CONFIG.FIREBASE);
+      _notifMessaging = firebase.messaging();
+      if (!_notifSwReg) _notifSwReg = await navigator.serviceWorker.register('./sw.js');
+      _notifInited = true;
+    } catch (err) { console.warn('[Notif]', err); }
+  }
+
+  async function registerNotifToken() {
+    if (!_notifMessaging || !_notifSwReg || !window.APP_CONFIG) return;
+    try {
+      const token = await _notifMessaging.getToken({
+        vapidKey: window.APP_CONFIG.FIREBASE_VAPID,
+        serviceWorkerRegistration: _notifSwReg,
+      });
+      if (!token) return;
+      await fetch(window.APP_CONFIG.GAS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'registerFCMToken', token, userAgent: navigator.userAgent }),
+      });
+    } catch (err) { console.warn('[Notif] token error:', err); }
+  }
+
+  function updateNotifBtn(permission) {
+    const btn = document.getElementById('notifBtn');
+    if (!btn) return;
+    if (permission === 'granted') {
+      btn.innerHTML = '<i class="fa-solid fa-bell" style="color:#4ade80"></i>';
+      btn.title = 'เปิดการแจ้งเตือนแล้ว';
+    } else if (permission === 'denied') {
+      btn.innerHTML = '<i class="fa-solid fa-bell-slash" style="color:#f87171"></i>';
+      btn.title = 'การแจ้งเตือนถูกปิด — เปิดในการตั้งค่าเบราว์เซอร์';
+    } else {
+      btn.innerHTML = '<i class="fa-solid fa-bell" style="color:white"></i>';
+      btn.title = 'กดเพื่อรับการแจ้งเตือนเมื่อมีงานใหม่';
+    }
+  }
+
+  function initNotifAfterLogin() {
+    if (!('Notification' in window)) return;
+    updateNotifBtn(Notification.permission);
+    if (Notification.permission === 'granted') ensureNotifInit().then(registerNotifToken);
   }
 
   // ============================================================
