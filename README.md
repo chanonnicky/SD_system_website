@@ -1,6 +1,7 @@
 # ระบบงานโสตทัศนูปกรณ์ โรงเรียนเซนต์ดอมินิก
 
 **Live:** https://chanonnicky.github.io/SD_AV_website/
+**Admin:** https://chanonnicky.github.io/SD_AV_website/admin.html
 
 ระบบแจ้งซ่อมอุปกรณ์และจองห้องประชุมสำหรับงานโสตทัศนูปกรณ์ พัฒนาด้วย HTML + Tailwind CSS โดยใช้ Google Apps Script เป็น Backend และ Google Sheets เป็นฐานข้อมูล รองรับการติดตั้งเป็น PWA บนมือถือและแจ้งเตือนผ่าน Push Notification
 
