@@ -86,6 +86,9 @@
           <button onclick="showAdminTab('admins')" class="tab-btn" data-tab="admins">
             <i class="fa-solid fa-users-gear mr-2"></i>จัดการ Admin
           </button>
+          <button onclick="showAdminTab('guide')" class="tab-btn" data-tab="guide">
+            <i class="fa-solid fa-book-open mr-2"></i>คู่มือ
+          </button>
         </nav>
       </div>
     </header>
@@ -222,6 +225,112 @@
           <i class="fa-solid fa-users-slash text-4xl mb-3"></i>
           <p>ยังไม่มีผู้ดูแลในระบบ</p>
         </div>
+      </section>
+
+      <!-- ===== TAB: คู่มือ ===== -->
+      <section id="tab-guide" class="tab-content hidden max-w-2xl mx-auto space-y-6">
+
+        <!-- ติดตั้ง App บน Android -->
+        <div class="card">
+          <h3 class="font-bold text-slate-800 text-base mb-4">
+            <i class="fa-brands fa-android mr-2 text-green-600 text-lg"></i>ติดตั้งแอปบน Android
+          </h3>
+          <ol class="space-y-3 text-sm text-slate-600">
+            <li class="flex gap-3">
+              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">1</span>
+              <span>เปิดเบราว์เซอร์ <strong>Chrome</strong> แล้วไปที่ลิงก์ Admin Panel</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">2</span>
+              <span>กดไอคอน <strong>⋮</strong> (เมนู 3 จุด) มุมขวาบนของ Chrome</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">3</span>
+              <span>กด <strong>"เพิ่มในหน้าจอหลัก"</strong> หรือ <strong>"ติดตั้งแอป"</strong></span>
+            </li>
+            <li class="flex gap-3">
+              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">4</span>
+              <span>กด <strong>"ติดตั้ง"</strong> เพื่อยืนยัน — แอปจะปรากฏที่หน้าจอหลัก</span>
+            </li>
+          </ol>
+        </div>
+
+        <!-- ติดตั้ง App บน iOS -->
+        <div class="card">
+          <h3 class="font-bold text-slate-800 text-base mb-4">
+            <i class="fa-brands fa-apple mr-2 text-slate-700 text-lg"></i>ติดตั้งแอปบน iPhone / iPad
+          </h3>
+          <ol class="space-y-3 text-sm text-slate-600">
+            <li class="flex gap-3">
+              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">1</span>
+              <span>เปิดเบราว์เซอร์ <strong>Safari</strong> (iOS รองรับเฉพาะ Safari เท่านั้น)</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">2</span>
+              <span>ไปที่ลิงก์ Admin Panel แล้วกดไอคอน <strong>แชร์</strong> <i class="fa-solid fa-arrow-up-from-bracket text-xs"></i> ที่แถบด้านล่าง</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">3</span>
+              <span>เลื่อนลงแล้วกด <strong>"เพิ่มไปยังหน้าจอเริ่มต้น"</strong></span>
+            </li>
+            <li class="flex gap-3">
+              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">4</span>
+              <span>กด <strong>"เพิ่ม"</strong> มุมขวาบน — แอปจะปรากฏที่หน้าจอหลัก</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="flex-shrink-0 w-6 h-6 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center font-bold text-xs">!</span>
+              <span class="text-orange-700"><strong>สำคัญ:</strong> ต้องเปิดแอปจากไอคอนที่หน้าจอหลักเท่านั้น จึงจะรับการแจ้งเตือนได้ (iOS 16.4 ขึ้นไป)</span>
+            </li>
+          </ol>
+        </div>
+
+        <!-- เปิดการแจ้งเตือน -->
+        <div class="card">
+          <h3 class="font-bold text-slate-800 text-base mb-4">
+            <i class="fa-solid fa-bell mr-2 text-yellow-500 text-lg"></i>เปิดรับการแจ้งเตือน Push Notification
+          </h3>
+          <ol class="space-y-3 text-sm text-slate-600">
+            <li class="flex gap-3">
+              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">1</span>
+              <span>Login เข้าหน้า Admin Panel</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">2</span>
+              <span>กดปุ่ม <i class="fa-solid fa-bell text-white bg-blue-700 px-1.5 py-0.5 rounded-md text-xs"></i> ที่มุมขวาบนของหน้า</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">3</span>
+              <span>กด <strong>"Allow"</strong> หรือ <strong>"อนุญาต"</strong> เมื่อเบราว์เซอร์ถาม</span>
+            </li>
+            <li class="flex gap-3">
+              <span class="flex-shrink-0 w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center font-bold text-xs">✓</span>
+              <span>ไอคอนกระดิ่งจะเปลี่ยนเป็นสีเขียว <i class="fa-solid fa-bell" style="color:#4ade80"></i> แสดงว่าเปิดการแจ้งเตือนสำเร็จ</span>
+            </li>
+          </ol>
+          <div class="mt-4 p-3 bg-slate-50 rounded-xl text-xs text-slate-500 space-y-1">
+            <p><i class="fa-solid fa-circle-info mr-1 text-blue-400"></i>ถ้ากดปุ่มแล้วขึ้น "Denied" ต้องไปเปิดใน <strong>การตั้งค่าเบราว์เซอร์ → การแจ้งเตือน → เว็บไซต์นี้ → อนุญาต</strong></p>
+            <p><i class="fa-solid fa-circle-info mr-1 text-blue-400"></i>ต้องทำบน <strong>ทุกอุปกรณ์</strong> ที่ต้องการรับแจ้งเตือน</p>
+          </div>
+        </div>
+
+        <!-- ลิงก์สำคัญ -->
+        <div class="card">
+          <h3 class="font-bold text-slate-800 text-base mb-4">
+            <i class="fa-solid fa-link mr-2 text-blue-600"></i>ลิงก์สำคัญ
+          </h3>
+          <div class="space-y-2 text-sm">
+            <a href="index.html" target="_blank" class="flex items-center justify-between p-3 bg-slate-50 hover:bg-blue-50 rounded-xl transition-colors group">
+              <span class="text-slate-700 group-hover:text-blue-700"><i class="fa-solid fa-house mr-2 text-slate-400"></i>หน้าหลัก (แจ้งซ่อม / จองห้อง)</span>
+              <i class="fa-solid fa-arrow-up-right-from-square text-slate-300 group-hover:text-blue-400 text-xs"></i>
+            </a>
+            <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+              <span class="text-slate-700"><i class="fa-solid fa-table-cells mr-2 text-slate-400"></i>Google Sheets (ฐานข้อมูล)</span>
+              <a href="https://docs.google.com/spreadsheets/d/1rHGjwT6ZBf0qryjXahaw1RUve3ozvbIB89u3gSYzhbU/edit" target="_blank" rel="noopener"
+                class="text-blue-600 hover:underline text-xs">เปิด <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i></a>
+            </div>
+          </div>
+        </div>
+
       </section>
 
     </main>
