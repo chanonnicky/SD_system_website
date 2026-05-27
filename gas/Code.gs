@@ -1479,7 +1479,7 @@ function sendFCMPush(title, body) {
             notification: { title: title, body: body },
             webpush: {
               notification: { icon: icon, badge: icon },
-              fcm_options: { link: 'https://chanonnicky.github.io/SD_AV_website/' },
+              fcm_options: { link: 'https://chanonnicky.github.io/SD_AV_website/admin.html' },
             },
           },
         }),
