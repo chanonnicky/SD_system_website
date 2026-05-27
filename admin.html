@@ -107,10 +107,31 @@
 
       <!-- ===== TAB: งานค้างอยู่ ===== -->
       <section id="tab-pending" class="tab-content">
-        <div class="flex flex-wrap gap-2 mb-4">
-          <button onclick="filterPending('all')"     class="room-filter active" data-f="all"><i class="fa-solid fa-layer-group mr-1"></i>ทั้งหมด</button>
-          <button onclick="filterPending('repair')"  class="room-filter" data-f="repair"><i class="fa-solid fa-screwdriver-wrench mr-1"></i>แจ้งซ่อม</button>
-          <button onclick="filterPending('booking')" class="room-filter" data-f="booking"><i class="fa-solid fa-calendar mr-1"></i>จองห้อง</button>
+        <div class="space-y-3 mb-5">
+          <!-- Row 1: ประเภท + เรียงตาม -->
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex flex-wrap gap-2">
+              <button onclick="filterPending('all')"     class="room-filter active" data-f="all"><i class="fa-solid fa-layer-group mr-1"></i>ทั้งหมด</button>
+              <button onclick="filterPending('repair')"  class="room-filter" data-f="repair"><i class="fa-solid fa-screwdriver-wrench mr-1"></i>แจ้งซ่อม</button>
+              <button onclick="filterPending('booking')" class="room-filter" data-f="booking"><i class="fa-solid fa-calendar mr-1"></i>จองห้อง</button>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-slate-400 whitespace-nowrap">เรียงตาม</span>
+              <select onchange="setSort(this.value)" id="sortSelect"
+                class="text-sm border border-slate-200 rounded-lg px-2 py-1.5 bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                <option value="newest">ใหม่สุด</option>
+                <option value="oldest">เก่าสุด</option>
+                <option value="status">สถานะ</option>
+              </select>
+            </div>
+          </div>
+          <!-- Row 2: สถานะ (multi-select) -->
+          <div class="flex flex-wrap gap-2 items-center">
+            <span class="text-xs text-slate-400">สถานะ:</span>
+            <button onclick="toggleStatusFilter('รับเรื่อง')"       class="room-filter active" data-s="รับเรื่อง">🟡 รับเรื่อง</button>
+            <button onclick="toggleStatusFilter('รอดำเนินการ')"     class="room-filter active" data-s="รอดำเนินการ">🟠 รอดำเนินการ</button>
+            <button onclick="toggleStatusFilter('กำลังดำเนินการ')" class="room-filter active" data-s="กำลังดำเนินการ">🔵 กำลังดำเนินการ</button>
+          </div>
         </div>
         <div id="loadingPending" class="text-center py-16 text-slate-400">
           <i class="fa-solid fa-spinner fa-spin text-4xl mb-3"></i>
@@ -204,8 +225,10 @@
   // ============================================================
   // STATE
   // ============================================================
-  let _session = null; // { username, password, name }
+  let _session = null;
   let _pendingRepairs = [], _pendingBookings = [], _pendingFilter = 'all';
+  let _pendingStatuses = new Set(['รับเรื่อง', 'รอดำเนินการ', 'กำลังดำเนินการ']);
+  let _pendingSort = 'newest';
 
   // ============================================================
   // AUTH
@@ -311,12 +334,43 @@
     renderPending();
   }
 
+  function toggleStatusFilter(s) {
+    if (_pendingStatuses.has(s)) {
+      if (_pendingStatuses.size <= 1) return;
+      _pendingStatuses.delete(s);
+    } else {
+      _pendingStatuses.add(s);
+    }
+    document.querySelectorAll('[data-s]').forEach(b =>
+      b.classList.toggle('active', _pendingStatuses.has(b.dataset.s))
+    );
+    renderPending();
+  }
+
+  function setSort(val) {
+    _pendingSort = val;
+    renderPending();
+  }
+
   function renderPending() {
     const list = document.getElementById('pendingList');
     list.innerHTML = '';
     document.getElementById('loadingPending').classList.add('hidden');
-    const repairs  = _pendingFilter !== 'booking' ? _pendingRepairs  : [];
-    const bookings = _pendingFilter !== 'repair'  ? _pendingBookings : [];
+
+    const sortFn = (a, b) => {
+      if (_pendingSort === 'oldest') return a.ticket.localeCompare(b.ticket);
+      if (_pendingSort === 'status') {
+        const order = ['รับเรื่อง', 'รอดำเนินการ', 'กำลังดำเนินการ'];
+        return order.indexOf(a.status) - order.indexOf(b.status);
+      }
+      return b.ticket.localeCompare(a.ticket); // newest
+    };
+
+    const repairs  = (_pendingFilter !== 'booking' ? _pendingRepairs  : [])
+                       .filter(r => _pendingStatuses.has(r.status)).sort(sortFn);
+    const bookings = (_pendingFilter !== 'repair'  ? _pendingBookings : [])
+                       .filter(b => _pendingStatuses.has(b.status)).sort(sortFn);
+
     if (!repairs.length && !bookings.length) {
       document.getElementById('emptyPending').classList.remove('hidden');
       return;
