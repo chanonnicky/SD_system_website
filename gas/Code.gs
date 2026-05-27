@@ -100,13 +100,17 @@ function doGet(e) {
       Logger.log('ticketData=' + JSON.stringify(ticketData));
       if (ticketData) {
         try {
-          sendLineFlex(buildStatusUpdateFlex(ticketData));
-          Logger.log('sendLineFlex called OK');
+          const isRepair = String(params.ticket).startsWith('REP');
+          const detail = isRepair
+            ? `อุปกรณ์: ${ticketData.equipment || ''} | สถานที่: ${ticketData.location || ''}`
+            : `ห้อง: ${ticketData.room || ''} | ผู้จอง: ${ticketData.name || ''}`;
+          sendFCMPush(`✅ ${params.ticket} เสร็จสิ้น`, detail);
+          Logger.log('sendFCMPush called OK');
         } catch (flexErr) {
-          Logger.log('buildStatusUpdateFlex error: ' + flexErr.message);
+          Logger.log('sendFCMPush error: ' + flexErr.message);
         }
       } else {
-        Logger.log('getTicketData returned null — LINE not sent');
+        Logger.log('getTicketData returned null — FCM not sent');
       }
     }
 
@@ -563,7 +567,6 @@ function handleRepair(data) {
     'รับเรื่อง',           // I สถานะ
   ]);
 
-  sendLineFlex(buildRepairFlex(data, ticket, dateStr, imageUrl));
   try { sendFCMPush(`🔧 แจ้งซ่อมใหม่ ${ticket}`, `อุปกรณ์: ${data.equipment || ''} | สถานที่: ${data.location || ''}`); } catch (_) {}
   return { success: true, ticket };
 }
@@ -647,7 +650,6 @@ function handleBooking(data) {
   const months = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
   const dateDisplay = `${dateParts[2]} ${months[parseInt(dateParts[1])-1]} ${dateParts[0]} (ค.ศ.)`;
 
-  sendLineFlex(buildBookingFlex(data, ticket, createdAt, dateDisplay));
   try { sendFCMPush(`📅 จองห้องใหม่ ${ticket}`, `ห้อง: ${data.room || ''} | วันที่: ${dateDisplay}`); } catch (_) {}
   return { success: true, ticket };
 }
