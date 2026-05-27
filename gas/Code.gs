@@ -190,6 +190,8 @@ function doPost(e) {
       result = handleAddAdmin(body);
     } else if (body.type === 'removeAdmin') {
       result = handleRemoveAdmin(body);
+    } else if (body.type === 'editAdmin') {
+      result = handleEditAdmin(body);
     } else {
       result = { success: false, error: 'Unknown type' };
     }
@@ -1287,6 +1289,20 @@ function handleAddAdmin(data) {
   }
   const ts = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm');
   sheet.appendRow([usr, '', nm, rol, ts]);
+  return { success: true };
+}
+
+function handleEditAdmin(data) {
+  if (!verifyAdmin(data.username)) return { success: false, error: 'Unauthorized' };
+  const rowIndex = parseInt(data.rowIndex);
+  if (isNaN(rowIndex) || rowIndex < 0) return { success: false, error: 'rowIndex ไม่ถูกต้อง' };
+  const nm  = String(data.name || '').trim();
+  const rol = String(data.role || '').trim();
+  if (!nm) return { success: false, error: 'กรุณากรอกชื่อ' };
+  const sheet = getAdminUsersSheet();
+  if (!sheet || rowIndex + 2 > sheet.getLastRow()) return { success: false, error: 'ไม่พบแถวนี้' };
+  sheet.getRange(rowIndex + 2, 3).setValue(nm);
+  sheet.getRange(rowIndex + 2, 4).setValue(rol);
   return { success: true };
 }
 
