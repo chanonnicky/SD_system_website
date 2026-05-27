@@ -1262,12 +1262,13 @@ function handleGetAdmins(data) {
   if (!verifyAdmin(data.username)) return { success: false, error: 'Unauthorized' };
   const sheet = getAdminUsersSheet();
   if (sheet.getLastRow() <= 1) return { success: true, admins: [] };
-  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 5).getValues();
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 6).getValues();
   const admins = rows.filter(r => r[0]).map(r => ({
     username: String(r[0]),
     name:     String(r[2]),
     role:     String(r[3]),
     addedAt:  String(r[4]),
+    phone:    String(r[5] || ''),
   }));
   return { success: true, admins };
 }
@@ -1287,8 +1288,9 @@ function handleAddAdmin(data) {
       return { success: false, error: `username "${usr}" มีอยู่แล้ว` };
     }
   }
-  const ts = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm');
-  sheet.appendRow([usr, '', nm, rol, ts]);
+  const ts  = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm');
+  const phn = String(data.phone || '').trim();
+  sheet.appendRow([usr, '', nm, rol, ts, phn]);
   return { success: true };
 }
 
@@ -1296,13 +1298,15 @@ function handleEditAdmin(data) {
   if (!verifyAdmin(data.username)) return { success: false, error: 'Unauthorized' };
   const rowIndex = parseInt(data.rowIndex);
   if (isNaN(rowIndex) || rowIndex < 0) return { success: false, error: 'rowIndex ไม่ถูกต้อง' };
-  const nm  = String(data.name || '').trim();
-  const rol = String(data.role || '').trim();
+  const nm  = String(data.name  || '').trim();
+  const rol = String(data.role  || '').trim();
+  const phn = String(data.phone || '').trim();
   if (!nm) return { success: false, error: 'กรุณากรอกชื่อ' };
   const sheet = getAdminUsersSheet();
   if (!sheet || rowIndex + 2 > sheet.getLastRow()) return { success: false, error: 'ไม่พบแถวนี้' };
   sheet.getRange(rowIndex + 2, 3).setValue(nm);
   sheet.getRange(rowIndex + 2, 4).setValue(rol);
+  sheet.getRange(rowIndex + 2, 6).setValue(phn);
   return { success: true };
 }
 

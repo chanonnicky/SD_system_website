@@ -130,7 +130,7 @@
           <h3 class="font-semibold text-slate-700 mb-4">
             <i class="fa-solid fa-user-plus mr-2 text-blue-600"></i>เพิ่มผู้ดูแลใหม่
           </h3>
-          <div class="grid sm:grid-cols-3 gap-3">
+          <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div class="form-group">
               <label class="form-label required">ชื่อ-นามสกุล</label>
               <input type="text" id="newAdminName" class="form-input" placeholder="สมชาย ใจดี" />
@@ -142,6 +142,10 @@
             <div class="form-group">
               <label class="form-label">บทบาท</label>
               <input type="text" id="newAdminRole" class="form-input" placeholder="ช่างเทคนิค" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">เบอร์มือถือ</label>
+              <input type="tel" id="newAdminPhone" class="form-input" placeholder="08x-xxx-xxxx" />
             </div>
           </div>
           <button onclick="addAdmin()" class="btn-primary mt-3 px-6">
@@ -171,9 +175,13 @@
         <label class="form-label required">ชื่อ-นามสกุล</label>
         <input type="text" id="editName" class="form-input" />
       </div>
-      <div class="form-group mb-4">
+      <div class="form-group mb-3">
         <label class="form-label">บทบาท</label>
         <input type="text" id="editRole" class="form-input" />
+      </div>
+      <div class="form-group mb-4">
+        <label class="form-label">เบอร์มือถือ</label>
+        <input type="tel" id="editPhone" class="form-input" />
       </div>
       <div class="flex gap-2">
         <button onclick="saveEditAdmin()" class="btn-primary flex-1">
@@ -450,11 +458,12 @@
             <div class="text-xs text-slate-500 font-mono">@${esc(a.username)}</div>
             <div class="text-xs text-slate-500 mt-0.5">
               ${a.role ? `<span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-md mr-1">${esc(a.role)}</span>` : ''}
-              เพิ่มเมื่อ ${esc(a.addedAt)}
+              ${a.phone ? `<span class="text-slate-500"><i class="fa-solid fa-phone text-xs mr-0.5"></i>${esc(a.phone)}</span>` : ''}
             </div>
+            <div class="text-xs text-slate-400 mt-0.5">เพิ่มเมื่อ ${esc(a.addedAt)}</div>
           </div>
           <div class="flex gap-1 flex-shrink-0">
-            <button onclick="openEditAdmin(${i},'${esc(a.name)}','${esc(a.role)}')"
+            <button onclick="openEditAdmin(${i},'${esc(a.name)}','${esc(a.role)}','${esc(a.phone || '')}')"
               class="p-2 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="แก้ไข">
               <i class="fa-solid fa-pen text-sm"></i>
             </button>
@@ -473,28 +482,30 @@
     const name        = document.getElementById('newAdminName').value.trim();
     const newUsername = document.getElementById('newAdminUsername').value.trim();
     const role        = document.getElementById('newAdminRole').value.trim();
+    const phone       = document.getElementById('newAdminPhone').value.trim();
     if (!name || !newUsername) { showToast('error', 'กรุณากรอกชื่อและ username'); return; }
 
     fetch(window.APP_CONFIG.GAS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(authBody({ type: 'addAdmin', name, newUsername, role })),
+      body: JSON.stringify(authBody({ type: 'addAdmin', name, newUsername, role, phone })),
     })
       .then(r => r.json())
       .then(data => {
         if (data.success) {
           showToast('success', `เพิ่ม "${name}" แล้ว ✅`);
-          ['newAdminName','newAdminUsername','newAdminRole'].forEach(id => document.getElementById(id).value = '');
+          ['newAdminName','newAdminUsername','newAdminRole','newAdminPhone'].forEach(id => document.getElementById(id).value = '');
           loadAdmins();
         } else showToast('error', data.error || 'เพิ่มไม่สำเร็จ');
       })
       .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
   }
 
-  function openEditAdmin(rowIndex, name, role) {
+  function openEditAdmin(rowIndex, name, role, phone) {
     document.getElementById('editRowIndex').value = rowIndex;
-    document.getElementById('editName').value = name;
-    document.getElementById('editRole').value = role;
+    document.getElementById('editName').value  = name;
+    document.getElementById('editRole').value  = role;
+    document.getElementById('editPhone').value = phone || '';
     document.getElementById('editModal').classList.remove('hidden');
     document.getElementById('editName').focus();
   }
@@ -505,14 +516,15 @@
 
   function saveEditAdmin() {
     const rowIndex = parseInt(document.getElementById('editRowIndex').value);
-    const name = document.getElementById('editName').value.trim();
-    const role = document.getElementById('editRole').value.trim();
+    const name  = document.getElementById('editName').value.trim();
+    const role  = document.getElementById('editRole').value.trim();
+    const phone = document.getElementById('editPhone').value.trim();
     if (!name) { showToast('error', 'กรุณากรอกชื่อ'); return; }
 
     fetch(window.APP_CONFIG.GAS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(authBody({ type: 'editAdmin', rowIndex, name, role })),
+      body: JSON.stringify(authBody({ type: 'editAdmin', rowIndex, name, role, phone })),
     })
       .then(r => r.json())
       .then(data => {
