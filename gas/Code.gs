@@ -36,6 +36,13 @@ const CONFIG = {
   // NOTIFY_USER_IDS: userId ของ Admin ที่ต้องการรับแจ้งเตือน คั่นด้วย comma
   // ตั้งค่าใน Script Properties → NOTIFY_USER_IDS → "Uxxxxxxx,Uyyyyyyy"
   NOTIFY_USER_IDS:  _props.NOTIFY_USER_IDS  || '',
+  // FCM Push Notification — ตั้งค่าใน Script Properties:
+  //   FCM_PRIVATE_KEY  → private_key จาก service account JSON (วางทั้งบรรทัดรวม -----BEGIN/END-----)
+  //   FCM_CLIENT_EMAIL → client_email จาก service account JSON
+  FCM_PRIVATE_KEY:  (_props.FCM_PRIVATE_KEY  || '').replace(/\\n/g, '\n'),
+  FCM_CLIENT_EMAIL: _props.FCM_CLIENT_EMAIL  || 'firebase-adminsdk-fbsvc@sd-av-website.iam.gserviceaccount.com',
+  FCM_PROJECT_ID:   'sd-av-website',
+  FCM_TOKENS_SHEET: 'FCMTokens',
 };
 
 // status ที่ถือว่า "ค้างอยู่" — ใช้กับระบบค้นหางาน
@@ -166,6 +173,8 @@ function doPost(e) {
       result = handleBooking(body);
     } else if (body.type === 'updateStatus') {
       result = handleUpdateStatus(body);
+    } else if (body.type === 'registerFCMToken') {
+      result = handleRegisterFCMToken(body);
     } else {
       result = { success: false, error: 'Unknown type' };
     }
@@ -555,6 +564,7 @@ function handleRepair(data) {
   ]);
 
   sendLineFlex(buildRepairFlex(data, ticket, dateStr, imageUrl));
+  try { sendFCMPush(`🔧 แจ้งซ่อมใหม่ ${ticket}`, `อุปกรณ์: ${data.equipment || ''} | สถานที่: ${data.location || ''}`); } catch (_) {}
   return { success: true, ticket };
 }
 
@@ -638,6 +648,7 @@ function handleBooking(data) {
   const dateDisplay = `${dateParts[2]} ${months[parseInt(dateParts[1])-1]} ${dateParts[0]} (ค.ศ.)`;
 
   sendLineFlex(buildBookingFlex(data, ticket, createdAt, dateDisplay));
+  try { sendFCMPush(`📅 จองห้องใหม่ ${ticket}`, `ห้อง: ${data.room || ''} | วันที่: ${dateDisplay}`); } catch (_) {}
   return { success: true, ticket };
 }
 
@@ -1187,6 +1198,128 @@ function checkLineQuota() {
   Logger.log(`ใช้ไปแล้ว   : ${used} messages`);
   Logger.log(`คงเหลือ     : ${left} messages`);
   Logger.log('==================================');
+}
+
+// ============================================================
+// FCM PUSH NOTIFICATION
+// ============================================================
+function handleRegisterFCMToken(data) {
+  const token = String(data.token || '').trim();
+  if (!token) return { success: false, error: 'ไม่มี token' };
+
+  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  let sheet = ss.getSheetByName(CONFIG.FCM_TOKENS_SHEET);
+
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG.FCM_TOKENS_SHEET);
+    sheet.appendRow(['token', 'timestamp', 'userAgent']);
+    sheet.getRange(1, 1, 1, 3).setFontWeight('bold').setBackground('#1d4ed8').setFontColor('#ffffff');
+    sheet.setFrozenRows(1);
+  }
+
+  if (sheet.getLastRow() > 1) {
+    const existing = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues().flat();
+    if (existing.includes(token)) return { success: true };
+  }
+
+  const ts = Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm:ss');
+  sheet.appendRow([token, ts, data.userAgent || '']);
+  return { success: true };
+}
+
+function getFCMTokens() {
+  const ss    = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(CONFIG.FCM_TOKENS_SHEET);
+  if (!sheet || sheet.getLastRow() <= 1) return [];
+  return sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues().flat().filter(Boolean);
+}
+
+function removeFCMTokens(staleTokens) {
+  const ss    = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(CONFIG.FCM_TOKENS_SHEET);
+  if (!sheet || sheet.getLastRow() <= 1) return;
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getValues();
+  for (let i = rows.length - 1; i >= 0; i--) {
+    if (staleTokens.includes(rows[i][0])) sheet.deleteRow(i + 2);
+  }
+}
+
+function getServiceAccountAccessToken() {
+  if (!CONFIG.FCM_PRIVATE_KEY) return null;
+  const now   = Math.floor(Date.now() / 1000);
+  const enc   = s => Utilities.base64EncodeWebSafe(s).replace(/=+$/, '');
+  const header = enc(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const claim  = enc(JSON.stringify({
+    iss:   CONFIG.FCM_CLIENT_EMAIL,
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    aud:   'https://oauth2.googleapis.com/token',
+    exp:   now + 3600,
+    iat:   now,
+  }));
+  const unsigned  = header + '.' + claim;
+  const signature = enc(Utilities.computeRsaSha256Signature(unsigned, CONFIG.FCM_PRIVATE_KEY));
+  const jwt       = unsigned + '.' + signature;
+  try {
+    const res = UrlFetchApp.fetch('https://oauth2.googleapis.com/token', {
+      method: 'post',
+      contentType: 'application/x-www-form-urlencoded',
+      payload: 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=' + jwt,
+      muteHttpExceptions: true,
+    });
+    return JSON.parse(res.getContentText()).access_token || null;
+  } catch (err) {
+    Logger.log('FCM access token error: ' + err.message);
+    return null;
+  }
+}
+
+function sendFCMPush(title, body) {
+  if (!CONFIG.FCM_PRIVATE_KEY) return;
+  const tokens = getFCMTokens();
+  if (tokens.length === 0) return;
+
+  const accessToken = getServiceAccountAccessToken();
+  if (!accessToken) return;
+
+  const icon   = 'https://chanonnicky.github.io/SD_AV_website/assets/img/school_logo.webp';
+  const fcmUrl = 'https://fcm.googleapis.com/v1/projects/' + CONFIG.FCM_PROJECT_ID + '/messages:send';
+  const stale  = [];
+  let sent     = 0;
+
+  for (const token of tokens) {
+    try {
+      const res = UrlFetchApp.fetch(fcmUrl, {
+        method: 'post',
+        contentType: 'application/json',
+        headers: { Authorization: 'Bearer ' + accessToken },
+        payload: JSON.stringify({
+          message: {
+            token: token,
+            notification: { title: title, body: body },
+            webpush: {
+              notification: { icon: icon, badge: icon },
+              fcm_options: { link: 'https://chanonnicky.github.io/SD_AV_website/' },
+            },
+          },
+        }),
+        muteHttpExceptions: true,
+      });
+      if (res.getResponseCode() === 200) {
+        sent++;
+      } else {
+        const errBody = JSON.parse(res.getContentText());
+        if (errBody.error && (errBody.error.status === 'INVALID_ARGUMENT' || errBody.error.status === 'NOT_FOUND')) {
+          stale.push(token);
+        }
+        Logger.log('FCM error: ' + res.getResponseCode() + ' ' + res.getContentText());
+      }
+    } catch (err) {
+      Logger.log('FCM send error: ' + err.message);
+    }
+  }
+
+  Logger.log('FCM sent ' + sent + '/' + tokens.length);
+  if (stale.length > 0) removeFCMTokens(stale);
 }
 
 // TEST LINE CONNECTION — Run this manually from GAS Editor
