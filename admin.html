@@ -626,10 +626,9 @@
       </div>`;
 
     document.getElementById('modalBtns').innerHTML = `
-      <button onclick="updateStatus('${esc(job.ticket)}','รับเรื่อง')"       class="px-3 py-2 bg-yellow-50 text-yellow-700 rounded-xl hover:bg-yellow-100 transition-colors font-medium text-sm">🟡 มีงานใหม่</button>
       <button onclick="updateStatus('${esc(job.ticket)}','กำลังดำเนินการ')" class="px-3 py-2 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors font-medium text-sm">🔵 กำลังดำเนินงาน</button>
       <button onclick="updateStatus('${esc(job.ticket)}','เสร็จสิ้น')"       class="px-3 py-2 bg-green-50 text-green-700 rounded-xl hover:bg-green-100 transition-colors font-medium text-sm">✅ เสร็จสิ้น</button>
-      <button onclick="updateStatus('${esc(job.ticket)}','ยกเลิก')"           class="px-3 py-2 bg-red-50 text-red-700 rounded-xl hover:bg-red-100 transition-colors font-medium text-sm">❌ ยกเลิก</button>`;
+      <button onclick="updateStatus('${esc(job.ticket)}','ยกเลิก')"           class="px-3 py-2 bg-red-50 text-red-700 rounded-xl hover:bg-red-100 transition-colors font-medium text-sm col-span-2">❌ ยกเลิก</button>`;
 
     document.getElementById('jobModal').classList.remove('hidden');
   }
