@@ -228,123 +228,229 @@
       </section>
 
       <!-- ===== TAB: คู่มือ ===== -->
-      <section id="tab-guide" class="tab-content hidden max-w-2xl mx-auto space-y-6">
+      <section id="tab-guide" class="tab-content hidden max-w-2xl mx-auto space-y-5">
 
-        <!-- ติดตั้ง App บน Android -->
-        <div class="card">
-          <h3 class="font-bold text-slate-800 text-base mb-4">
-            <i class="fa-brands fa-android mr-2 text-green-600 text-lg"></i>ติดตั้งแอปบน Android
-          </h3>
+        <!-- Overview banner -->
+        <div class="rounded-2xl bg-gradient-to-br from-blue-700 to-blue-900 text-white p-5">
+          <p class="text-xs font-semibold uppercase tracking-widest text-blue-200 mb-1">คู่มือการใช้งาน</p>
+          <h2 class="text-lg font-bold mb-3">ระบบ Admin AV โรงเรียนเซนต์ดอมินิก</h2>
+          <div class="grid grid-cols-3 gap-2 text-center text-xs">
+            <div class="bg-white/10 rounded-xl p-2">
+              <div class="text-2xl mb-1">📱</div>
+              <div class="font-semibold">ขั้นตอนที่ 1</div>
+              <div class="text-blue-200">ติดตั้งแอป</div>
+            </div>
+            <div class="bg-white/10 rounded-xl p-2">
+              <div class="text-2xl mb-1">🔔</div>
+              <div class="font-semibold">ขั้นตอนที่ 2</div>
+              <div class="text-blue-200">เปิดแจ้งเตือน</div>
+            </div>
+            <div class="bg-white/10 rounded-xl p-2">
+              <div class="text-2xl mb-1">✅</div>
+              <div class="font-semibold">ขั้นตอนที่ 3</div>
+              <div class="text-blue-200">ทดสอบระบบ</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ขั้นตอนที่ 1 -->
+        <div class="flex items-center gap-3">
+          <div class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">1</div>
+          <h3 class="font-bold text-slate-700">ติดตั้งแอปลงเครื่อง</h3>
+          <div class="flex-1 h-px bg-slate-200"></div>
+        </div>
+
+        <!-- Android -->
+        <div class="card border-l-4 border-l-green-500">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+              <i class="fa-brands fa-android text-green-600"></i>
+            </div>
+            <div>
+              <div class="font-bold text-slate-800 text-sm">Android</div>
+              <div class="text-xs text-slate-400">Chrome Browser</div>
+            </div>
+          </div>
           <ol class="space-y-3 text-sm text-slate-600">
             <li class="flex gap-3">
-              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">1</span>
-              <span>เปิดเบราว์เซอร์ <strong>Chrome</strong> แล้วไปที่ลิงก์ Admin Panel</span>
+              <span class="flex-shrink-0 w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center font-bold text-xs">1</span>
+              <span>เปิด <strong>Chrome</strong> แล้วไปที่ลิงก์ Admin Panel</span>
             </li>
             <li class="flex gap-3">
-              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">2</span>
-              <span>กดไอคอน <strong>⋮</strong> (เมนู 3 จุด) มุมขวาบนของ Chrome</span>
+              <span class="flex-shrink-0 w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center font-bold text-xs">2</span>
+              <span>กดไอคอน <strong>⋮</strong> (3 จุด) มุมขวาบน แล้วเลือก <strong>"ติดตั้งแอป"</strong> หรือ <strong>"เพิ่มในหน้าจอหลัก"</strong></span>
             </li>
             <li class="flex gap-3">
-              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">3</span>
-              <span>กด <strong>"เพิ่มในหน้าจอหลัก"</strong> หรือ <strong>"ติดตั้งแอป"</strong></span>
+              <span class="flex-shrink-0 w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center font-bold text-xs">3</span>
+              <span>กด <strong>"ติดตั้ง"</strong> เพื่อยืนยัน — ไอคอนแอปจะปรากฏที่หน้าจอหลัก</span>
             </li>
             <li class="flex gap-3">
-              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">4</span>
-              <span>กด <strong>"ติดตั้ง"</strong> เพื่อยืนยัน — แอปจะปรากฏที่หน้าจอหลัก</span>
+              <span class="flex-shrink-0 w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center font-bold text-xs">4</span>
+              <span>เปิดแอปจากไอคอนที่หน้าจอหลัก แล้วทำขั้นตอนที่ 2</span>
             </li>
           </ol>
         </div>
 
-        <!-- ติดตั้ง App บน iOS -->
-        <div class="card">
-          <h3 class="font-bold text-slate-800 text-base mb-4">
-            <i class="fa-brands fa-apple mr-2 text-slate-700 text-lg"></i>ติดตั้งแอปบน iPhone / iPad
-          </h3>
+        <!-- iOS -->
+        <div class="card border-l-4 border-l-slate-400">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">
+              <i class="fa-brands fa-apple text-slate-700"></i>
+            </div>
+            <div>
+              <div class="font-bold text-slate-800 text-sm">iPhone / iPad</div>
+              <div class="text-xs text-slate-400">Safari Browser · iOS 16.4+</div>
+            </div>
+          </div>
           <ol class="space-y-3 text-sm text-slate-600">
             <li class="flex gap-3">
-              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">1</span>
-              <span>เปิดเบราว์เซอร์ <strong>Safari</strong> (iOS รองรับเฉพาะ Safari เท่านั้น)</span>
+              <span class="flex-shrink-0 w-6 h-6 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center font-bold text-xs">1</span>
+              <span>เปิด <strong>Safari</strong> (ต้องใช้ Safari เท่านั้น — Chrome บน iOS ไม่รองรับ)</span>
             </li>
             <li class="flex gap-3">
-              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">2</span>
-              <span>ไปที่ลิงก์ Admin Panel แล้วกดไอคอน <strong>แชร์</strong> <i class="fa-solid fa-arrow-up-from-bracket text-xs"></i> ที่แถบด้านล่าง</span>
+              <span class="flex-shrink-0 w-6 h-6 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center font-bold text-xs">2</span>
+              <span>ไปที่ลิงก์ Admin Panel แล้วกดไอคอน <strong>แชร์</strong> <i class="fa-solid fa-arrow-up-from-bracket text-xs text-blue-500"></i> ที่แถบด้านล่าง</span>
             </li>
             <li class="flex gap-3">
-              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">3</span>
-              <span>เลื่อนลงแล้วกด <strong>"เพิ่มไปยังหน้าจอเริ่มต้น"</strong></span>
+              <span class="flex-shrink-0 w-6 h-6 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center font-bold text-xs">3</span>
+              <span>เลื่อนหาแล้วกด <strong>"เพิ่มไปยังหน้าจอเริ่มต้น"</strong> (Add to Home Screen)</span>
             </li>
             <li class="flex gap-3">
-              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">4</span>
-              <span>กด <strong>"เพิ่ม"</strong> มุมขวาบน — แอปจะปรากฏที่หน้าจอหลัก</span>
-            </li>
-            <li class="flex gap-3">
-              <span class="flex-shrink-0 w-6 h-6 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center font-bold text-xs">!</span>
-              <span class="text-orange-700"><strong>สำคัญ:</strong> ต้องเปิดแอปจากไอคอนที่หน้าจอหลักเท่านั้น จึงจะรับการแจ้งเตือนได้ (iOS 16.4 ขึ้นไป)</span>
+              <span class="flex-shrink-0 w-6 h-6 bg-slate-100 text-slate-600 rounded-full flex items-center justify-center font-bold text-xs">4</span>
+              <span>กด <strong>"เพิ่ม"</strong> มุมขวาบน — ไอคอนแอปจะปรากฏที่หน้าจอหลัก</span>
             </li>
           </ol>
+          <div class="mt-4 flex gap-2 p-3 bg-orange-50 rounded-xl text-xs text-orange-700">
+            <i class="fa-solid fa-triangle-exclamation flex-shrink-0 mt-0.5"></i>
+            <span><strong>สำคัญมาก:</strong> ต้องเปิดแอปจากไอคอนที่หน้าจอหลักเท่านั้น ถ้าเปิดจาก Safari ปกติจะ<strong>ไม่ได้รับ</strong>การแจ้งเตือน</span>
+          </div>
+        </div>
+
+        <!-- ขั้นตอนที่ 2 -->
+        <div class="flex items-center gap-3">
+          <div class="flex-shrink-0 w-8 h-8 bg-yellow-500 text-white rounded-full flex items-center justify-center font-bold text-sm">2</div>
+          <h3 class="font-bold text-slate-700">เปิดรับการแจ้งเตือน</h3>
+          <div class="flex-1 h-px bg-slate-200"></div>
+        </div>
+
+        <div class="card border-l-4 border-l-yellow-400">
+          <ol class="space-y-4 text-sm text-slate-600">
+            <li class="flex gap-3 items-start">
+              <span class="flex-shrink-0 w-6 h-6 bg-yellow-100 text-yellow-700 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">1</span>
+              <div>
+                <div class="font-medium text-slate-700">Login เข้าหน้า Admin Panel</div>
+                <div class="text-xs text-slate-400 mt-0.5">เปิดแอปจากไอคอนที่หน้าจอหลัก (ไม่ใช่จาก browser โดยตรง)</div>
+              </div>
+            </li>
+            <li class="flex gap-3 items-start">
+              <span class="flex-shrink-0 w-6 h-6 bg-yellow-100 text-yellow-700 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">2</span>
+              <div>
+                <div class="font-medium text-slate-700">กดปุ่ม <span class="inline-flex items-center bg-blue-700 text-white px-2 py-0.5 rounded-lg text-xs gap-1"><i class="fa-solid fa-bell text-xs"></i> กระดิ่ง</span> มุมขวาบน</div>
+                <div class="text-xs text-slate-400 mt-0.5">ถ้ากระดิ่งเป็นสีเขียวแล้ว แสดงว่าเปิดไว้แล้ว</div>
+              </div>
+            </li>
+            <li class="flex gap-3 items-start">
+              <span class="flex-shrink-0 w-6 h-6 bg-yellow-100 text-yellow-700 rounded-full flex items-center justify-center font-bold text-xs mt-0.5">3</span>
+              <div>
+                <div class="font-medium text-slate-700">กด <strong>"Allow"</strong> หรือ <strong>"อนุญาต"</strong> เมื่อ browser ถาม</div>
+                <div class="text-xs text-slate-400 mt-0.5">ถ้าไม่มีป๊อปอัปขึ้น อาจถูกบล็อกไว้แล้ว → ดูหัวข้อแก้ปัญหาด้านล่าง</div>
+              </div>
+            </li>
+            <li class="flex gap-3 items-start">
+              <span class="flex-shrink-0 w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center text-xs mt-0.5">✓</span>
+              <div>
+                <div class="font-medium text-green-700">กระดิ่งเปลี่ยนเป็นสีเขียว <i class="fa-solid fa-bell" style="color:#4ade80"></i> = สำเร็จ</div>
+                <div class="text-xs text-slate-400 mt-0.5">ระบบจะแจ้งเตือนทุกครั้งที่มีงานซ่อมหรือจองห้องใหม่</div>
+              </div>
+            </li>
+          </ol>
+        </div>
+
+        <!-- ขั้นตอนที่ 3 -->
+        <div class="flex items-center gap-3">
+          <div class="flex-shrink-0 w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-sm">3</div>
+          <h3 class="font-bold text-slate-700">ตรวจสอบและทดสอบ</h3>
+          <div class="flex-1 h-px bg-slate-200"></div>
         </div>
 
         <!-- ตรวจสอบระบบ -->
         <div class="card border-2 border-purple-100">
-          <h3 class="font-bold text-slate-800 text-base mb-1">
-            <i class="fa-solid fa-stethoscope mr-2 text-purple-600"></i>ตรวจสอบระบบแจ้งเตือน
-          </h3>
-          <p class="text-xs text-slate-400 mb-3">กดเพื่อดูว่าอุปกรณ์นี้พร้อมรับแจ้งเตือนหรือยัง</p>
-          <div id="diagResult" class="mb-3 hidden space-y-1.5 text-xs"></div>
-          <div class="flex gap-2">
-            <button onclick="runDiag()" class="flex-1 py-2 px-4 rounded-xl bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors">
-              <i class="fa-solid fa-magnifying-glass mr-2"></i>ตรวจสอบ
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-stethoscope text-purple-600 text-sm"></i>
+            </div>
+            <div>
+              <div class="font-bold text-slate-800 text-sm">ตรวจสอบระบบ</div>
+              <div class="text-xs text-slate-400">ดูว่าอุปกรณ์นี้พร้อมรับแจ้งเตือนหรือยัง</div>
+            </div>
+          </div>
+          <div id="diagResult" class="mb-3 hidden space-y-1.5 p-3 bg-slate-50 rounded-xl text-xs"></div>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="runDiag()" class="py-2.5 px-3 rounded-xl bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors text-sm">
+              <i class="fa-solid fa-magnifying-glass mr-1.5"></i>ตรวจสอบ
             </button>
-            <button onclick="registerThisDevice()" id="regDevBtn" class="flex-1 py-2 px-4 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors">
-              <i class="fa-solid fa-mobile-screen mr-2"></i>ลงทะเบียนอุปกรณ์นี้
+            <button onclick="registerThisDevice()" id="regDevBtn" class="py-2.5 px-3 rounded-xl bg-indigo-600 text-white font-medium hover:bg-indigo-700 transition-colors text-sm">
+              <i class="fa-solid fa-mobile-screen mr-1.5"></i>ลงทะเบียนเครื่องนี้
             </button>
           </div>
         </div>
 
         <!-- ทดสอบการแจ้งเตือน -->
         <div class="card border-2 border-blue-100">
-          <h3 class="font-bold text-slate-800 text-base mb-1">
-            <i class="fa-solid fa-flask mr-2 text-blue-600"></i>ทดสอบการแจ้งเตือน
-          </h3>
-          <p class="text-xs text-slate-400 mb-4">ส่ง test notification ไปยังทุกอุปกรณ์ที่ลงทะเบียนไว้</p>
-          <div id="fcmDiag" class="mb-4 hidden p-3 rounded-xl text-sm"></div>
+          <div class="flex items-center gap-2 mb-3">
+            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-paper-plane text-blue-600 text-sm"></i>
+            </div>
+            <div>
+              <div class="font-bold text-slate-800 text-sm">ส่งการแจ้งเตือนทดสอบ</div>
+              <div class="text-xs text-slate-400">ส่ง notification ไปยังทุกอุปกรณ์ที่ลงทะเบียนไว้</div>
+            </div>
+          </div>
+          <div id="fcmDiag" class="mb-3 hidden p-3 rounded-xl text-sm"></div>
           <button onclick="testFCM()" id="testFCMBtn" class="btn-primary w-full">
             <i class="fa-solid fa-paper-plane mr-2"></i>ส่งทดสอบ
           </button>
         </div>
 
-        <!-- เปิดการแจ้งเตือน -->
-        <div class="card">
-          <h3 class="font-bold text-slate-800 text-base mb-4">
-            <i class="fa-solid fa-bell mr-2 text-yellow-500 text-lg"></i>เปิดรับการแจ้งเตือน Push Notification
-          </h3>
-          <ol class="space-y-3 text-sm text-slate-600">
-            <li class="flex gap-3">
-              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">1</span>
-              <span>Login เข้าหน้า Admin Panel</span>
-            </li>
-            <li class="flex gap-3">
-              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">2</span>
-              <span>กดปุ่ม <i class="fa-solid fa-bell text-white bg-blue-700 px-1.5 py-0.5 rounded-md text-xs"></i> ที่มุมขวาบนของหน้า</span>
-            </li>
-            <li class="flex gap-3">
-              <span class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center font-bold text-xs">3</span>
-              <span>กด <strong>"Allow"</strong> หรือ <strong>"อนุญาต"</strong> เมื่อเบราว์เซอร์ถาม</span>
-            </li>
-            <li class="flex gap-3">
-              <span class="flex-shrink-0 w-6 h-6 bg-green-100 text-green-700 rounded-full flex items-center justify-center font-bold text-xs">✓</span>
-              <span>ไอคอนกระดิ่งจะเปลี่ยนเป็นสีเขียว <i class="fa-solid fa-bell" style="color:#4ade80"></i> แสดงว่าเปิดการแจ้งเตือนสำเร็จ</span>
-            </li>
-          </ol>
-          <div class="mt-4 p-3 bg-slate-50 rounded-xl text-xs text-slate-500 space-y-1">
-            <p><i class="fa-solid fa-circle-info mr-1 text-blue-400"></i>ถ้ากดปุ่มแล้วขึ้น "Denied" ต้องไปเปิดใน <strong>การตั้งค่าเบราว์เซอร์ → การแจ้งเตือน → เว็บไซต์นี้ → อนุญาต</strong></p>
-            <p><i class="fa-solid fa-circle-info mr-1 text-blue-400"></i>ต้องทำบน <strong>ทุกอุปกรณ์</strong> ที่ต้องการรับแจ้งเตือน</p>
+        <!-- แก้ปัญหา -->
+        <div class="flex items-center gap-3">
+          <div class="flex-shrink-0 w-8 h-8 bg-red-100 text-red-600 rounded-full flex items-center justify-center text-sm">
+            <i class="fa-solid fa-wrench"></i>
+          </div>
+          <h3 class="font-bold text-slate-700">แก้ปัญหาที่พบบ่อย</h3>
+          <div class="flex-1 h-px bg-slate-200"></div>
+        </div>
+
+        <div class="space-y-3">
+          <div class="card p-4">
+            <div class="flex gap-2 mb-2">
+              <i class="fa-solid fa-circle-question text-slate-400 mt-0.5 flex-shrink-0"></i>
+              <div class="font-semibold text-slate-700 text-sm">กดกระดิ่งแล้วไม่มีป๊อปอัปขึ้น</div>
+            </div>
+            <p class="text-xs text-slate-500 pl-5">การแจ้งเตือนอาจถูกบล็อกไว้ก่อนหน้า<br>
+              <strong>Chrome:</strong> กด 🔒 ที่ address bar → Site settings → Notifications → Allow<br>
+              <strong>Safari iOS:</strong> ตั้งค่า → Apps → Safari → เว็บไซต์ → เว็บไซต์นี้ → Allow
+            </p>
+          </div>
+          <div class="card p-4">
+            <div class="flex gap-2 mb-2">
+              <i class="fa-solid fa-circle-question text-slate-400 mt-0.5 flex-shrink-0"></i>
+              <div class="font-semibold text-slate-700 text-sm">ลงทะเบียนแล้วแต่ไม่ได้รับแจ้งเตือน (iOS)</div>
+            </div>
+            <p class="text-xs text-slate-500 pl-5">ต้องเปิดแอปผ่านไอคอนที่หน้าจอหลักเท่านั้น ไม่ใช่จาก Safari โดยตรง<br>ตรวจสอบ iOS version ≥ 16.4</p>
+          </div>
+          <div class="card p-4">
+            <div class="flex gap-2 mb-2">
+              <i class="fa-solid fa-circle-question text-slate-400 mt-0.5 flex-shrink-0"></i>
+              <div class="font-semibold text-slate-700 text-sm">ส่งทดสอบแล้วขึ้นว่า 0 เครื่อง</div>
+            </div>
+            <p class="text-xs text-slate-500 pl-5">กดปุ่ม <strong>"ลงทะเบียนเครื่องนี้"</strong> ด้านบนก่อน แล้วลองส่งใหม่</p>
           </div>
         </div>
 
         <!-- ลิงก์สำคัญ -->
         <div class="card">
-          <h3 class="font-bold text-slate-800 text-base mb-4">
+          <h3 class="font-bold text-slate-800 text-sm mb-3">
             <i class="fa-solid fa-link mr-2 text-blue-600"></i>ลิงก์สำคัญ
           </h3>
           <div class="space-y-2 text-sm">
