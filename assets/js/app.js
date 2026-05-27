@@ -447,11 +447,11 @@ function backBtn() {
 
 function statusStyle(status) {
   return {
-    'รับเรื่อง':       { cls: 'status-pending',    icon: 'fa-clock fa-beat',     label: 'รับเรื่อง' },
-    'กำลังดำเนินการ': { cls: 'status-inprogress', icon: 'fa-gear fa-spin',      label: 'กำลังดำเนินการ' },
+    'รับเรื่อง':       { cls: 'status-pending',    icon: 'fa-clock fa-beat', label: 'มีงานใหม่' },
+    'กำลังดำเนินการ': { cls: 'status-inprogress', icon: 'fa-gear fa-spin',  label: 'กำลังดำเนินงาน' },
     'เสร็จสิ้น':       { cls: 'status-done',       icon: 'fa-circle-check', label: 'เสร็จสิ้น' },
     'ยกเลิก':          { cls: 'status-cancelled',  icon: 'fa-ban',          label: 'ยกเลิก' },
-  }[status] || { cls: 'status-pending', icon: 'fa-clock', label: status || 'รับเรื่อง' };
+  }[status] || { cls: 'status-pending', icon: 'fa-clock', label: status || 'มีงานใหม่' };
 }
 
 function renderNameResults(results) {
@@ -484,12 +484,12 @@ function renderStatusCard(d) {
 
   const allSteps = isRepair
     ? [
-        { label: 'รับเรื่อง',       desc: 'ได้รับ Ticket แล้ว'        },
-        { label: 'กำลังดำเนินการ', desc: 'ทีมงานกำลังดำเนินการซ่อม'  },
+        { label: 'มีงานใหม่',       desc: 'ได้รับ Ticket แล้ว'        },
+        { label: 'กำลังดำเนินงาน', desc: 'ทีมงานกำลังดำเนินการซ่อม'  },
         { label: 'เสร็จสิ้น',       desc: 'ซ่อมเรียบร้อยแล้ว'          },
       ]
     : [
-        { label: 'รับเรื่อง',  desc: 'ได้รับคำขอจองแล้ว'       },
+        { label: 'มีงานใหม่',  desc: 'ได้รับคำขอจองแล้ว'       },
         { label: 'ยืนยัน',     desc: 'ทีมงานกำลังตรวจสอบ'       },
         { label: 'เสร็จสิ้น',  desc: 'ยืนยันการจองแล้ว'          },
       ];
