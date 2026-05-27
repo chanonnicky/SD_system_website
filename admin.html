@@ -284,6 +284,18 @@
           </ol>
         </div>
 
+        <!-- ทดสอบการแจ้งเตือน -->
+        <div class="card border-2 border-blue-100">
+          <h3 class="font-bold text-slate-800 text-base mb-1">
+            <i class="fa-solid fa-flask mr-2 text-blue-600"></i>ทดสอบการแจ้งเตือน
+          </h3>
+          <p class="text-xs text-slate-400 mb-4">ส่ง test notification ไปยังทุกอุปกรณ์ที่ลงทะเบียนไว้</p>
+          <div id="fcmDiag" class="mb-4 hidden p-3 rounded-xl text-sm"></div>
+          <button onclick="testFCM()" id="testFCMBtn" class="btn-primary w-full">
+            <i class="fa-solid fa-paper-plane mr-2"></i>ส่งทดสอบ
+          </button>
+        </div>
+
         <!-- เปิดการแจ้งเตือน -->
         <div class="card">
           <h3 class="font-bold text-slate-800 text-base mb-4">
@@ -980,6 +992,41 @@
       btn.innerHTML = '<i class="fa-solid fa-bell" style="color:white"></i>';
       btn.title = 'กดเพื่อรับการแจ้งเตือนเมื่อมีงานใหม่';
     }
+  }
+
+  function testFCM() {
+    const btn  = document.getElementById('testFCMBtn');
+    const diag = document.getElementById('fcmDiag');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังส่ง...';
+    diag.className = 'mb-4 hidden p-3 rounded-xl text-sm';
+
+    fetch(window.APP_CONFIG.GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(authBody({ type: 'testFCM' })),
+    })
+      .then(r => r.json())
+      .then(data => {
+        diag.classList.remove('hidden');
+        if (data.success) {
+          diag.className = 'mb-4 p-3 rounded-xl text-sm bg-green-50 text-green-700 border border-green-200';
+          diag.innerHTML = `<i class="fa-solid fa-check-circle mr-2"></i>ส่งสำเร็จ! มีอุปกรณ์ที่ลงทะเบียนไว้ <strong>${data.tokenCount}</strong> เครื่อง — รอรับแจ้งเตือนได้เลย`;
+        } else {
+          diag.className = 'mb-4 p-3 rounded-xl text-sm bg-red-50 text-red-700 border border-red-200';
+          const count = data.tokenCount !== undefined ? `<br><span class="text-xs text-slate-500 mt-1 block">อุปกรณ์ที่ลงทะเบียน: ${data.tokenCount} เครื่อง</span>` : '';
+          diag.innerHTML = `<i class="fa-solid fa-triangle-exclamation mr-2"></i><strong>ไม่สำเร็จ:</strong> ${data.error}${count}`;
+        }
+      })
+      .catch(() => {
+        diag.classList.remove('hidden');
+        diag.className = 'mb-4 p-3 rounded-xl text-sm bg-red-50 text-red-700 border border-red-200';
+        diag.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-2"></i>ไม่สามารถเชื่อมต่อกับระบบได้';
+      })
+      .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i>ส่งทดสอบ';
+      });
   }
 
   function initNotifAfterLogin() {

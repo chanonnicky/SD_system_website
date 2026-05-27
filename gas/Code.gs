@@ -194,6 +194,8 @@ function doPost(e) {
       result = handleRemoveAdmin(body);
     } else if (body.type === 'editAdmin') {
       result = handleEditAdmin(body);
+    } else if (body.type === 'testFCM') {
+      result = handleTestFCM(body);
     } else {
       result = { success: false, error: 'Unknown type' };
     }
@@ -1501,6 +1503,26 @@ function sendFCMPush(title, body) {
 
   Logger.log('FCM sent ' + sent + '/' + tokens.length);
   if (stale.length > 0) removeFCMTokens(stale);
+}
+
+function handleTestFCM(data) {
+  if (!verifyAdmin(data.username)) return { success: false, error: 'Unauthorized' };
+
+  const hasKey    = !!CONFIG.FCM_PRIVATE_KEY;
+  const hasEmail  = !!CONFIG.FCM_CLIENT_EMAIL;
+  const tokens    = getFCMTokens();
+  const tokenCount = tokens.length;
+
+  if (!hasKey)       return { success: false, error: 'FCM_PRIVATE_KEY ยังไม่ได้ตั้งค่าใน Script Properties', tokenCount };
+  if (!hasEmail)     return { success: false, error: 'FCM_CLIENT_EMAIL ยังไม่ได้ตั้งค่าใน Script Properties', tokenCount };
+  if (tokenCount === 0) return { success: false, error: 'ยังไม่มีอุปกรณ์ที่ลงทะเบียนการแจ้งเตือน กดปุ่มกระดิ่งก่อน', tokenCount };
+
+  try {
+    sendFCMPush('🧪 ทดสอบการแจ้งเตือน', 'ระบบ Admin AV โรงเรียนเซนต์ดอมินิก — แจ้งเตือนทำงานปกติ ✅');
+    return { success: true, tokenCount };
+  } catch (err) {
+    return { success: false, error: err.message, tokenCount };
+  }
 }
 
 // TEST LINE CONNECTION — Run this manually from GAS Editor
