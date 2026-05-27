@@ -190,7 +190,7 @@
     fetch(window.APP_CONFIG.GAS_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ type: 'adminLogin', username }),
+      body: JSON.stringify({ type: 'adminLogin', username, secret: (window.APP_CONFIG || {}).CLIENT_SECRET || '' }),
     })
       .then(r => r.json())
       .then(data => {
@@ -230,7 +230,7 @@
   }
 
   function authBody(extra) {
-    return Object.assign({ username: _session.username }, extra);
+    return Object.assign({ username: _session.username, secret: (window.APP_CONFIG || {}).CLIENT_SECRET || '' }, extra);
   }
 
   // ============================================================
