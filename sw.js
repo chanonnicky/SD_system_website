@@ -16,11 +16,11 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   const n    = payload.notification || {};
   const data = payload.data || {};
-  const url  = data.url || 'https://chanonnicky.github.io/SD_AV_website/admin.html';
+  const url  = data.url || 'https://chanonnicky.github.io/SD_system_website/admin.html';
   self.registration.showNotification(n.title || 'AV โสตทัศนูปกรณ์', {
     body: n.body || '',
-    icon: '/SD_AV_website/assets/img/school_logo.webp',
-    badge: '/SD_AV_website/assets/img/school_logo.webp',
+    icon: '/SD_system_website/assets/img/school_logo.webp',
+    badge: '/SD_system_website/assets/img/school_logo.webp',
     data: { url },
   });
 });
@@ -29,7 +29,7 @@ messaging.onBackgroundMessage((payload) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const url = (event.notification.data && event.notification.data.url)
-    || 'https://chanonnicky.github.io/SD_AV_website/admin.html';
+    || 'https://chanonnicky.github.io/SD_system_website/admin.html';
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
       const match = wins.find(w => w.url.includes('admin.html'));

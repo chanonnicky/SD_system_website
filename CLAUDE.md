@@ -9,8 +9,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 1. **`ระบบงานฝ่าย.html`** — Portal/Hub หน้าแรก ให้เลือกฝ่าย (โสต, ธุรการ, วัดประเมินผล)
 2. **`index.html` + `admin.html`** — ระบบงานฝ่ายโสตทัศนูปกรณ์ (แจ้งซ่อม, จองห้อง, ปฏิทิน, Admin Panel)
 
-- **Live:** https://chanonnicky.github.io/SD_AV_website/
-- **Repo:** https://github.com/chanonnicky/SD_AV_website
+- **Live:** https://chanonnicky.github.io/SD_system_website/
+- **Repo:** https://github.com/chanonnicky/SD_system_website
 - **Hosting:** GitHub Pages (branch: main — auto deploy เมื่อ push)
 
 ## Tech Stack

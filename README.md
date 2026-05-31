@@ -1,8 +1,8 @@
 # ระบบงานฝ่าย โรงเรียนเซนต์ดอมินิก
 
-**Portal (หน้าหลัก):** https://chanonnicky.github.io/SD_AV_website/%E0%B8%A3%E0%B8%B0%E0%B8%9A%E0%B8%9A%E0%B8%87%E0%B8%B2%E0%B8%99%E0%B8%9D%E0%B9%88%E0%B8%B2%E0%B8%A2.html
-**ฝ่ายโสต:** https://chanonnicky.github.io/SD_AV_website/
-**Admin:** https://chanonnicky.github.io/SD_AV_website/admin.html
+**Portal (หน้าหลัก):** https://chanonnicky.github.io/SD_system_website/%E0%B8%A3%E0%B8%B0%E0%B8%9A%E0%B8%9A%E0%B8%87%E0%B8%B2%E0%B8%99%E0%B8%9D%E0%B9%88%E0%B8%B2%E0%B8%A2.html
+**ฝ่ายโสต:** https://chanonnicky.github.io/SD_system_website/
+**Admin:** https://chanonnicky.github.io/SD_system_website/admin.html
 
 ระบบสารสนเทศภายในโรงเรียนเซนต์ดอมินิก ประกอบด้วย Portal หน้าแรกสำหรับเลือกฝ่าย และระบบงานฝ่ายโสตทัศนูปกรณ์ (แจ้งซ่อม, จองห้อง, ปฏิทิน) พัฒนาด้วย HTML + Tailwind CSS ใช้ Google Apps Script เป็น Backend และ Google Sheets เป็นฐานข้อมูล รองรับ PWA และแจ้งเตือนผ่าน LINE + FCM Push Notification
 
@@ -55,7 +55,7 @@ LINE Chat (Bot Commands)
 ## โครงสร้างไฟล์
 
 ```
-SD_AV_website/
+SD_system_website/
 ├── ระบบงานฝ่าย.html            ← Portal hub (เลือกฝ่าย) — หน้าแรกของระบบ
 ├── index.html                  ← ฝ่ายโสต (แจ้งซ่อม / จอง / ติดตาม / ปฏิทิน)
 ├── admin.html                  ← Admin Panel (login, งานค้าง, งานทั้งหมด, จัดการ admin, คู่มือ)
