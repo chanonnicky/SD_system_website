@@ -1,9 +1,10 @@
-# ระบบงานโสตทัศนูปกรณ์ โรงเรียนเซนต์ดอมินิก
+# ระบบงานฝ่าย โรงเรียนเซนต์ดอมินิก
 
-**Live:** https://chanonnicky.github.io/SD_AV_website/
+**Portal (หน้าหลัก):** https://chanonnicky.github.io/SD_AV_website/%E0%B8%A3%E0%B8%B0%E0%B8%9A%E0%B8%9A%E0%B8%87%E0%B8%B2%E0%B8%99%E0%B8%9D%E0%B9%88%E0%B8%B2%E0%B8%A2.html
+**ฝ่ายโสต:** https://chanonnicky.github.io/SD_AV_website/
 **Admin:** https://chanonnicky.github.io/SD_AV_website/admin.html
 
-ระบบแจ้งซ่อมอุปกรณ์และจองห้องประชุมสำหรับงานโสตทัศนูปกรณ์ พัฒนาด้วย HTML + Tailwind CSS โดยใช้ Google Apps Script เป็น Backend และ Google Sheets เป็นฐานข้อมูล รองรับการติดตั้งเป็น PWA บนมือถือและแจ้งเตือนผ่าน Push Notification
+ระบบสารสนเทศภายในโรงเรียนเซนต์ดอมินิก ประกอบด้วย Portal หน้าแรกสำหรับเลือกฝ่าย และระบบงานฝ่ายโสตทัศนูปกรณ์ (แจ้งซ่อม, จองห้อง, ปฏิทิน) พัฒนาด้วย HTML + Tailwind CSS ใช้ Google Apps Script เป็น Backend และ Google Sheets เป็นฐานข้อมูล รองรับ PWA และแจ้งเตือนผ่าน LINE + FCM Push Notification
 
 ---
 
@@ -11,6 +12,7 @@
 
 | ฟีเจอร์ | รายละเอียด |
 |---------|-----------|
+| **Portal Hub** | หน้าแรกเลือกฝ่าย (โสต / ธุรการ / วัดประเมินผล) พร้อม design system |
 | **แจ้งซ่อมอุปกรณ์** | กรอกฟอร์ม → ส่ง GAS → บันทึก Sheets + แจ้งเตือน LINE + FCM Push |
 | **จองห้องประชุม** | เลือกห้อง / วันเวลา → ตรวจ conflict → บันทึก Sheets + แจ้งเตือน LINE + FCM Push |
 | **ติดตามสถานะ** | ค้นหาด้วยเลขที่ Ticket หรือชื่อผู้แจ้ง |
@@ -26,7 +28,10 @@
 ## สถาปัตยกรรม
 
 ```
-Browser / PWA
+ระบบงานฝ่าย.html (Portal)
+  └── เลือกฝ่าย ──→ index.html (โสต) / mockup (ธุรการ, วัดประเมินผล)
+
+Browser / PWA (index.html + admin.html)
   ├── POST (แจ้งซ่อม / จองห้อง) ──→ Google Apps Script Web App
   │                                       ├── บันทึก Google Sheets
   │                                       ├── ส่ง LINE Notification (Broadcast)
@@ -51,7 +56,8 @@ LINE Chat (Bot Commands)
 
 ```
 SD_AV_website/
-├── index.html                  ← หน้าเว็บหลัก (แจ้งซ่อม / จอง / ติดตาม / ปฏิทิน)
+├── ระบบงานฝ่าย.html            ← Portal hub (เลือกฝ่าย) — หน้าแรกของระบบ
+├── index.html                  ← ฝ่ายโสต (แจ้งซ่อม / จอง / ติดตาม / ปฏิทิน)
 ├── admin.html                  ← Admin Panel (login, งานค้าง, งานทั้งหมด, จัดการ admin, คู่มือ)
 ├── manifest.json               ← PWA Manifest
 ├── sw.js                       ← Service Worker (รับ Push Notification เบื้องหลัง)
@@ -63,7 +69,8 @@ SD_AV_website/
 │   │   └── app_logo.webp       ← โลโก้แอป (หน้า Admin)
 │   └── js/
 │       ├── app.js              ← JavaScript หลัก (index.html)
-│       ├── config.js           ← Token/Key จริง (ไม่ถูก commit)
+│       ├── notifications.js    ← FCM permission + token registration
+│       ├── config.js           ← Token/Key จริง (ไม่ถูก commit — auto-gen ใน CI)
 │       └── config.example.js  ← Template สำหรับ config.js
 └── gas/
     └── Code.gs                 ← Google Apps Script backend ทั้งหมด
