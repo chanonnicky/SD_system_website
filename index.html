@@ -3,480 +3,764 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>งานโสตทัศนูปกรณ์ โรงเรียนเซนต์ดอมินิก — แจ้งซ่อม & จองห้องประชุม</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>ระบบงานฝ่าย · โรงเรียนเซนต์ดอมินิก</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <link rel="stylesheet" href="assets/css/style.css" />
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#1d4ed8" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Sarabun', 'sans-serif'] },
-          colors: {
-            primary: { DEFAULT: '#1d4ed8', light: '#3b82f6', dark: '#1e3a8a' },
-            accent:  { DEFAULT: '#0ea5e9', light: '#38bdf8' },
-          }
-        }
-      }
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Design System ── */
+    :root {
+      --navy-900:#0f2557; --navy-800:#15356b; --navy-700:#1c4690;
+      --navy-600:#2257b4; --navy-500:#2f6fd6; --navy-400:#6298e6;
+      --navy-300:#a9c6f2; --navy-100:#dce8fb; --navy-50:#eef4fe;
+      --ink:#14223d; --slate-700:#33415c; --slate-600:#4a587a;
+      --slate-500:#697693; --slate-400:#94a0b8; --slate-300:#c3ccdc;
+      --line:#e2e8f3; --line-soft:#edf1f8;
+      --paper:#ffffff; --canvas:#f4f6fb; --canvas-2:#eaeef7;
+      --green:#15924d; --green-bg:#e4f5ec;
+      --amber:#c9820b; --amber-bg:#fbf0d8;
+      --red:#d23b3b;   --red-bg:#fbe6e6;
+      --sky:#1c7fc4;   --sky-bg:#e1f0fb;
+      --violet:#7048c4;--violet-bg:#ede6fb;
+      --r-sm:8px; --r-md:12px; --r-lg:18px; --r-xl:26px;
+      --sh-1:0 1px 2px rgba(20,34,61,.06),0 1px 3px rgba(20,34,61,.05);
+      --sh-2:0 4px 14px rgba(20,34,61,.08);
+      --sh-3:0 14px 40px rgba(15,37,87,.16);
+      --maxw:1240px;
     }
-  </script>
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;font-family:"Noto Sans Thai",system-ui,sans-serif;background:var(--canvas);color:var(--ink);-webkit-font-smoothing:antialiased;}
+    body{line-height:1.5;}
+    button{font-family:inherit;cursor:pointer;}
+    a{color:inherit;text-decoration:none;}
+
+    /* Typography */
+    .h-display{font-size:2.55rem;font-weight:800;letter-spacing:-.02em;line-height:1.12;}
+    .h-1{font-size:1.85rem;font-weight:800;letter-spacing:-.01em;}
+    .h-2{font-size:1.35rem;font-weight:700;}
+    .h-3{font-size:1.08rem;font-weight:700;}
+    .eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--navy-500);}
+    .muted{color:var(--slate-500);}
+    .tnum{font-variant-numeric:tabular-nums;}
+
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:var(--r-sm);padding:10px 16px;font-size:.95rem;font-weight:600;transition:all .15s ease;white-space:nowrap;line-height:1;}
+    .btn svg{width:18px;height:18px;}
+    .btn-primary{background:var(--navy-600);color:#fff;box-shadow:0 1px 2px rgba(34,87,180,.4);}
+    .btn-primary:hover{background:var(--navy-700);}
+    .btn-ghost{background:var(--paper);color:var(--slate-700);border-color:var(--line);}
+    .btn-ghost:hover{border-color:var(--slate-300);background:var(--canvas);}
+    .btn-subtle{background:var(--navy-50);color:var(--navy-700);}
+    .btn-subtle:hover{background:var(--navy-100);}
+    .btn-sm{padding:7px 12px;font-size:.85rem;}
+    .btn-lg{padding:13px 22px;font-size:1.02rem;}
+
+    /* Cards */
+    .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--sh-1);}
+    .card-pad{padding:22px 24px;}
+
+    /* Badges */
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:99px;font-size:.8rem;font-weight:600;white-space:nowrap;}
+    .badge .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none;}
+    .badge.green{background:var(--green-bg);color:var(--green);}
+    .badge.amber{background:var(--amber-bg);color:var(--amber);}
+    .badge.red{background:var(--red-bg);color:var(--red);}
+    .badge.sky{background:var(--sky-bg);color:var(--sky);}
+    .badge.violet{background:var(--violet-bg);color:var(--violet);}
+    .badge.slate{background:var(--canvas-2);color:var(--slate-600);}
+    .badge.navy{background:var(--navy-100);color:var(--navy-700);}
+
+    /* Chips */
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:99px;font-size:.86rem;font-weight:600;border:1px solid var(--line);background:var(--paper);color:var(--slate-600);transition:all .14s ease;}
+    .chip:hover{border-color:var(--navy-300);color:var(--navy-700);}
+    .chip.active{background:var(--navy-600);border-color:var(--navy-600);color:#fff;}
+
+    /* Tables */
+    .tbl{width:100%;border-collapse:collapse;font-size:.92rem;}
+    .tbl th{text-align:left;font-weight:700;color:var(--slate-500);font-size:.76rem;letter-spacing:.05em;text-transform:uppercase;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--canvas);}
+    .tbl td{padding:14px 16px;border-bottom:1px solid var(--line-soft);vertical-align:middle;}
+    .tbl tr:last-child td{border-bottom:none;}
+    .tbl tbody tr{transition:background .12s ease;}
+    .tbl tbody tr:hover{background:var(--navy-50);}
+
+    /* Progress bar */
+    .bar{height:8px;border-radius:99px;background:var(--canvas-2);overflow:hidden;}
+    .bar>span{display:block;height:100%;border-radius:99px;background:var(--navy-500);transition:width .5s cubic-bezier(.4,0,.2,1);}
+    .bar.green>span{background:var(--green);}
+    .bar.amber>span{background:var(--amber);}
+
+    /* Layout utilities */
+    .row{display:flex;align-items:center;}
+    .col{display:flex;flex-direction:column;}
+    .between{justify-content:space-between;}
+    .center{align-items:center;justify-content:center;}
+    .gap-4{gap:4px;}.gap-6{gap:6px;}.gap-8{gap:8px;}.gap-10{gap:10px;}
+    .gap-12{gap:12px;}.gap-16{gap:16px;}.gap-20{gap:20px;}.gap-24{gap:24px;}
+    .wrap{flex-wrap:wrap;}
+    .grow{flex:1;}
+    .full{width:100%;}
+
+    /* Modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(15,37,87,.32);backdrop-filter:blur(3px);z-index:1000;display:flex;align-items:center;justify-content:center;padding:24px;animation:fade .18s ease;}
+    .modal{background:var(--paper);border-radius:var(--r-xl);box-shadow:var(--sh-3);width:100%;max-width:560px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;animation:pop .22s cubic-bezier(.34,1.56,.64,1);}
+    .modal-head{padding:22px 26px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;}
+    .modal-body{padding:24px 26px;overflow-y:auto;}
+    .modal-foot{padding:18px 26px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;background:var(--canvas);}
+    .x-btn{width:34px;height:34px;border-radius:8px;border:none;background:var(--canvas);color:var(--slate-500);display:grid;place-items:center;flex:none;cursor:pointer;}
+    .x-btn:hover{background:var(--canvas-2);color:var(--ink);}
+    @keyframes fade{from{opacity:0;}}
+    @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.98);}}
+    @keyframes slideUp{from{opacity:0;transform:translateY(10px);}}
+
+    /* Empty state */
+    .empty{text-align:center;padding:54px 20px;color:var(--slate-500);}
+
+    /* Stat tile */
+    .stat .ic-box{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;flex:none;}
+    .stat .ic-box svg{width:23px;height:23px;}
+
+    /* Nav */
+    .nav-shell{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.86);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+    .nav-inner{max-width:var(--maxw);margin:0 auto;padding:0 24px;height:66px;display:flex;align-items:center;gap:24px;}
+    .nav-link{border:none;background:transparent;color:var(--slate-600);font-weight:600;font-size:.92rem;padding:9px 15px;border-radius:9px;display:inline-flex;align-items:center;gap:8px;transition:all .14s ease;}
+    .nav-link:hover{background:var(--navy-50);color:var(--navy-700);}
+    .nav-link.active{background:var(--navy-50);color:var(--navy-700);}
+
+    /* Footer */
+    footer{border-top:1px solid var(--line);background:var(--paper);margin-top:40px;}
+    .footer-inner{max-width:var(--maxw);margin:0 auto;padding:26px 24px;color:var(--slate-500);font-size:.84rem;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+
+    /* Page wrapper */
+    .page-wrap{max-width:var(--maxw);margin:0 auto;padding:34px 24px 60px;}
+
+    /* Responsive */
+    @media(max-width:900px){
+      .h-display{font-size:2rem;}
+      .hide-mobile{display:none!important;}
+    }
+    @media(max-width:640px){
+      .page-wrap{padding:24px 16px 48px;}
+    }
+
+    /* Tab underline */
+    .tab-btn{border:none;background:none;padding:11px 16px;font-weight:600;font-size:.94rem;color:var(--slate-500);border-bottom:2.5px solid transparent;margin-bottom:-1px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:all .14s ease;}
+    .tab-btn.active{color:var(--navy-700);border-bottom-color:var(--navy-600);}
+    .tab-btn:hover{color:var(--navy-700);}
+
+    /* Coming soon overlay */
+    .coming-soon-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:var(--amber-bg);color:var(--amber);border-radius:99px;font-size:.8rem;font-weight:700;}
+
+    /* Quick action card */
+    .quick-card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);padding:24px 20px;display:flex;flex-direction:column;gap:12px;text-align:left;cursor:pointer;transition:all .2s ease;box-shadow:var(--sh-1);}
+    .quick-card:hover{transform:translateY(-3px);box-shadow:var(--sh-3);}
+
+    /* Forms */
+    .field{display:flex;flex-direction:column;gap:7px;}
+    .field label{font-size:.85rem;font-weight:600;color:var(--slate-700);}
+    .input,.select,.textarea{width:100%;padding:11px 13px;font-size:.95rem;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--paper);color:var(--ink);transition:all .14s ease;font-family:inherit;}
+    .input:focus,.select:focus,.textarea:focus{outline:none;border-color:var(--navy-400);box-shadow:0 0 0 3px var(--navy-100);}
+    .textarea{resize:vertical;min-height:92px;}
+    .select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23697693' stroke-width='2.2' stroke-linecap='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:38px;}
+
+    /* Toast */
+    .toast-wrap{position:fixed;bottom:26px;right:26px;z-index:2000;display:flex;flex-direction:column;gap:10px;}
+    .toast{background:var(--green);color:#fff;padding:13px 18px;border-radius:var(--r-md);box-shadow:var(--sh-3);font-size:.9rem;font-weight:500;display:flex;align-items:center;gap:10px;animation:slideUp .25s ease;max-width:360px;}
+  </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-800">
+<body>
 
-  <!-- ===== HEADER ===== -->
-  <header class="bg-gradient-to-r from-blue-900 via-blue-800 to-blue-700 text-white shadow-xl sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <img src="assets/img/school_logo.webp" alt="โรงเรียนเซนต์ดอมินิก" class="h-12 w-12 rounded-xl object-contain bg-white p-1" />
-        <div>
-          <h1 class="text-xl font-bold leading-tight">งานโสตทัศนูปกรณ์</h1>
-          <p class="text-blue-200 text-xs">ระบบแจ้งซ่อมและจองห้องประชุม โรงเรียนเซนต์ดอมินิก</p>
-        </div>
+<!-- ── Navigation ── -->
+<nav class="nav-shell">
+  <div class="nav-inner">
+    <button class="row gap-12" onclick="go('home')" style="border:none;background:none;padding:0;cursor:pointer;">
+      <div style="width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--navy-600),var(--navy-800));display:grid;place-items:center;color:#fff;flex:none;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
       </div>
-      <div class="flex items-center gap-3">
-        <div class="hidden md:flex items-center gap-2 text-sm text-blue-200">
-          <i class="fa-solid fa-circle text-green-400 text-xs animate-pulse"></i>
-          <span>ระบบออนไลน์</span>
-        </div>
-        <a href="admin.html" class="p-2 hover:bg-blue-700 rounded-lg transition-colors" title="Admin Panel">
-          <i class="fa-solid fa-user-shield text-white"></i>
-        </a>
+      <div style="text-align:left;line-height:1.15;">
+        <div style="font-weight:800;font-size:1.02rem;color:var(--navy-800);">ระบบงานฝ่าย</div>
+        <div style="font-size:.74rem;color:var(--slate-500);font-weight:600;">โรงเรียนเซนต์ดอมินิก</div>
       </div>
-    </div>
-
-    <!-- Tab Navigation -->
-    <div class="max-w-7xl mx-auto px-4 pb-0">
-      <nav class="flex gap-1 overflow-x-auto scrollbar-hide" id="tabNav">
-        <button onclick="showTab('repair')" class="tab-btn active" data-tab="repair">
-          <i class="fa-solid fa-screwdriver-wrench mr-2"></i>แจ้งซ่อมอุปกรณ์
-        </button>
-        <button onclick="showTab('booking')" class="tab-btn" data-tab="booking">
-          <i class="fa-solid fa-calendar-plus mr-2"></i>จองห้องประชุม
-        </button>
-        <button onclick="showTab('status')" class="tab-btn" data-tab="status">
-          <i class="fa-solid fa-magnifying-glass mr-2"></i>ติดตามสถานะ
-        </button>
-        <button onclick="showTab('calendar')" class="tab-btn" data-tab="calendar">
-          <i class="fa-solid fa-calendar-days mr-2"></i>ปฏิทินห้องประชุม
-        </button>
-      </nav>
-    </div>
-  </header>
-
-  <!-- ===== MAIN CONTENT ===== -->
-  <main class="max-w-7xl mx-auto px-4 py-8">
-
-    <!-- ===== TAB: แจ้งซ่อมอุปกรณ์ ===== -->
-    <section id="tab-repair" class="tab-content">
-      <div class="section-header">
-        <div class="section-icon bg-orange-100 text-orange-600">
-          <i class="fa-solid fa-screwdriver-wrench text-2xl"></i>
-        </div>
-        <div>
-          <h2 class="text-2xl font-bold">แจ้งซ่อมอุปกรณ์โสตทัศนูปกรณ์</h2>
-          <p class="text-slate-500 text-sm">กรอกข้อมูลให้ครบถ้วน ทีมงานจะติดต่อกลับโดยเร็ว</p>
-        </div>
-      </div>
-
-      <div class="grid lg:grid-cols-3 gap-6">
-        <!-- Form -->
-        <div class="lg:col-span-2">
-          <div class="card">
-            <form id="repairForm" onsubmit="submitRepair(event)">
-              <div class="grid sm:grid-cols-2 gap-4">
-                <div class="form-group">
-                  <label class="form-label required">ชื่อ-นามสกุลผู้แจ้ง</label>
-                  <input type="text" name="name" class="form-input" placeholder="กรอกชื่อ-นามสกุล" required />
-                </div>
-                <div class="form-group">
-                  <label class="form-label required">เบอร์โทรติดต่อ</label>
-                  <input type="tel" name="phone" class="form-input" placeholder="0xx-xxx-xxxx" required />
-                </div>
-                <div class="form-group sm:col-span-2">
-                  <label class="form-label required">อุปกรณ์ที่ต้องการซ่อม</label>
-                  <select name="equipment" id="equipmentSelect" class="form-input" required onchange="toggleEquipmentOther(this)">
-                    <option value="">-- เลือกอุปกรณ์ --</option>
-                    <option value="ไมโครโฟน">🎤 ไมโครโฟน</option>
-                    <option value="ลำโพง / เครื่องเสียง">🔊 ลำโพง / เครื่องเสียง</option>
-                    <option value="โปรเจกเตอร์">📽️ โปรเจกเตอร์</option>
-                    <option value="จอภาพ / จอ LED">🖥️ จอภาพ / จอ LED</option>
-                    <option value="สายสัญญาณ / Adapter">🔌 สายสัญญาณ / Adapter</option>
-                    <option value="อื่นๆ">⚙️ อื่นๆ</option>
-                  </select>
-                  <input type="text" name="equipmentOther" id="equipmentOther" class="form-input mt-2 hidden" placeholder="ระบุอุปกรณ์ที่ต้องการซ่อม" />
-                </div>
-                <div class="form-group sm:col-span-2">
-                  <label class="form-label required">สถานที่อุปกรณ์อยู่</label>
-                  <div class="grid grid-cols-3 gap-2">
-                    <div>
-                      <input type="text" name="locationBuilding" class="form-input" placeholder="อาคาร" required />
-                    </div>
-                    <div>
-                      <input type="text" name="locationFloor" class="form-input" placeholder="ชั้น" required />
-                    </div>
-                    <div>
-                      <input type="text" name="locationRoom" class="form-input" placeholder="ห้อง" required />
-                    </div>
-                  </div>
-                </div>
-                <div class="form-group sm:col-span-2">
-                  <label class="form-label required">อาการ / ปัญหาที่พบ</label>
-                  <textarea name="description" class="form-input" rows="4" maxlength="1000" placeholder="อธิบายอาการที่พบ เช่น เปิดไม่ติด, มีเสียงดัง, สัญญาณขาดหาย..." oninput="countChars(this)" required></textarea>
-                  <span class="char-counter">0/1000</span>
-                </div>
-                <div class="form-group sm:col-span-2">
-                  <label class="form-label">แนบรูปภาพ (ถ้ามี)</label>
-                  <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
-                    <i class="fa-solid fa-image text-slate-400 text-3xl mb-2"></i>
-                    <p class="text-slate-500 text-sm mb-2">ลากไฟล์มาวาง หรือคลิกเพื่อเลือกไฟล์</p>
-                    <input type="file" name="image" accept="image/*" class="hidden" id="repairImageInput" onchange="previewImage(this,'repairPreview')" />
-                    <button type="button" onclick="document.getElementById('repairImageInput').click()" class="btn-secondary text-sm px-4 py-2">
-                      เลือกรูปภาพ
-                    </button>
-                    <div id="repairPreview" class="mt-3 hidden">
-                      <img id="repairPreviewImg" class="max-h-40 mx-auto rounded-lg" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="mt-6 flex gap-3">
-                <button type="submit" class="btn-primary flex-1">
-                  <i class="fa-solid fa-paper-plane mr-2"></i>ส่งแจ้งซ่อม
-                </button>
-                <button type="reset" class="btn-secondary px-6" onclick="document.getElementById('repairPreview').classList.add('hidden');document.getElementById('repairPreviewImg').src=''">
-                  <i class="fa-solid fa-rotate-left mr-2"></i>ล้างข้อมูล
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!-- Info Cards -->
-        <div class="space-y-4">
-          <div class="card bg-blue-50 border border-blue-200">
-            <h3 class="font-semibold text-blue-800 mb-3"><i class="fa-solid fa-circle-info mr-2"></i>ขั้นตอนการแจ้งซ่อม</h3>
-            <div class="space-y-3">
-              <div class="flex gap-3 text-sm">
-                <div class="step-num">1</div>
-                <p class="text-blue-700">กรอกแบบฟอร์มแจ้งซ่อม</p>
-              </div>
-              <div class="flex gap-3 text-sm">
-                <div class="step-num">2</div>
-                <p class="text-blue-700">รับเลขที่ใบแจ้งซ่อม (Ticket)</p>
-              </div>
-              <div class="flex gap-3 text-sm">
-                <div class="step-num">3</div>
-                <p class="text-blue-700">ทีมงานตรวจสอบและติดต่อกลับ</p>
-              </div>
-              <div class="flex gap-3 text-sm">
-                <div class="step-num">4</div>
-                <p class="text-blue-700">ดำเนินการซ่อมและรายงานผล</p>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== TAB: จองห้องประชุม ===== -->
-    <section id="tab-booking" class="tab-content hidden">
-      <div class="section-header">
-        <div class="section-icon bg-blue-100 text-blue-600">
-          <i class="fa-solid fa-calendar-plus text-2xl"></i>
-        </div>
-        <div>
-          <h2 class="text-2xl font-bold">จองห้องประชุม</h2>
-          <p class="text-slate-500 text-sm">ตรวจสอบความพร้อมของห้องก่อนทำการจอง</p>
-        </div>
-      </div>
-
-      <!-- Room Cards (populated from rooms.js) -->
-      <div id="roomCardsContainer" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"></div>
-
-      <div class="grid lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2">
-          <div class="card">
-            <form id="bookingForm" onsubmit="submitBooking(event)">
-              <div class="grid sm:grid-cols-2 gap-4">
-                <div class="form-group">
-                  <label class="form-label required">ชื่อ-นามสกุลผู้จอง</label>
-                  <input type="text" name="name" class="form-input" placeholder="กรอกชื่อ-นามสกุล" required />
-                </div>
-                <div class="form-group">
-                  <label class="form-label required">เบอร์โทรติดต่อ</label>
-                  <input type="tel" name="phone" class="form-input" placeholder="0xx-xxx-xxxx" required />
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label required">จำนวนผู้เข้าร่วม</label>
-                  <input type="number" name="attendees" class="form-input" min="1" placeholder="จำนวนคน" required />
-                </div>
-                <div class="form-group sm:col-span-2">
-                  <label class="form-label required">ห้องประชุม</label>
-                  <select name="room" id="roomSelect" class="form-input" required onchange="updateEquipmentOptions(this.value)">
-                    <option value="">-- เลือกห้องประชุม --</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label required">วันที่ใช้ห้อง <span class="text-slate-400 font-normal">(วว/ดด/ปปปป ค.ศ.)</span></label>
-                  <div class="flex gap-1 items-center flex-wrap">
-                    <select name="bookingDay" id="bookingDay" class="pick-sel pick-sel-sm" onchange="refreshBookedSlots()" required></select>
-                    <span class="text-slate-400 font-bold">/</span>
-                    <select name="bookingMonth" id="bookingMonth" class="pick-sel pick-sel-lg" onchange="updateDays()" required></select>
-                    <span class="text-slate-400 font-bold">/</span>
-                    <select name="bookingYear" id="bookingYear" class="pick-sel pick-sel-md" onchange="updateMonths()" required></select>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label class="form-label required">เวลา <span class="text-slate-400 font-normal">(24 ชั่วโมง)</span></label>
-                  <div class="flex gap-2 items-center flex-wrap">
-                    <div class="flex items-center gap-1">
-                      <select name="startHour" id="startHour" class="pick-sel pick-sel-sm" required></select>
-                      <span class="font-bold text-slate-500">:</span>
-                      <select name="startMin" id="startMin" class="pick-sel pick-sel-sm" required></select>
-                    </div>
-                    <span class="text-slate-500">ถึง</span>
-                    <div class="flex items-center gap-1">
-                      <select name="endHour" id="endHour" class="pick-sel pick-sel-sm" required></select>
-                      <span class="font-bold text-slate-500">:</span>
-                      <select name="endMin" id="endMin" class="pick-sel pick-sel-sm" required></select>
-                    </div>
-                    <span class="text-slate-400 text-sm">น.</span>
-                  </div>
-                </div>
-                <div id="bookedSlotsPanel" class="hidden sm:col-span-2 p-3 rounded-xl border text-sm"></div>
-
-                <div class="form-group sm:col-span-2">
-                  <label class="form-label required">วัตถุประสงค์การประชุม</label>
-                  <input type="text" name="purpose" class="form-input" maxlength="1000" placeholder="เช่น ประชุมแผนงานประจำเดือน" oninput="countChars(this)" required />
-                  <span class="char-counter">0/1000</span>
-                </div>
-                <div class="form-group sm:col-span-2">
-                  <label class="form-label">อุปกรณ์ที่ต้องการใช้</label>
-                  <div id="equipmentCheckboxes" class="mt-1">
-                    <p class="text-slate-400 text-sm italic">กรุณาเลือกห้องประชุมก่อน</p>
-                  </div>
-                </div>
-                <div class="form-group sm:col-span-2">
-                  <label class="form-label">หมายเหตุเพิ่มเติม</label>
-                  <textarea name="note" class="form-input" rows="3" maxlength="1000" placeholder="ข้อมูลเพิ่มเติมที่ต้องการแจ้งให้ทราบ" oninput="countChars(this)"></textarea>
-                  <span class="char-counter">0/1000</span>
-                </div>
-              </div>
-
-              <div class="mt-6 flex gap-3">
-                <button type="submit" class="btn-primary flex-1">
-                  <i class="fa-solid fa-calendar-check mr-2"></i>ยืนยันการจอง
-                </button>
-                <button type="reset" class="btn-secondary px-6" onclick="document.getElementById('roomSelect').value=''">
-                  <i class="fa-solid fa-rotate-left mr-2"></i>ล้างข้อมูล
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!-- Booking Info -->
-        <div class="space-y-4">
-          <div class="card bg-blue-50 border border-blue-200">
-            <h3 class="font-semibold text-blue-800 mb-3"><i class="fa-solid fa-circle-info mr-2"></i>ข้อปฏิบัติการใช้ห้อง</h3>
-            <ul class="space-y-2 text-sm text-blue-700">
-              <li class="flex gap-2"><i class="fa-solid fa-check text-blue-500 mt-0.5"></i>จองล่วงหน้าอย่างน้อย 7 วันทำการ</li>
-              <li class="flex gap-2"><i class="fa-solid fa-check text-blue-500 mt-0.5"></i>แจ้งยกเลิกล่วงหน้าอย่างน้อย 2 วัน</li>
-              <li class="flex gap-2"><i class="fa-solid fa-check text-blue-500 mt-0.5"></i>รับผิดชอบอุปกรณ์ระหว่างการใช้งาน</li>
-              <li class="flex gap-2"><i class="fa-solid fa-check text-blue-500 mt-0.5"></i>รักษาความสะอาดของห้องประชุมทุกครั้งหลังใช้งานเสร็จสิ้น</li>
-            </ul>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== TAB: ติดตามสถานะ ===== -->
-    <section id="tab-status" class="tab-content hidden">
-      <div class="section-header">
-        <div class="section-icon bg-purple-100 text-purple-600">
-          <i class="fa-solid fa-magnifying-glass text-2xl"></i>
-        </div>
-        <div>
-          <h2 class="text-2xl font-bold">ติดตามสถานะ</h2>
-          <p class="text-slate-500 text-sm">ค้นหาสถานะการแจ้งซ่อมหรือการจองห้องประชุม</p>
-        </div>
-      </div>
-
-      <div class="max-w-2xl mx-auto">
-        <div class="card mb-6">
-          <p class="text-xs text-slate-400 mb-2"><i class="fa-solid fa-circle-info mr-1"></i>กรอกเลขที่ Ticket หรือ ชื่อผู้แจ้ง</p>
-          <div class="flex gap-3">
-            <input type="text" id="ticketInput" class="form-input flex-1" placeholder="REP-2026-001 หรือ ชื่อผู้แจ้ง เช่น สมชาย"
-              onkeydown="if(event.key==='Enter') searchStatus()" />
-            <button onclick="searchStatus()" class="btn-primary px-6">
-              <i class="fa-solid fa-magnifying-glass mr-2"></i>ค้นหา
-            </button>
-          </div>
-        </div>
-
-        <div id="statusResult" class="hidden">
-          <!-- Result will be populated by JS -->
-        </div>
-
-        <!-- Recent Tickets Placeholder -->
-        <div id="recentTickets" class="space-y-3">
-          <h3 class="font-semibold text-slate-700 mb-4">
-            <i class="fa-solid fa-clock-rotate-left mr-2 text-slate-400"></i>วิธีค้นหาสถานะ
-          </h3>
-          <div class="card bg-slate-50">
-            <p class="text-slate-600 text-sm leading-relaxed">
-              ค้นหาได้ 2 วิธี:<br/><br/>
-              • <strong>ค้นด้วยเลขที่ Ticket</strong> — กรอกรหัสที่ได้รับหลังส่งแบบฟอร์ม<br/>
-              &nbsp;&nbsp;<code class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded">REP-2026-XXX</code> แจ้งซ่อม &nbsp;
-              <code class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded">BK-2026-XXX</code> จองห้อง<br/><br/>
-              • <strong>ค้นด้วยชื่อผู้แจ้ง</strong> — พิมพ์ชื่อ-นามสกุล (บางส่วนก็ได้)
-            </p>
-          </div>
-
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-            <div class="card text-center border-2 border-yellow-200 p-3">
-              <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <i class="fa-solid fa-clock text-yellow-600"></i>
-              </div>
-              <h4 class="font-semibold text-sm">รับเรื่อง</h4>
-              <p class="text-xs text-slate-500 mt-1">ได้รับ Ticket แล้ว</p>
-            </div>
-            <div class="card text-center border-2 border-blue-200 p-3">
-              <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <i class="fa-solid fa-gear text-blue-600 fa-spin"></i>
-              </div>
-              <h4 class="font-semibold text-sm">กำลังดำเนินการ</h4>
-              <p class="text-xs text-slate-500 mt-1">อยู่ระหว่างดำเนินการ</p>
-            </div>
-            <div class="card text-center border-2 border-green-200 p-3">
-              <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <i class="fa-solid fa-circle-check text-green-600"></i>
-              </div>
-              <h4 class="font-semibold text-sm">เสร็จสิ้น</h4>
-              <p class="text-xs text-slate-500 mt-1">เรียบร้อยแล้ว</p>
-            </div>
-            <div class="card text-center border-2 border-red-200 p-3">
-              <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <i class="fa-solid fa-ban text-red-500"></i>
-              </div>
-              <h4 class="font-semibold text-sm">ยกเลิก</h4>
-              <p class="text-xs text-slate-500 mt-1">ยกเลิกการแจ้งซ่อม</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== TAB: ปฏิทินห้องประชุม ===== -->
-    <section id="tab-calendar" class="tab-content hidden">
-      <div class="section-header">
-        <div class="section-icon bg-teal-100 text-teal-600">
-          <i class="fa-solid fa-calendar-days text-2xl"></i>
-        </div>
-        <div>
-          <h2 class="text-2xl font-bold">ปฏิทินห้องประชุม</h2>
-          <p class="text-slate-500 text-sm">ดูตารางการจองห้องประชุมรายเดือน</p>
-        </div>
-      </div>
-
-      <!-- Room Filter (populated from rooms.js) -->
-      <div id="roomFilters" class="flex flex-wrap gap-2 mb-6">
-        <button onclick="filterRoom('all')" class="room-filter active" data-room="all">
-          <i class="fa-solid fa-layer-group mr-1.5"></i>ทั้งหมด
-        </button>
-      </div>
-
-      <div class="card">
-        <!-- Calendar Header -->
-        <div class="flex items-center justify-between mb-6">
-          <button onclick="prevMonth()" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-            <i class="fa-solid fa-chevron-left text-slate-600"></i>
-          </button>
-          <h3 id="calendarTitle" class="text-xl font-bold text-slate-800"></h3>
-          <button onclick="nextMonth()" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-            <i class="fa-solid fa-chevron-right text-slate-600"></i>
-          </button>
-        </div>
-
-        <!-- Day Headers -->
-        <div class="grid grid-cols-7 gap-1 mb-2">
-          <div class="text-center text-xs font-semibold text-red-500 py-2">อา</div>
-          <div class="text-center text-xs font-semibold text-slate-600 py-2">จ</div>
-          <div class="text-center text-xs font-semibold text-slate-600 py-2">อ</div>
-          <div class="text-center text-xs font-semibold text-slate-600 py-2">พ</div>
-          <div class="text-center text-xs font-semibold text-slate-600 py-2">พฤ</div>
-          <div class="text-center text-xs font-semibold text-slate-600 py-2">ศ</div>
-          <div class="text-center text-xs font-semibold text-blue-500 py-2">ส</div>
-        </div>
-
-        <!-- Calendar Grid -->
-        <div id="calendarGrid" class="grid grid-cols-7 gap-1"></div>
-
-        <!-- Legend (populated from rooms.js) -->
-        <div id="calendarLegend" class="flex flex-wrap gap-4 mt-6 pt-4 border-t border-slate-100"></div>
-      </div>
-
-      <!-- Event Detail Modal -->
-      <div id="eventModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onclick="closeModal(event)">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6" onclick="event.stopPropagation()">
-          <div class="flex justify-between items-start mb-4">
-            <h3 class="font-bold text-lg" id="modalTitle"></h3>
-            <button onclick="document.getElementById('eventModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600">
-              <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
-          </div>
-          <div id="modalContent" class="space-y-3 text-sm text-slate-700 overflow-y-auto max-h-96"></div>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- ===== FOOTER ===== -->
-  <footer class="bg-slate-800 text-slate-400 text-center py-6 mt-12">
-    <div class="max-w-7xl mx-auto px-4">
-      <div class="flex items-center justify-center gap-2 mb-2">
-        <img src="assets/img/school_logo.webp" alt="โรงเรียนเซนต์ดอมินิก" class="h-6 w-6 object-contain" />
-        <span class="text-white font-semibold">งานโสตทัศนูปกรณ์ โรงเรียนเซนต์ดอมินิก</span>
-      </div>
-      <p class="text-xs">ระบบแจ้งซ่อมและจองห้องประชุม</p>
-    </div>
-  </footer>
-
-  <!-- ===== TOAST NOTIFICATION ===== -->
-  <div id="toast" class="hidden fixed bottom-6 right-6 z-50 max-w-sm"></div>
-
-  <!-- ===== SUCCESS MODAL ===== -->
-  <div id="successModal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
-      <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <i class="fa-solid fa-circle-check text-green-500 text-4xl"></i>
-      </div>
-      <h3 class="text-2xl font-bold text-slate-800 mb-2" id="successTitle"></h3>
-      <p class="text-slate-600 mb-2" id="successMessage"></p>
-      <div class="bg-slate-50 rounded-xl p-4 mb-6">
-        <p class="text-xs text-slate-500 mb-1">เลขที่ Ticket ของคุณ</p>
-        <p class="text-2xl font-bold text-blue-600" id="successTicket"></p>
-      </div>
-      <p class="text-slate-500 text-sm mb-6" id="successNote"></p>
-      <button onclick="document.getElementById('successModal').classList.add('hidden')" class="btn-primary px-8">
-        <i class="fa-solid fa-check mr-2"></i>รับทราบ
+    </button>
+    <nav class="row gap-4 grow hide-mobile" style="justify-content:center;" id="main-nav">
+      <button class="nav-link active" id="nav-home" onclick="go('home')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        หน้าหลัก
       </button>
+      <button class="nav-link" id="nav-docs" onclick="go('docs')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M15 2v5h5"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+        ฝ่ายธุรการ
+      </button>
+      <button class="nav-link" id="nav-assess" onclick="go('assess')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+        วัดประเมินผล
+      </button>
+      <button class="nav-link" id="nav-av" onclick="go('av')">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        ฝ่ายโสต
+      </button>
+    </nav>
+    <div class="grow hide-mobile"></div>
+    <a href="admin.html" class="btn btn-primary btn-sm hide-mobile">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      เข้าสู่ระบบผู้ดูแล
+    </a>
+  </div>
+</nav>
+
+<!-- ── Pages ── -->
+<main>
+
+  <!-- ═══════════════ HOME HUB ═══════════════ -->
+  <div id="page-home">
+    <div style="min-height:calc(100vh - 66px);display:flex;flex-direction:column;background:linear-gradient(170deg,var(--navy-900) 0%,var(--navy-700) 48%,var(--navy-600) 100%);position:relative;overflow:hidden;">
+      <!-- Dot texture -->
+      <div style="position:absolute;inset:0;opacity:.1;background-image:radial-gradient(circle at 1px 1px,#fff 1px,transparent 0);background-size:28px 28px;pointer-events:none;"></div>
+      <!-- Glows -->
+      <div style="position:absolute;top:-12%;right:-6%;width:460px;height:460px;border-radius:50%;background:radial-gradient(circle,rgba(91,142,221,.4),transparent 68%);filter:blur(20px);pointer-events:none;"></div>
+      <div style="position:absolute;bottom:-18%;left:-8%;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(112,72,196,.32),transparent 68%);filter:blur(20px);pointer-events:none;"></div>
+
+      <div style="max-width:var(--maxw);margin:0 auto;position:relative;flex:1;display:flex;flex-direction:column;justify-content:center;padding:56px 24px;width:100%;">
+        <!-- Heading -->
+        <div style="text-align:center;color:#fff;margin-bottom:44px;">
+          <div class="badge" style="background:rgba(255,255,255,.15);color:#fff;margin-bottom:20px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            ระบบสารสนเทศภายในโรงเรียน
+          </div>
+          <h1 class="h-display" style="margin-bottom:14px;color:#fff;">เลือกฝ่ายที่ต้องการเข้าใช้งาน</h1>
+          <p style="font-size:1.08rem;color:rgba(255,255,255,.82);max-width:540px;margin:0 auto;">
+            ประตูทางเข้าสู่ระบบงานของแต่ละฝ่าย คลิกการ์ดด้านล่างเพื่อเข้าสู่ฝ่ายที่ต้องการ
+          </p>
+        </div>
+
+        <!-- Department Cards -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:22px;max-width:1040px;margin:0 auto;width:100%;">
+
+          <!-- ฝ่ายธุรการ -->
+          <button onclick="go('docs')" class="dept-card" style="text-align:left;padding:0;overflow:hidden;cursor:pointer;border:1px solid rgba(255,255,255,.16);border-radius:var(--r-xl);background:rgba(255,255,255,.97);box-shadow:0 18px 50px rgba(7,18,45,.35);transition:transform .2s ease,box-shadow .2s ease;display:flex;flex-direction:column;">
+            <div style="padding:30px 28px 26px;flex:1;display:flex;flex-direction:column;">
+              <div style="width:60px;height:60px;border-radius:17px;background:#dce8fb;color:#2257b4;display:grid;place-items:center;margin-bottom:20px;">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M15 2v5h5"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+              </div>
+              <div class="h-2" style="margin-bottom:9px;">ฝ่ายธุรการ</div>
+              <p class="muted" style="font-size:.94rem;margin-bottom:18px;flex:1;">อ่านและส่งไฟล์เอกสารทั้งหมด เพื่อตรวจสอบและจัดเก็บข้อมูลราชการ</p>
+              <div class="row gap-6 wrap" style="margin-bottom:4px;">
+                <span class="badge" style="background:#dce8fb;color:#2257b4;font-size:.76rem;">คลังเอกสาร</span>
+                <span class="badge" style="background:#dce8fb;color:#2257b4;font-size:.76rem;">ส่งไฟล์</span>
+                <span class="badge" style="background:#dce8fb;color:#2257b4;font-size:.76rem;">ตรวจสอบ</span>
+              </div>
+            </div>
+            <div class="row between" style="padding:16px 28px;border-top:1px solid var(--line-soft);color:#2257b4;font-weight:700;font-size:.94rem;">
+              <span>เข้าสู่ฝ่าย</span>
+              <span style="width:34px;height:34px;border-radius:50%;background:#dce8fb;display:grid;place-items:center;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </span>
+            </div>
+          </button>
+
+          <!-- ฝ่ายวัดและประเมินผล -->
+          <button onclick="go('assess')" class="dept-card" style="text-align:left;padding:0;overflow:hidden;cursor:pointer;border:1px solid rgba(255,255,255,.16);border-radius:var(--r-xl);background:rgba(255,255,255,.97);box-shadow:0 18px 50px rgba(7,18,45,.35);transition:transform .2s ease,box-shadow .2s ease;display:flex;flex-direction:column;">
+            <div style="padding:30px 28px 26px;flex:1;display:flex;flex-direction:column;">
+              <div style="width:60px;height:60px;border-radius:17px;background:#e4f5ec;color:#15924d;display:grid;place-items:center;margin-bottom:20px;">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+              </div>
+              <div class="h-2" style="margin-bottom:9px;">ฝ่ายวัดและประเมินผล</div>
+              <p class="muted" style="font-size:.94rem;margin-bottom:18px;flex:1;">ติดตามสถานะการตรวจข้อสอบของแต่ละวิชาว่าเสร็จสิ้นแล้วหรือยัง</p>
+              <div class="row gap-6 wrap" style="margin-bottom:4px;">
+                <span class="badge" style="background:#e4f5ec;color:#15924d;font-size:.76rem;">สถานะตรวจข้อสอบ</span>
+                <span class="badge" style="background:#e4f5ec;color:#15924d;font-size:.76rem;">รายวิชา</span>
+              </div>
+            </div>
+            <div class="row between" style="padding:16px 28px;border-top:1px solid var(--line-soft);color:#15924d;font-weight:700;font-size:.94rem;">
+              <span>เข้าสู่ฝ่าย</span>
+              <span style="width:34px;height:34px;border-radius:50%;background:#e4f5ec;display:grid;place-items:center;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </span>
+            </div>
+          </button>
+
+          <!-- ฝ่ายโสตทัศนศึกษา -->
+          <button onclick="go('av')" class="dept-card" style="text-align:left;padding:0;overflow:hidden;cursor:pointer;border:1px solid rgba(255,255,255,.16);border-radius:var(--r-xl);background:rgba(255,255,255,.97);box-shadow:0 18px 50px rgba(7,18,45,.35);transition:transform .2s ease,box-shadow .2s ease;display:flex;flex-direction:column;">
+            <div style="padding:30px 28px 26px;flex:1;display:flex;flex-direction:column;">
+              <div style="width:60px;height:60px;border-radius:17px;background:#ede6fb;color:#7048c4;display:grid;place-items:center;margin-bottom:20px;">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+              <div class="h-2" style="margin-bottom:9px;">ฝ่ายโสตทัศนศึกษา</div>
+              <p class="muted" style="font-size:.94rem;margin-bottom:18px;flex:1;">แจ้งซ่อมอุปกรณ์ จองห้องประชุม พร้อมปฏิทินการใช้หอประชุม</p>
+              <div class="row gap-6 wrap" style="margin-bottom:4px;">
+                <span class="badge" style="background:#ede6fb;color:#7048c4;font-size:.76rem;">แจ้งซ่อม</span>
+                <span class="badge" style="background:#ede6fb;color:#7048c4;font-size:.76rem;">จองห้อง</span>
+                <span class="badge" style="background:#ede6fb;color:#7048c4;font-size:.76rem;">ปฏิทิน</span>
+              </div>
+            </div>
+            <div class="row between" style="padding:16px 28px;border-top:1px solid var(--line-soft);color:#7048c4;font-weight:700;font-size:.94rem;">
+              <span>เข้าสู่ฝ่าย</span>
+              <span style="width:34px;height:34px;border-radius:50%;background:#ede6fb;display:grid;place-items:center;">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+              </span>
+            </div>
+          </button>
+
+        </div>
+
+        <!-- Admin entry -->
+        <div style="text-align:center;margin-top:40px;">
+          <a href="admin.html" class="row gap-8 center" style="display:inline-flex;margin:0 auto;border:1px solid rgba(255,255,255,.24);background:rgba(255,255,255,.08);color:#fff;font-weight:600;font-size:.92rem;padding:11px 22px;border-radius:99px;transition:all .2s ease;" onmouseover="this.style.background='rgba(255,255,255,.16)'" onmouseout="this.style.background='rgba(255,255,255,.08)'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            เข้าสู่ระบบผู้ดูแล (Admin)
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 
-  <script src="assets/js/config.js"></script>
-  <script src="rooms.js"></script>
-  <script src="assets/js/app.js"></script>
+  <!-- ═══════════════ ฝ่ายธุรการ (MOCKUP) ═══════════════ -->
+  <div id="page-docs" style="display:none;">
+    <div class="page-wrap">
+      <!-- Page Header -->
+      <div class="row between wrap gap-16" style="margin-bottom:26px;">
+        <div class="row gap-16">
+          <div style="width:56px;height:56px;border-radius:16px;background:#dce8fb;color:#2257b4;display:grid;place-items:center;flex:none;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M15 2v5h5"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+          </div>
+          <div>
+            <div class="eyebrow" style="color:#2257b4;">ฝ่ายธุรการ</div>
+            <h1 class="h-1" style="margin:2px 0 4px;">คลังเอกสารและงานสารบรรณ</h1>
+            <p class="muted" style="font-size:.94rem;max-width:560px;">อ่าน ดาวน์โหลด และส่งไฟล์เอกสารทั้งหมดเข้าระบบเพื่อตรวจสอบและจัดเก็บข้อมูลราชการ</p>
+          </div>
+        </div>
+        <div class="row gap-10 wrap">
+          <span class="coming-soon-tag">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            กำลังพัฒนา
+          </span>
+          <button class="btn btn-primary" onclick="showToast('ระบบส่งเอกสารจะเปิดให้บริการเร็วๆ นี้')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            ส่งเอกสารใหม่
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px;">
+        <div class="card card-pad stat row between" style="align-items:flex-start;">
+          <div><div class="muted" style="font-size:.86rem;font-weight:600;">เอกสารทั้งหมด</div><div class="h-1 tnum" style="margin-top:6px;">10</div></div>
+          <div class="ic-box" style="background:#dce8fb;color:#2257b4;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M15 2v5h5"/></svg></div>
+        </div>
+        <div class="card card-pad stat row between" style="align-items:flex-start;">
+          <div><div class="muted" style="font-size:.86rem;font-weight:600;">รอตรวจสอบ</div><div class="h-1 tnum" style="margin-top:6px;">4</div></div>
+          <div class="ic-box" style="background:#fbf0d8;color:#c9820b;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        </div>
+        <div class="card card-pad stat row between" style="align-items:flex-start;">
+          <div><div class="muted" style="font-size:.86rem;font-weight:600;">อนุมัติแล้ว</div><div class="h-1 tnum" style="margin-top:6px;">5</div></div>
+          <div class="ic-box" style="background:#e4f5ec;color:#15924d;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+        </div>
+      </div>
+
+      <!-- Document table mockup -->
+      <div class="card" style="overflow:hidden;position:relative;">
+        <!-- Blur overlay -->
+        <div style="position:absolute;inset:0;background:rgba(244,246,251,.7);backdrop-filter:blur(4px);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;border-radius:var(--r-lg);">
+          <div style="width:64px;height:64px;border-radius:20px;background:var(--amber-bg);color:var(--amber);display:grid;place-items:center;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div style="text-align:center;">
+            <div class="h-3" style="color:var(--slate-700);">ระบบกำลังพัฒนา</div>
+            <p class="muted" style="font-size:.9rem;margin-top:6px;max-width:340px;">ระบบจัดการเอกสารฝ่ายธุรการอยู่ระหว่างการพัฒนา จะเปิดให้บริการเร็วๆ นี้</p>
+          </div>
+        </div>
+        <!-- Table content (blurred behind) -->
+        <div style="overflow-x:auto;">
+          <table class="tbl">
+            <thead><tr><th style="width:40%">เอกสาร</th><th>หมวดหมู่</th><th>ผู้ส่ง / ฝ่าย</th><th>วันที่</th><th>สถานะ</th></tr></thead>
+            <tbody id="docs-tbody">
+              <tr><td><div class="row gap-12"><div style="width:34px;height:40px;border-radius:7px;background:#fff;border:1.5px solid #d23b3b33;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;"><span style="font-size:8.5px;font-weight:800;color:#d23b3b;">PDF</span></div><div><div style="font-weight:600;">คำสั่งแต่งตั้งคณะกรรมการสอบปลายภาค</div><div class="muted" style="font-size:.8rem;">DOC-2401 · PDF · 248 KB</div></div></div></td><td><span class="badge slate">คำสั่ง</span></td><td><div style="font-weight:600;font-size:.9rem;">ครูสมหญิง พินิจ</div><div class="muted" style="font-size:.8rem;">วิชาการ</div></td><td class="muted" style="font-size:.88rem;">1 มิ.ย. 2568</td><td><span class="badge amber"><span class="dot"></span>รอดำเนินการ</span></td></tr>
+              <tr><td><div class="row gap-12"><div style="width:34px;height:40px;border-radius:7px;background:#fff;border:1.5px solid #2257b433;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;"><span style="font-size:8.5px;font-weight:800;color:#2257b4;">DOCX</span></div><div><div style="font-weight:600;">บันทึกข้อความขออนุมัติจัดซื้อครุภัณฑ์</div><div class="muted" style="font-size:.8rem;">DOC-2402 · DOCX · 92 KB</div></div></div></td><td><span class="badge slate">บันทึกข้อความ</span></td><td><div style="font-weight:600;font-size:.9rem;">ครูวิชัย ตั้งมั่น</div><div class="muted" style="font-size:.8rem;">พัสดุ</div></td><td class="muted" style="font-size:.88rem;">1 มิ.ย. 2568</td><td><span class="badge amber"><span class="dot"></span>รอดำเนินการ</span></td></tr>
+              <tr><td><div class="row gap-12"><div style="width:34px;height:40px;border-radius:7px;background:#fff;border:1.5px solid #d23b3b33;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;"><span style="font-size:8.5px;font-weight:800;color:#d23b3b;">PDF</span></div><div><div style="font-weight:600;">หนังสือเชิญประชุมผู้ปกครอง ภาคเรียนที่ 1</div><div class="muted" style="font-size:.8rem;">DOC-2403 · PDF · 1.2 MB</div></div></div></td><td><span class="badge slate">หนังสือราชการ</span></td><td><div style="font-weight:600;font-size:.9rem;">ครูอารยา สุขสันต์</div><div class="muted" style="font-size:.8rem;">กิจการนักเรียน</div></td><td class="muted" style="font-size:.88rem;">30 พ.ค. 2568</td><td><span class="badge green"><span class="dot"></span>อนุมัติแล้ว</span></td></tr>
+              <tr><td><div class="row gap-12"><div style="width:34px;height:40px;border-radius:7px;background:#fff;border:1.5px solid #d23b3b33;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;"><span style="font-size:8.5px;font-weight:800;color:#d23b3b;">PDF</span></div><div><div style="font-weight:600;">รายงานผลการดำเนินโครงการกีฬาสี</div><div class="muted" style="font-size:.8rem;">DOC-2404 · PDF · 3.4 MB</div></div></div></td><td><span class="badge slate">รายงาน</span></td><td><div style="font-weight:600;font-size:.9rem;">ครูธนกฤต ใจดี</div><div class="muted" style="font-size:.8rem;">กิจการนักเรียน</div></td><td class="muted" style="font-size:.88rem;">29 พ.ค. 2568</td><td><span class="badge green"><span class="dot"></span>อนุมัติแล้ว</span></td></tr>
+              <tr><td><div class="row gap-12"><div style="width:34px;height:40px;border-radius:7px;background:#fff;border:1.5px solid #d23b3b33;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;"><span style="font-size:8.5px;font-weight:800;color:#d23b3b;">PDF</span></div><div><div style="font-weight:600;">คำสั่งมอบหมายงานเวรประจำวัน</div><div class="muted" style="font-size:.8rem;">DOC-2406 · PDF · 180 KB</div></div></div></td><td><span class="badge slate">คำสั่ง</span></td><td><div style="font-weight:600;font-size:.9rem;">ครูสมชาย มานะ</div><div class="muted" style="font-size:.8rem;">บริหารทั่วไป</div></td><td class="muted" style="font-size:.88rem;">27 พ.ค. 2568</td><td><span class="badge green"><span class="dot"></span>อนุมัติแล้ว</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ ฝ่ายวัดประเมินผล (MOCKUP) ═══════════════ -->
+  <div id="page-assess" style="display:none;">
+    <div class="page-wrap">
+      <!-- Page Header -->
+      <div class="row between wrap gap-16" style="margin-bottom:26px;">
+        <div class="row gap-16">
+          <div style="width:56px;height:56px;border-radius:16px;background:#e4f5ec;color:#15924d;display:grid;place-items:center;flex:none;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>
+          </div>
+          <div>
+            <div class="eyebrow" style="color:#15924d;">ฝ่ายวัดและประเมินผล</div>
+            <h1 class="h-1" style="margin:2px 0 4px;">สถานะการตรวจข้อสอบ</h1>
+            <p class="muted" style="font-size:.94rem;max-width:560px;">ติดตามความคืบหน้าการตรวจข้อสอบของแต่ละวิชาและระดับชั้น ว่าตรวจเสร็จสิ้นแล้วหรือยัง</p>
+          </div>
+        </div>
+        <span class="coming-soon-tag">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          กำลังพัฒนา
+        </span>
+      </div>
+
+      <!-- Overview Stats -->
+      <div style="display:grid;grid-template-columns:minmax(260px,1.1fr) repeat(3,minmax(150px,1fr));gap:14px;margin-bottom:26px;" class="assess-grid">
+        <div class="card card-pad row gap-20" style="align-items:center;">
+          <div style="position:relative;flex:none;">
+            <svg width="84" height="84" style="transform:rotate(-90deg)">
+              <circle cx="42" cy="42" r="34" fill="none" stroke="var(--canvas-2)" stroke-width="10"/>
+              <circle cx="42" cy="42" r="34" fill="none" stroke="#15924d" stroke-width="10" stroke-linecap="round" stroke-dasharray="213.6" stroke-dashoffset="85.4"/>
+            </svg>
+            <div style="position:absolute;inset:0;display:grid;place-items:center;">
+              <div class="tnum" style="font-weight:800;font-size:1.25rem;color:#15924d;line-height:1;">60%</div>
+            </div>
+          </div>
+          <div>
+            <div class="muted" style="font-size:.86rem;font-weight:600;">ความคืบหน้ารวมทั้งหมด</div>
+            <div class="h-2" style="margin:3px 0;">7 / 12 วิชา</div>
+            <div style="font-size:.84rem;color:var(--slate-500);">ตรวจข้อสอบเสร็จสมบูรณ์</div>
+          </div>
+        </div>
+        <div class="card card-pad stat row between" style="align-items:flex-start;">
+          <div><div class="muted" style="font-size:.86rem;font-weight:600;">ตรวจเสร็จ</div><div class="h-1 tnum" style="margin-top:6px;">7</div></div>
+          <div class="ic-box" style="background:#e4f5ec;color:#15924d;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+        </div>
+        <div class="card card-pad stat row between" style="align-items:flex-start;">
+          <div><div class="muted" style="font-size:.86rem;font-weight:600;">กำลังตรวจ</div><div class="h-1 tnum" style="margin-top:6px;">3</div></div>
+          <div class="ic-box" style="background:#e1f0fb;color:#1c7fc4;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        </div>
+        <div class="card card-pad stat row between" style="align-items:flex-start;">
+          <div><div class="muted" style="font-size:.86rem;font-weight:600;">ยังไม่เริ่ม</div><div class="h-1 tnum" style="margin-top:6px;">2</div></div>
+          <div class="ic-box" style="background:#fbf0d8;color:#c9820b;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        </div>
+      </div>
+
+      <!-- Exam cards grid (mockup) -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">
+        <!-- Card 1: Done -->
+        <div class="card" style="overflow:hidden;display:flex;flex-direction:column;">
+          <div style="padding:18px 20px 14px;display:flex;flex-direction:column;flex:1;">
+            <div class="row between" style="margin-bottom:12px;">
+              <div><div class="row gap-8" style="margin-bottom:4px;"><span class="badge navy">ม.1</span><span class="muted tnum" style="font-size:.8rem;font-weight:600;">ท21101</span></div><div class="h-3">ภาษาไทย</div></div>
+              <span class="badge green"><span class="dot"></span>เสร็จสิ้น</span>
+            </div>
+            <div class="muted row gap-6" style="font-size:.86rem;margin-bottom:16px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>ครูสุดา วาจาดี</div>
+            <div style="margin-top:auto;">
+              <div class="row between" style="font-size:.84rem;margin-bottom:6px;"><span class="muted">ตรวจแล้ว <strong class="tnum" style="color:var(--ink);">142</strong> / 142 คน</span><span class="tnum" style="font-weight:700;color:#15924d;">100%</span></div>
+              <div class="bar green"><span style="width:100%;"></span></div>
+              <div style="margin-top:12px;font-size:.82rem;" class="muted">กำหนดส่ง 30 พ.ค. 2568</div>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--line-soft);padding:10px 14px;background:var(--canvas);display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm grow" onclick="showToast('ระบบนี้กำลังพัฒนา')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>อัปเดตสถานะ</button>
+          </div>
+        </div>
+        <!-- Card 2: In Progress -->
+        <div class="card" style="overflow:hidden;display:flex;flex-direction:column;">
+          <div style="padding:18px 20px 14px;display:flex;flex-direction:column;flex:1;">
+            <div class="row between" style="margin-bottom:12px;">
+              <div><div class="row gap-8" style="margin-bottom:4px;"><span class="badge navy">ม.1</span><span class="muted tnum" style="font-size:.8rem;font-weight:600;">ค21101</span></div><div class="h-3">คณิตศาสตร์</div></div>
+              <span class="badge sky"><span class="dot"></span>กำลังดำเนินการ</span>
+            </div>
+            <div class="muted row gap-6" style="font-size:.86rem;margin-bottom:16px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>ครูประพันธ์ เลขดี</div>
+            <div style="margin-top:auto;">
+              <div class="row between" style="font-size:.84rem;margin-bottom:6px;"><span class="muted">ตรวจแล้ว <strong class="tnum" style="color:var(--ink);">96</strong> / 142 คน</span><span class="tnum" style="font-weight:700;color:#1c7fc4;">68%</span></div>
+              <div class="bar"><span style="width:68%;"></span></div>
+              <div style="margin-top:12px;font-size:.82rem;" class="muted">กำหนดส่ง 3 มิ.ย. 2568</div>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--line-soft);padding:10px 14px;background:var(--canvas);display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm grow" onclick="showToast('ระบบนี้กำลังพัฒนา')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>อัปเดตสถานะ</button>
+            <button class="btn btn-subtle btn-sm" onclick="showToast('ระบบนี้กำลังพัฒนา')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>เสร็จ</button>
+          </div>
+        </div>
+        <!-- Card 3: Not Started -->
+        <div class="card" style="overflow:hidden;display:flex;flex-direction:column;">
+          <div style="padding:18px 20px 14px;display:flex;flex-direction:column;flex:1;">
+            <div class="row between" style="margin-bottom:12px;">
+              <div><div class="row gap-8" style="margin-bottom:4px;"><span class="badge navy">ม.1</span><span class="muted tnum" style="font-size:.8rem;font-weight:600;">ว21101</span></div><div class="h-3">วิทยาศาสตร์</div></div>
+              <span class="badge slate"><span class="dot"></span>ยังไม่เริ่ม</span>
+            </div>
+            <div class="muted row gap-6" style="font-size:.86rem;margin-bottom:16px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>ครูจินดา ทดลอง</div>
+            <div style="margin-top:auto;">
+              <div class="row between" style="font-size:.84rem;margin-bottom:6px;"><span class="muted">ตรวจแล้ว <strong class="tnum" style="color:var(--ink);">0</strong> / 142 คน</span><span class="tnum" style="font-weight:700;color:#c9820b;">0%</span></div>
+              <div class="bar amber"><span style="width:0%;"></span></div>
+              <div style="margin-top:12px;font-size:.82rem;" class="muted">กำหนดส่ง 6 มิ.ย. 2568</div>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--line-soft);padding:10px 14px;background:var(--canvas);display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm grow" onclick="showToast('ระบบนี้กำลังพัฒนา')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>อัปเดตสถานะ</button>
+            <button class="btn btn-subtle btn-sm" onclick="showToast('ระบบนี้กำลังพัฒนา')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>เสร็จ</button>
+          </div>
+        </div>
+        <!-- Card 4: Done -->
+        <div class="card" style="overflow:hidden;display:flex;flex-direction:column;">
+          <div style="padding:18px 20px 14px;display:flex;flex-direction:column;flex:1;">
+            <div class="row between" style="margin-bottom:12px;">
+              <div><div class="row gap-8" style="margin-bottom:4px;"><span class="badge navy">ม.2</span><span class="muted tnum" style="font-size:.8rem;font-weight:600;">อ22101</span></div><div class="h-3">ภาษาอังกฤษ</div></div>
+              <span class="badge green"><span class="dot"></span>เสร็จสิ้น</span>
+            </div>
+            <div class="muted row gap-6" style="font-size:.86rem;margin-bottom:16px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>ครูแอนนา คลาร์ก</div>
+            <div style="margin-top:auto;">
+              <div class="row between" style="font-size:.84rem;margin-bottom:6px;"><span class="muted">ตรวจแล้ว <strong class="tnum" style="color:var(--ink);">138</strong> / 138 คน</span><span class="tnum" style="font-weight:700;color:#15924d;">100%</span></div>
+              <div class="bar green"><span style="width:100%;"></span></div>
+              <div style="margin-top:12px;font-size:.82rem;" class="muted">กำหนดส่ง 29 พ.ค. 2568</div>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--line-soft);padding:10px 14px;background:var(--canvas);display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm grow" onclick="showToast('ระบบนี้กำลังพัฒนา')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>อัปเดตสถานะ</button>
+          </div>
+        </div>
+        <!-- Card 5: Overdue -->
+        <div class="card" style="overflow:hidden;display:flex;flex-direction:column;">
+          <div style="padding:18px 20px 14px;display:flex;flex-direction:column;flex:1;">
+            <div class="row between" style="margin-bottom:12px;">
+              <div><div class="row gap-8" style="margin-bottom:4px;"><span class="badge navy">ม.3</span><span class="muted tnum" style="font-size:.8rem;font-weight:600;">ว23101</span></div><div class="h-3">วิทยาศาสตร์</div></div>
+              <span class="badge sky"><span class="dot"></span>กำลังดำเนินการ</span>
+            </div>
+            <div class="muted row gap-6" style="font-size:.86rem;margin-bottom:16px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>ครูพิมล วิจัย</div>
+            <div style="margin-top:auto;">
+              <div class="row between" style="font-size:.84rem;margin-bottom:6px;"><span class="muted">ตรวจแล้ว <strong class="tnum" style="color:var(--ink);">44</strong> / 130 คน</span><span class="tnum" style="font-weight:700;color:#1c7fc4;">34%</span></div>
+              <div class="bar"><span style="width:34%;"></span></div>
+              <div style="margin-top:12px;font-size:.82rem;color:var(--red);font-weight:700;">⚠ เลยกำหนด 28 พ.ค. 2568</div>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--line-soft);padding:10px 14px;background:var(--canvas);display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm grow" onclick="showToast('ระบบนี้กำลังพัฒนา')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>อัปเดตสถานะ</button>
+            <button class="btn btn-subtle btn-sm" onclick="showToast('ระบบนี้กำลังพัฒนา')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>เสร็จ</button>
+          </div>
+        </div>
+        <!-- Card 6: Not Started -->
+        <div class="card" style="overflow:hidden;display:flex;flex-direction:column;">
+          <div style="padding:18px 20px 14px;display:flex;flex-direction:column;flex:1;">
+            <div class="row between" style="margin-bottom:12px;">
+              <div><div class="row gap-8" style="margin-bottom:4px;"><span class="badge navy">ม.3</span><span class="muted tnum" style="font-size:.8rem;font-weight:600;">พ23101</span></div><div class="h-3">สุขศึกษา พลศึกษา</div></div>
+              <span class="badge slate"><span class="dot"></span>ยังไม่เริ่ม</span>
+            </div>
+            <div class="muted row gap-6" style="font-size:.86rem;margin-bottom:16px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>ครูเอกชัย แข็งแรง</div>
+            <div style="margin-top:auto;">
+              <div class="row between" style="font-size:.84rem;margin-bottom:6px;"><span class="muted">ตรวจแล้ว <strong class="tnum" style="color:var(--ink);">0</strong> / 130 คน</span><span class="tnum" style="font-weight:700;color:#c9820b;">0%</span></div>
+              <div class="bar amber"><span style="width:0%;"></span></div>
+              <div style="margin-top:12px;font-size:.82rem;" class="muted">กำหนดส่ง 8 มิ.ย. 2568</div>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--line-soft);padding:10px 14px;background:var(--canvas);display:flex;gap:8px;">
+            <button class="btn btn-ghost btn-sm grow" onclick="showToast('ระบบนี้กำลังพัฒนา')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z"/></svg>อัปเดตสถานะ</button>
+            <button class="btn btn-subtle btn-sm" onclick="showToast('ระบบนี้กำลังพัฒนา')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>เสร็จ</button>
+          </div>
+        </div>
+      </div>
+
+      <style>@media(max-width:820px){.assess-grid{grid-template-columns:1fr 1fr!important}}</style>
+    </div>
+  </div>
+
+  <!-- ═══════════════ ฝ่ายโสตทัศนศึกษา (REAL SYSTEM LINK) ═══════════════ -->
+  <div id="page-av" style="display:none;">
+    <div class="page-wrap">
+      <!-- Page Header -->
+      <div class="row between wrap gap-16" style="margin-bottom:26px;">
+        <div class="row gap-16">
+          <div style="width:56px;height:56px;border-radius:16px;background:#ede6fb;color:#7048c4;display:grid;place-items:center;flex:none;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div>
+            <div class="eyebrow" style="color:#7048c4;">ฝ่ายโสตทัศนศึกษา</div>
+            <h1 class="h-1" style="margin:2px 0 4px;">แจ้งซ่อม · จองห้อง · ปฏิทิน</h1>
+            <p class="muted" style="font-size:.94rem;max-width:560px;">แจ้งซ่อมอุปกรณ์โสต จองห้องประชุมและหอประชุม พร้อมดูปฏิทินว่ามีการใช้ห้องวันไหน ที่ไหนบ้าง</p>
+          </div>
+        </div>
+        <div class="row gap-10 wrap">
+          <a href="av.html#repair" class="btn btn-ghost">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>
+            แจ้งซ่อม
+          </a>
+          <a href="av.html" class="btn btn-primary">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            จองห้อง
+          </a>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px;">
+        <div class="card card-pad stat row between" style="align-items:flex-start;">
+          <div><div class="muted" style="font-size:.86rem;font-weight:600;">การจองที่จะถึง</div><div class="h-1 tnum" style="margin-top:6px;">—</div><div style="font-size:.82rem;color:var(--slate-500);margin-top:4px;">ดูข้อมูลจริงในระบบ</div></div>
+          <div class="ic-box" style="background:#ede6fb;color:#7048c4;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        </div>
+        <div class="card card-pad stat row between" style="align-items:flex-start;">
+          <div><div class="muted" style="font-size:.86rem;font-weight:600;">งานซ่อมค้าง</div><div class="h-1 tnum" style="margin-top:6px;">—</div><div style="font-size:.82rem;color:var(--slate-500);margin-top:4px;">ดูข้อมูลจริงในระบบ</div></div>
+          <div class="ic-box" style="background:#fbf0d8;color:#c9820b;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg></div>
+        </div>
+        <div class="card card-pad stat row between" style="align-items:flex-start;">
+          <div><div class="muted" style="font-size:.86rem;font-weight:600;">ห้อง / หอประชุม</div><div class="h-1 tnum" style="margin-top:6px;">4</div><div style="font-size:.82rem;color:var(--slate-500);margin-top:4px;">ห้องพร้อมให้จอง</div></div>
+          <div class="ic-box" style="background:#dce8fb;color:#2257b4;"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:32px;">
+        <!-- ปฏิทินการใช้ห้อง -->
+        <a href="av.html" style="text-decoration:none;">
+          <div class="quick-card">
+            <div style="width:48px;height:48px;border-radius:14px;background:#ede6fb;color:#7048c4;display:grid;place-items:center;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:1rem;margin-bottom:4px;color:var(--ink);">ปฏิทินการใช้ห้อง</div>
+              <div class="muted" style="font-size:.88rem;">ดูว่าห้องใดว่างหรือถูกจองในช่วงเวลาใด</div>
+            </div>
+            <div class="row gap-6" style="color:#7048c4;font-weight:600;font-size:.9rem;">
+              เข้าสู่ระบบ
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </div>
+          </div>
+        </a>
+
+        <!-- จองห้องประชุม -->
+        <a href="av.html" style="text-decoration:none;">
+          <div class="quick-card">
+            <div style="width:48px;height:48px;border-radius:14px;background:#dce8fb;color:#2257b4;display:grid;place-items:center;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:1rem;margin-bottom:4px;color:var(--ink);">จองห้องประชุม</div>
+              <div class="muted" style="font-size:.88rem;">ส่งคำขอจองหอประชุมหรือห้องประชุม</div>
+            </div>
+            <div class="row gap-6" style="color:#2257b4;font-weight:600;font-size:.9rem;">
+              เข้าสู่ระบบ
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </div>
+          </div>
+        </a>
+
+        <!-- แจ้งซ่อมอุปกรณ์ -->
+        <a href="av.html" style="text-decoration:none;">
+          <div class="quick-card">
+            <div style="width:48px;height:48px;border-radius:14px;background:#fbf0d8;color:#c9820b;display:grid;place-items:center;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:1rem;margin-bottom:4px;color:var(--ink);">แจ้งซ่อมอุปกรณ์</div>
+              <div class="muted" style="font-size:.88rem;">แจ้งอุปกรณ์ชำรุด ฝ่ายโสตรับดำเนินการ</div>
+            </div>
+            <div class="row gap-6" style="color:#c9820b;font-weight:600;font-size:.9rem;">
+              เข้าสู่ระบบ
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </div>
+          </div>
+        </a>
+
+        <!-- Admin Panel -->
+        <a href="admin.html" style="text-decoration:none;">
+          <div class="quick-card">
+            <div style="width:48px;height:48px;border-radius:14px;background:var(--navy-50);color:var(--navy-700);display:grid;place-items:center;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:1rem;margin-bottom:4px;color:var(--ink);">Admin Panel</div>
+              <div class="muted" style="font-size:.88rem;">จัดการงาน อนุมัติคำขอ และตั้งค่าระบบ</div>
+            </div>
+            <div class="row gap-6" style="color:var(--navy-700);font-weight:600;font-size:.9rem;">
+              เข้าสู่ระบบ
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <!-- Rooms reference -->
+      <div class="card card-pad">
+        <div class="h-3" style="margin-bottom:16px;">ห้องที่ให้บริการ</div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
+          <div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:var(--r-md);border:1px solid var(--line-soft);background:var(--canvas);">
+            <span style="width:14px;height:14px;border-radius:4px;background:#2257b4;flex:none;"></span>
+            <div><div style="font-weight:700;font-size:.94rem;">หอประชุมใหญ่</div><div class="muted" style="font-size:.8rem;">รองรับ 1,200+ คน</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:var(--r-md);border:1px solid var(--line-soft);background:var(--canvas);">
+            <span style="width:14px;height:14px;border-radius:4px;background:#15924d;flex:none;"></span>
+            <div><div style="font-weight:700;font-size:.94rem;">ห้องประชุม 1</div><div class="muted" style="font-size:.8rem;">รองรับ 80 คน</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:var(--r-md);border:1px solid var(--line-soft);background:var(--canvas);">
+            <span style="width:14px;height:14px;border-radius:4px;background:#c9820b;flex:none;"></span>
+            <div><div style="font-weight:700;font-size:.94rem;">ห้องประชุม 2</div><div class="muted" style="font-size:.8rem;">รองรับ 40 คน</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:var(--r-md);border:1px solid var(--line-soft);background:var(--canvas);">
+            <span style="width:14px;height:14px;border-radius:4px;background:#7048c4;flex:none;"></span>
+            <div><div style="font-weight:700;font-size:.94rem;">ห้องโสตทัศนศึกษา</div><div class="muted" style="font-size:.8rem;">รองรับ 60 คน</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="footer-inner">
+    <span>© <span id="year-be"></span> โรงเรียนเซนต์ดอมินิก · ระบบงานฝ่ายภายในโรงเรียน</span>
+    <span>ปีการศึกษา 2568</span>
+  </div>
+</footer>
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<style>
+  .dept-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 28px 64px rgba(7,18,45,.45);
+  }
+</style>
+
+<script>
+  // Year BE in footer
+  document.getElementById('year-be').textContent = new Date().getFullYear() + 543;
+
+  // ── SPA Router ──
+  const pages = ['home', 'docs', 'assess', 'av'];
+  const navIds = { home: 'nav-home', docs: 'nav-docs', assess: 'nav-assess', av: 'nav-av' };
+
+  function go(page) {
+    if (!pages.includes(page)) page = 'home';
+    pages.forEach(p => {
+      const el = document.getElementById('page-' + p);
+      if (el) el.style.display = p === page ? '' : 'none';
+    });
+    // update nav active state
+    Object.entries(navIds).forEach(([p, id]) => {
+      const btn = document.getElementById(id);
+      if (btn) btn.classList.toggle('active', p === page);
+    });
+    // update URL hash
+    location.hash = page === 'home' ? '' : page;
+    window.scrollTo({ top: 0 });
+  }
+
+  // Handle hash on load / popstate
+  function routeFromHash() {
+    const hash = location.hash.replace('#', '') || 'home';
+    go(hash);
+  }
+  window.addEventListener('hashchange', routeFromHash);
+  routeFromHash();
+
+  // ── Toast ──
+  function showToast(msg) {
+    const wrap = document.getElementById('toast-wrap');
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> ${msg}`;
+    wrap.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+</script>
 </body>
 </html>
