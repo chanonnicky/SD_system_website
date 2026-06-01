@@ -4,10 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## โปรเจกต์นี้คืออะไร
 
-ระบบเว็บไซต์สำหรับโรงเรียนเซนต์ดอมินิก มี 2 ชั้น:
+ระบบเว็บไซต์สำหรับโรงเรียนเซนต์ดอมินิก เป็น SPA ใน `index.html`:
 
-1. **`ระบบงานฝ่าย.html`** — Portal/Hub หน้าแรก ให้เลือกฝ่าย (โสต, ธุรการ, วัดประเมินผล)
-2. **`index.html` + `admin.html`** — ระบบงานฝ่ายโสตทัศนูปกรณ์ (แจ้งซ่อม, จองห้อง, ปฏิทิน, Admin Panel)
+1. **Portal Hub** (`#page-home`) — เลือกฝ่าย (โสต, ธุรการ, วัดประเมินผล)
+2. **ฝ่ายโสตทัศนูปกรณ์** (`#page-av`) — แจ้งซ่อม, จองห้อง, ปฏิทิน, ติดตามสถานะ
+3. **ฝ่ายธุรการ** (`#page-docs`) — mockup + view-only; admin แก้ไขได้ที่ `admin-docs.html`
+4. **ฝ่ายวัดประเมินผล** (`#page-assess`) — view-only สถานะตรวจข้อสอบ; admin แก้ไขได้ที่ `admin-assess.html`
 
 - **Live:** https://chanonnicky.github.io/SD_system_website/
 - **Repo:** https://github.com/chanonnicky/SD_system_website
@@ -41,12 +43,17 @@ cp assets/js/config.example.js assets/js/config.js
 ## โครงสร้างไฟล์สำคัญ
 
 ```
-ระบบงานฝ่าย.html   — Portal hub (เลือกฝ่าย); ฝ่ายธุรการ+วัดประเมินผล = mockup
-index.html          — AV system SPA (แจ้งซ่อม, จองห้อง, ปฏิทิน, ติดตามสถานะ)
-admin.html          — Admin Panel (login, จัดการงาน, admin users, คู่มือ PWA)
+index.html          — SPA หลัก: Portal hub + ฝ่ายโสต (av) + ฝ่ายธุรการ (docs) + ฝ่ายวัดประเมินผล (assess)
+admin.html          — Admin Panel ฝ่ายโสต (login, จัดการงาน, admin users, คู่มือ PWA)
+admin-docs.html     — Admin Panel ฝ่ายธุรการ (login, CRUD เอกสาร, เก็บใน localStorage sdDocsData)
+admin-assess.html   — Admin Panel ฝ่ายวัดประเมินผล (login, แก้สถานะตรวจข้อสอบ, เก็บใน localStorage sdAssessExams)
+ระบบงานฝ่าย.html   — redirect ไป index.html (ไม่มีเนื้อหา)
 sw.js               — Service Worker: FCM background push + notificationclick → admin.html?ticket=XXX
 manifest.json       — PWA manifest
 rooms.js            — ข้อมูลห้องประชุม (ชื่อ, capacity)
+picture/
+  school_logo.webp  — โลโก้โรงเรียน (แสดงใน top nav)
+  app_logo.webp     — โลโก้แอป (แสดงใน admin.html)
 assets/js/
   app.js            — logic หลักทั้งหมดของ index.html (form, calendar, sheets, GAS calls)
   notifications.js  — FCM init, permission request, token registration ไป GAS
@@ -68,7 +75,12 @@ fetch(APP_CONFIG.GAS_URL, {
 ```
 GAS `doPost` ตรวจ `body.secret !== CONFIG.CLIENT_SECRET` เป็นบรรทัดแรก — ถ้าไม่ผ่านจะ return Unauthorized
 
-**Admin login:** เก็บใน `localStorage` + expiry 30 วัน — ไม่ใช่ session
+**Admin login (ทุกฝ่าย):** เก็บใน `localStorage` + expiry 30 วัน — ไม่ใช่ session
+
+**localStorage keys สำหรับ docs/assess:**
+- `sdAssessExams` — JSON array ข้อมูลการตรวจข้อสอบ; เขียนโดย `admin-assess.html`, อ่านโดย `index.html` (view-only)
+- `sdDocsData` — JSON array เอกสารฝ่ายธุรการ; เขียนโดย `admin-docs.html`, อ่านโดย `index.html` (view-only)
+- `sdAssessAdmin` / `sdDocsAdmin` — session token แยกต่างหากสำหรับแต่ละ admin panel
 
 **FCM token flow:** `notifications.js` → ขอ permission → get token → POST ไป GAS → GAS บันทึกลงชีท `FCMTokens` (A=token, B=timestamp, C=userAgent)
 

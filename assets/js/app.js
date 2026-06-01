@@ -680,6 +680,7 @@ async function renderCalendar() {
 
     grid.appendChild(cell);
   });
+  renderUpcoming();
 }
 
 function getRoomClass(room) {
@@ -735,6 +736,7 @@ function initRooms() {
     legendEl.innerHTML = ROOMS.map(r => `
       <div class="flex items-center gap-2 text-sm">
         <div class="booking-event ${r.calClass}" style="padding:0 0.4rem;flex-shrink:0;font-size:0.6rem;white-space:nowrap">${r.short}</div>
+        <span class="text-slate-700 text-xs truncate">${r.label}</span>
       </div>`).join('');
   }
 }
@@ -809,6 +811,35 @@ function showEventDetail(b) {
 function closeModal(e) {
   if (e.target.id === 'eventModal') document.getElementById('eventModal').classList.add('hidden');
 }
+
+function renderUpcoming() {
+  const el = document.getElementById('upcomingList');
+  if (!el) return;
+  const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+  const upcoming = allBookings
+    .filter(b => b.date >= todayStr && b.status !== 'ยกเลิก')
+    .sort((a, b) => (a.date + a.startTime).localeCompare(b.date + b.startTime))
+    .slice(0, 5);
+  if (!upcoming.length) {
+    el.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">ไม่มีการจองที่กำลังจะถึง</p>';
+    return;
+  }
+  el.innerHTML = `<div class="flex flex-col gap-2">${upcoming.map((b, i) => {
+    const cls = getRoomClass(b.room);
+    return `<div class="upcoming-item" onclick="showEventDetail(_upcomingBookings[${i}])">
+      <div class="upcoming-strip ${cls}"></div>
+      <div class="min-w-0 flex-1">
+        <p class="text-xs font-semibold text-slate-700 truncate">${escHtml(b.room)}</p>
+        <p class="text-xs text-slate-500">${formatDateTH(b.date)}</p>
+        <p class="text-xs text-slate-400">${escHtml(b.startTime)} – ${escHtml(b.endTime)} น.</p>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+  _upcomingBookings = upcoming;
+}
+
+let _upcomingBookings = [];
 
 // ============================================================
 // HELPERS
@@ -949,10 +980,7 @@ function formatDateTH(dateStr) {
 // ============================================================
 // DEMO DATA (used when GAS_URL is not configured)
 // ============================================================
-let demoBookings = [
-  { ticket:'BK-2025-001', date:`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`, room:'ห้องประชุม A', startTime:'09:00', endTime:'11:00', name:'นายสมชาย ใจดี', department:'กลุ่มสาระวิทยาศาสตร์', purpose:'ประชุมกลุ่มสาระประจำเดือน', attendees:15 },
-  { ticket:'BK-2025-002', date:`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`, room:'ห้องประชุม C (ใหญ่)', startTime:'13:00', endTime:'16:00', name:'นางสาวสุภาพร มีทอง', department:'ฝ่ายวิชาการ', purpose:'ประชุมผู้ปกครองนักเรียน', attendees:40 },
-];
+let demoBookings = [];
 
 function getDemoBookings() {
   return demoBookings;

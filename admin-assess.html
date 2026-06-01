@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — ฝ่ายวัดประเมินผล โรงเรียนเซนต์ดอมินิก</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --green-900: #14532d;
+      --green-800: #166534;
+      --green-700: #15803d;
+      --green-100: #dcfce7;
+      --ink: #1a1f36;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-600: #475569;
+      --canvas: #f8fafc;
+      --canvas-2: #f1f5f9;
+      --line-soft: #e2e8f0;
+      --navy-600: #1e40af;
+      --red: #dc2626;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Sarabun', sans-serif; background: #f1f5f9; color: var(--ink); min-height: 100vh; }
+
+    /* LOGIN */
+    #loginScreen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--green-900), var(--green-700)); padding: 16px;
+    }
+    .login-card {
+      background: #fff; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      padding: 32px; max-width: 360px; width: 100%;
+    }
+    .login-icon {
+      width: 64px; height: 64px; background: var(--green-100); color: var(--green-700);
+      border-radius: 16px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.75rem; margin: 0 auto 12px;
+    }
+    .login-title { text-align: center; font-size: 1.2rem; font-weight: 700; color: var(--ink); }
+    .login-sub { text-align: center; font-size: .875rem; color: var(--slate-500); margin-top: 2px; }
+    .login-error {
+      display: none; margin: 14px 0; padding: 10px 14px; background: #fef2f2;
+      border: 1px solid #fecaca; border-radius: 10px; color: var(--red); font-size: .875rem; text-align: center;
+    }
+    .form-label { display: block; font-size: .875rem; font-weight: 600; color: var(--slate-600); margin-bottom: 4px; margin-top: 16px; }
+    .form-input {
+      width: 100%; border: 1px solid var(--line-soft); border-radius: 12px;
+      padding: 10px 14px; font-size: .9rem; font-family: inherit; outline: none; transition: border-color .15s;
+    }
+    .form-input:focus { border-color: var(--green-700); box-shadow: 0 0 0 3px rgba(21,128,61,.12); }
+    .btn-login {
+      width: 100%; margin-top: 18px; padding: 11px; background: var(--green-700);
+      color: #fff; border: none; border-radius: 12px; font-size: .9rem; font-weight: 600;
+      font-family: inherit; cursor: pointer; transition: background .15s;
+    }
+    .btn-login:hover { background: var(--green-800); }
+    .btn-login:disabled { opacity: .6; cursor: not-allowed; }
+    .back-link { display: block; text-align: center; margin-top: 16px; color: var(--green-700); font-size: .875rem; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
+
+    /* DASHBOARD */
+    #dashboard { display: none; min-height: 100vh; }
+    header {
+      background: linear-gradient(90deg, var(--green-900), var(--green-800), var(--green-700));
+      color: #fff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 12px rgba(0,0,0,.15);
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-icon { width: 40px; height: 40px; background: rgba(255,255,255,.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .header-title { font-size: 1.05rem; font-weight: 700; line-height: 1.2; }
+    .header-sub { font-size: .78rem; color: rgba(255,255,255,.7); }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .btn-icon-header { padding: 7px 9px; border-radius: 8px; border: none; background: transparent; color: #fff; cursor: pointer; font-size: 1rem; transition: background .15s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+    .btn-icon-header:hover { background: rgba(255,255,255,.15); }
+    .btn-logout { padding: 7px 14px; background: #dc2626; border: none; border-radius: 8px; color: #fff; font-size: .85rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: background .15s; }
+    .btn-logout:hover { background: #b91c1c; }
+
+    .main { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+
+    /* STATS */
+    .stats-grid { display: grid; grid-template-columns: minmax(220px, 1.1fr) repeat(2, minmax(130px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    @media (max-width: 640px) { .stats-grid { grid-template-columns: 1fr; } }
+    .stat-card { background: #fff; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .stat-card.main-stat { display: flex; align-items: center; gap: 18px; }
+    .stat-card.mini { display: flex; align-items: flex-start; justify-content: space-between; }
+    .stat-num { font-size: 2rem; font-weight: 800; line-height: 1; margin-top: 8px; font-variant-numeric: tabular-nums; }
+    .stat-label { font-size: .86rem; font-weight: 600; color: var(--slate-500); }
+    .ic-box { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    /* FILTERS */
+    .filter-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    .filter-label { font-size: .82rem; font-weight: 600; color: var(--slate-500); }
+    .chip {
+      padding: 5px 14px; border-radius: 999px; border: 1.5px solid var(--line-soft);
+      background: #fff; font-size: .84rem; font-weight: 600; color: var(--slate-600);
+      cursor: pointer; transition: all .15s; font-family: inherit;
+    }
+    .chip:hover { border-color: var(--green-700); color: var(--green-700); }
+    .chip.active { background: var(--green-700); border-color: var(--green-700); color: #fff; }
+
+    /* CARDS GRID */
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+
+    .exam-card { background: #fff; border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.06); overflow: hidden; display: flex; flex-direction: column; }
+    .exam-card-body { padding: 18px 20px 14px; flex: 1; display: flex; flex-direction: column; }
+    .exam-card-footer { border-top: 1px solid var(--line-soft); padding: 10px 14px; background: var(--canvas); display: flex; gap: 8px; }
+
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: .78rem; font-weight: 700; }
+    .badge.green { background: #dcfce7; color: #15803d; }
+    .badge.sky { background: #e0f2fe; color: #0369a1; }
+    .badge.navy { background: #dbeafe; color: #1e40af; }
+    .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+    .bar { height: 6px; background: var(--canvas-2); border-radius: 3px; overflow: hidden; }
+    .bar span { display: block; height: 100%; background: #1c7fc4; border-radius: 3px; transition: width .4s; }
+    .bar.green span { background: #15924d; }
+
+    /* ACTION BUTTONS */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; border: none; font-size: .85rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .15s; }
+    .btn-primary { background: var(--green-700); color: #fff; }
+    .btn-primary:hover { background: var(--green-800); }
+    .btn-ghost { background: transparent; color: var(--slate-600); border: 1.5px solid var(--line-soft); }
+    .btn-ghost:hover { border-color: #94a3b8; background: var(--canvas-2); }
+    .btn-subtle { background: var(--canvas-2); color: var(--slate-600); }
+    .btn-subtle:hover { background: var(--line-soft); }
+    .btn.sm { padding: 6px 12px; font-size: .82rem; }
+    .btn.grow { flex: 1; justify-content: center; }
+    .btn.danger { background: #fef2f2; color: #dc2626; }
+    .btn.danger:hover { background: #fee2e2; }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(14,26,55,.45); z-index: 900;
+      align-items: center; justify-content: center; padding: 16px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: #fff; border-radius: 20px; box-shadow: 0 20px 60px rgba(14,26,55,.25);
+      max-width: 440px; width: 100%; overflow: hidden;
+    }
+    .modal-header { padding: 22px 24px 16px; border-bottom: 1px solid var(--line-soft); }
+    .modal-title { font-weight: 700; font-size: 1.05rem; color: var(--ink); }
+    .modal-sub { font-size: .84rem; color: var(--slate-500); margin-top: 3px; }
+    .modal-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 20px; }
+    .modal-footer { padding: 14px 24px; border-top: 1px solid var(--line-soft); display: flex; gap: 8px; justify-content: flex-end; }
+    .field-label { font-size: .84rem; font-weight: 600; color: var(--slate-600); margin-bottom: 8px; }
+    .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .row-between { display: flex; align-items: center; justify-content: space-between; }
+    .muted { color: var(--slate-500); }
+    .tnum { font-variant-numeric: tabular-nums; }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--slate-400); font-size: .95rem; }
+
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+    .section-title { font-size: 1rem; font-weight: 700; color: var(--ink); }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginScreen">
+    <div class="login-card">
+      <div class="login-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+      <div class="login-title">Admin Panel</div>
+      <div class="login-sub">ฝ่ายวัดประเมินผล · โรงเรียนเซนต์ดอมินิก</div>
+      <div class="login-error" id="loginError"></div>
+      <label class="form-label">ชื่อผู้ใช้</label>
+      <input type="text" id="usernameInput" class="form-input" placeholder="Username" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('passwordInput').focus()" />
+      <label class="form-label">รหัสผ่าน</label>
+      <input type="password" id="passwordInput" class="form-input" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+      <button class="btn-login" id="loginBtn" onclick="doLogin()">
+        <i class="fa-solid fa-unlock" style="margin-right:6px;"></i>เข้าสู่ระบบ Admin
+      </button>
+      <a href="./#assess" class="back-link"><i class="fa-solid fa-arrow-left" style="margin-right:4px;"></i>กลับหน้าหลัก</a>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard">
+    <header>
+      <div class="header-left">
+        <div class="header-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+        <div>
+          <div class="header-title">Admin — ฝ่ายวัดประเมินผล</div>
+          <div class="header-sub">โรงเรียนเซนต์ดอมินิก</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <a href="./#assess" class="btn-icon-header" title="หน้าหลัก"><i class="fa-solid fa-house"></i></a>
+        <button class="btn-logout" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket" style="margin-right:4px;"></i>ออก</button>
+      </div>
+    </header>
+
+    <div class="main">
+      <!-- Stats -->
+      <div id="statsArea" class="stats-grid"></div>
+
+      <!-- Filters -->
+      <div style="background:#fff;border-radius:14px;padding:14px 18px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:18px;">
+        <div class="filter-row">
+          <span class="filter-label">ระดับชั้น:</span>
+          <div id="levelFilters" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+        </div>
+        <div class="filter-row" style="margin-bottom:0;">
+          <span class="filter-label">สถานะ:</span>
+          <div id="statFilters" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+        </div>
+      </div>
+
+      <!-- Cards -->
+      <div class="section-header">
+        <div class="section-title" id="cardCount"></div>
+      </div>
+      <div id="emptyState" class="empty-state" style="display:none;">
+        <i class="fa-solid fa-magnifying-glass" style="font-size:2rem;margin-bottom:12px;display:block;"></i>
+        ไม่พบรายวิชาตามเงื่อนไขที่เลือก
+      </div>
+      <div id="cardsGrid" class="cards-grid"></div>
+    </div>
+  </div>
+
+  <!-- EXAM EDITOR MODAL -->
+  <div class="modal-overlay" id="examModal" onclick="if(event.target===this)closeModal()">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-sub" id="modalSub"></div>
+      </div>
+      <div class="modal-body">
+        <div>
+          <div class="field-label">สถานะการตรวจ</div>
+          <div class="chip-row">
+            <button class="chip" id="chipProgress" onclick="setModalStatus('in_progress')">ยังตรวจไม่เสร็จ</button>
+            <button class="chip" id="chipDone" onclick="setModalStatus('done')">ตรวจเสร็จแล้ว</button>
+          </div>
+        </div>
+        <div>
+          <div class="row-between" style="margin-bottom:8px;">
+            <div class="field-label" style="margin-bottom:0;">จำนวนที่ตรวจแล้ว</div>
+            <div id="sliderLabel" class="tnum" style="font-weight:700;font-size:.95rem;"></div>
+          </div>
+          <input type="range" id="gradedSlider" min="0" value="0"
+            style="width:100%;accent-color:#15803d;" oninput="onSlider(this.value)" />
+          <div class="bar" style="margin-top:8px;"><span id="sliderBarFill" style="width:0%;background:#15803d;"></span></div>
+        </div>
+        <div>
+          <div class="field-label">กำหนดส่ง</div>
+          <input type="date" id="dueDateInput" class="form-input" style="font-family:inherit;" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeModal()">ยกเลิก</button>
+        <button class="btn btn-primary" onclick="saveModal()">บันทึกสถานะ</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── AUTH ────────────────────────────────────────────
+    const ADMIN_USERS = [
+      { username: 'admin', password: 'assess2025' },
+      { username: 'assess', password: 'sdassess' },
+    ];
+    const SESSION_KEY = 'sdAssessAdmin';
+
+    function doLogin() {
+      const u = document.getElementById('usernameInput').value.trim();
+      const p = document.getElementById('passwordInput').value;
+      if (!u || !p) { showError('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน'); return; }
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right:6px;"></i>กำลังเข้าสู่ระบบ...';
+      setTimeout(() => {
+        const ok = ADMIN_USERS.some(a => a.username === u && a.password === p);
+        if (ok) {
+          localStorage.setItem(SESSION_KEY, JSON.stringify({ user: u, exp: Date.now() + 30*24*60*60*1000 }));
+          showDashboard();
+        } else {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-unlock" style="margin-right:6px;"></i>เข้าสู่ระบบ Admin';
+          showError('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+        }
+      }, 400);
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('loginError');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function doLogout() {
+      localStorage.removeItem(SESSION_KEY);
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('loginScreen').style.display = 'flex';
+    }
+
+    function showDashboard() {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadExams();
+      render();
+    }
+
+    // ── DATA ────────────────────────────────────────────
+    const DEFAULT_EXAMS = [
+      { id:1,  level:'ม.1', code:'ท21101', subject:'ภาษาไทย',       teacher:'ครูสุดา วาจาดี',     graded:142, total:142, status:'done',        due:'2025-05-30' },
+      { id:2,  level:'ม.1', code:'ค21101', subject:'คณิตศาสตร์',    teacher:'ครูประพันธ์ เลขดี',  graded:96,  total:142, status:'in_progress',  due:'2025-06-03' },
+      { id:3,  level:'ม.1', code:'ส21101', subject:'สังคมศึกษา',    teacher:'ครูวิภา ใจดี',       graded:142, total:142, status:'done',        due:'2025-05-31' },
+      { id:4,  level:'ม.2', code:'อ22101', subject:'ภาษาอังกฤษ',    teacher:'ครูแอนนา คลาร์ก',   graded:138, total:138, status:'done',        due:'2025-05-29' },
+      { id:5,  level:'ม.2', code:'ค22101', subject:'คณิตศาสตร์',    teacher:'ครูสมชาย เลขดี',    graded:138, total:138, status:'done',        due:'2025-05-30' },
+      { id:6,  level:'ม.2', code:'ว22101', subject:'วิทยาศาสตร์',   teacher:'ครูพิมล วิจัย',     graded:110, total:138, status:'in_progress',  due:'2025-06-04' },
+      { id:7,  level:'ม.3', code:'ว23101', subject:'วิทยาศาสตร์',   teacher:'ครูพิมล วิจัย',     graded:44,  total:130, status:'in_progress',  due:'2025-05-28' },
+      { id:8,  level:'ม.3', code:'ท23101', subject:'ภาษาไทย',       teacher:'ครูสุดา วาจาดี',    graded:130, total:130, status:'done',        due:'2025-05-27' },
+      { id:9,  level:'ม.3', code:'ส23101', subject:'ประวัติศาสตร์', teacher:'ครูธนกฤต ใจดี',    graded:130, total:130, status:'done',        due:'2025-05-28' },
+      { id:10, level:'ม.3', code:'ค23101', subject:'คณิตศาสตร์',    teacher:'ครูสมชาย เลขดี',   graded:130, total:130, status:'done',        due:'2025-05-29' },
+    ];
+
+    let exams = [];
+    let filter = { level: 'ทั้งหมด', stat: 'ทั้งหมด' };
+
+    function loadExams() {
+      exams = JSON.parse(localStorage.getItem('sdAssessExams') || 'null') || DEFAULT_EXAMS.map(e => ({...e}));
+    }
+
+    function saveExams() {
+      localStorage.setItem('sdAssessExams', JSON.stringify(exams));
+    }
+
+    // ── RENDER ──────────────────────────────────────────
+    function fmtDate(iso) {
+      if (!iso) return '';
+      const [y, m, d] = iso.split('-').map(Number);
+      const mth = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+      return `${d} ${mth[m]} ${y + 543}`;
+    }
+
+    function render() {
+      const today = new Date().toISOString().slice(0, 10);
+      const allDone = exams.filter(e => e.status === 'done').length;
+      const allProg = exams.filter(e => e.status === 'in_progress').length;
+      const pct = exams.length ? Math.round(allDone / exams.length * 100) : 0;
+      const circ = 213.6;
+      const offset = circ - (circ * pct / 100);
+
+      // Stats
+      document.getElementById('statsArea').innerHTML = `
+        <div class="stat-card main-stat">
+          <div style="position:relative;flex:none;">
+            <svg width="84" height="84" style="transform:rotate(-90deg)">
+              <circle cx="42" cy="42" r="34" fill="none" stroke="#e2e8f0" stroke-width="10"/>
+              <circle cx="42" cy="42" r="34" fill="none" stroke="#15924d" stroke-width="10" stroke-linecap="round" stroke-dasharray="${circ}" stroke-dashoffset="${offset.toFixed(1)}"/>
+            </svg>
+            <div style="position:absolute;inset:0;display:grid;place-items:center;">
+              <div class="tnum" style="font-weight:800;font-size:1.25rem;color:#15924d;line-height:1;">${pct}%</div>
+            </div>
+          </div>
+          <div>
+            <div class="stat-label">ความคืบหน้ารวมทั้งหมด</div>
+            <div style="font-size:1.15rem;font-weight:700;margin-top:4px;">${allDone} / ${exams.length} วิชา</div>
+            <div style="font-size:.84rem;color:#64748b;margin-top:2px;">ตรวจข้อสอบเสร็จสมบูรณ์</div>
+          </div>
+        </div>
+        <div class="stat-card mini">
+          <div><div class="stat-label">ตรวจเสร็จ</div><div class="stat-num tnum" style="color:#15924d;">${allDone}</div></div>
+          <div class="ic-box" style="background:#dcfce7;color:#15803d;"><i class="fa-solid fa-circle-check fa-lg"></i></div>
+        </div>
+        <div class="stat-card mini">
+          <div><div class="stat-label">ยังตรวจไม่เสร็จ</div><div class="stat-num tnum" style="color:#0369a1;">${allProg}</div></div>
+          <div class="ic-box" style="background:#e0f2fe;color:#0369a1;"><i class="fa-solid fa-clock fa-lg"></i></div>
+        </div>`;
+
+      // Level chips
+      const levels = ['ทั้งหมด', 'ม.1', 'ม.2', 'ม.3'];
+      document.getElementById('levelFilters').innerHTML = levels.map(l =>
+        `<button class="chip ${filter.level === l ? 'active' : ''}" onclick="setLevel('${l}')">${l}</button>`
+      ).join('');
+
+      // Stat chips
+      const statOpts = [['ทั้งหมด','ทั้งหมด'],['done','ตรวจแล้ว'],['in_progress','ยังตรวจไม่เสร็จ']];
+      document.getElementById('statFilters').innerHTML = statOpts.map(([v, l]) =>
+        `<button class="chip ${filter.stat === v ? 'active' : ''}" onclick="setStat('${v}')">${l}</button>`
+      ).join('');
+
+      // Cards
+      const list = exams.filter(e =>
+        (filter.level === 'ทั้งหมด' || e.level === filter.level) &&
+        (filter.stat  === 'ทั้งหมด' || e.status === filter.stat)
+      );
+
+      document.getElementById('cardCount').textContent = `รายวิชาทั้งหมด ${list.length} วิชา`;
+      document.getElementById('emptyState').style.display = list.length ? 'none' : 'block';
+      document.getElementById('cardsGrid').innerHTML = list.map(e => {
+        const p = Math.round(e.graded / e.total * 100);
+        const overdue = e.status !== 'done' && e.due < today;
+        const accent = e.status === 'done' ? '#15924d' : '#1c7fc4';
+        const badge = e.status === 'done'
+          ? `<span class="badge green"><span class="dot"></span>เสร็จสิ้น</span>`
+          : `<span class="badge sky"><span class="dot"></span>กำลังดำเนินการ</span>`;
+        const dueHtml = overdue
+          ? `<div style="margin-top:12px;font-size:.82rem;color:#dc2626;font-weight:700;">⚠ เลยกำหนด ${fmtDate(e.due)}</div>`
+          : `<div style="margin-top:12px;font-size:.82rem;color:#64748b;">กำหนดส่ง ${fmtDate(e.due)}</div>`;
+        return `
+          <div class="exam-card">
+            <div class="exam-card-body">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
+                <div>
+                  <div style="display:flex;gap:6px;margin-bottom:4px;">
+                    <span class="badge navy">${e.level}</span>
+                    <span style="font-size:.8rem;font-weight:600;color:#64748b;">${e.code}</span>
+                  </div>
+                  <div style="font-size:1rem;font-weight:700;">${e.subject}</div>
+                </div>
+                ${badge}
+              </div>
+              <div style="font-size:.86rem;color:#64748b;display:flex;align-items:center;gap:5px;margin-bottom:16px;">
+                <i class="fa-solid fa-user" style="font-size:.75rem;"></i>${e.teacher}
+              </div>
+              <div style="margin-top:auto;">
+                <div style="display:flex;justify-content:space-between;font-size:.84rem;margin-bottom:6px;">
+                  <span style="color:#64748b;">ตรวจแล้ว <strong style="color:#1a1f36;">${e.graded}</strong> / ${e.total} ห้อง</span>
+                  <span class="tnum" style="font-weight:700;color:${accent};">${p}%</span>
+                </div>
+                <div class="bar ${e.status === 'done' ? 'green' : ''}"><span style="width:${p}%;"></span></div>
+                ${dueHtml}
+              </div>
+            </div>
+            <div class="exam-card-footer">
+              <button class="btn btn-ghost sm grow" onclick="openModal(${e.id})">
+                <i class="fa-solid fa-pen-to-square" style="font-size:.8rem;"></i>อัปเดตสถานะ
+              </button>
+              ${e.status !== 'done' ? `<button class="btn btn-subtle sm" onclick="quickDone(${e.id})">
+                <i class="fa-solid fa-check" style="font-size:.8rem;"></i>เสร็จ
+              </button>` : ''}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function setLevel(l) { filter.level = l; render(); }
+    function setStat(s)  { filter.stat  = s; render(); }
+
+    function quickDone(id) {
+      const e = exams.find(x => x.id === id);
+      if (!e) return;
+      e.status = 'done';
+      e.graded = e.total;
+      saveExams();
+      render();
+    }
+
+    // ── MODAL ───────────────────────────────────────────
+    let editingId = null;
+    let modalStatus = 'in_progress';
+
+    function openModal(id) {
+      const e = exams.find(x => x.id === id);
+      if (!e) return;
+      editingId = id;
+      modalStatus = e.status;
+      document.getElementById('modalTitle').textContent = `${e.subject} (${e.code})`;
+      document.getElementById('modalSub').textContent = `${e.level} · ${e.teacher}`;
+      document.getElementById('gradedSlider').max = e.total;
+      document.getElementById('gradedSlider').value = e.graded;
+      document.getElementById('dueDateInput').value = e.due;
+      onSlider(e.graded);
+      setModalStatus(e.status, false);
+      document.getElementById('examModal').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('examModal').classList.remove('open');
+      editingId = null;
+    }
+
+    function setModalStatus(s, fromClick = true) {
+      modalStatus = s;
+      const e = exams.find(x => x.id === editingId);
+      document.getElementById('chipProgress').classList.toggle('active', s === 'in_progress');
+      document.getElementById('chipDone').classList.toggle('active', s === 'done');
+      if (fromClick && e && s === 'done') {
+        document.getElementById('gradedSlider').value = e.total;
+        onSlider(e.total);
+      }
+    }
+
+    function onSlider(val) {
+      const e = exams.find(x => x.id === editingId);
+      const total = e ? e.total : 1;
+      const pct = Math.round(val / total * 100);
+      document.getElementById('sliderLabel').textContent = `${val} / ${total} ห้อง (${pct}%)`;
+      document.getElementById('sliderBarFill').style.width = pct + '%';
+      if (parseInt(val) >= total) setModalStatus('done', false);
+      else if (modalStatus === 'done') setModalStatus('in_progress', false);
+    }
+
+    function saveModal() {
+      const e = exams.find(x => x.id === editingId);
+      if (!e) return;
+      e.graded = parseInt(document.getElementById('gradedSlider').value);
+      e.status = modalStatus;
+      e.due = document.getElementById('dueDateInput').value;
+      saveExams();
+      closeModal();
+      render();
+    }
+
+    // ── INIT ────────────────────────────────────────────
+    (function init() {
+      const sess = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+      if (sess && sess.exp > Date.now()) {
+        showDashboard();
+      }
+    })();
+  </script>
+</body>
+</html>

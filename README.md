@@ -1,10 +1,11 @@
 # ระบบงานฝ่าย โรงเรียนเซนต์ดอมินิก
 
-**Portal (หน้าหลัก):** https://chanonnicky.github.io/SD_system_website/%E0%B8%A3%E0%B8%B0%E0%B8%9A%E0%B8%9A%E0%B8%87%E0%B8%B2%E0%B8%99%E0%B8%9D%E0%B9%88%E0%B8%B2%E0%B8%A2.html
-**ฝ่ายโสต:** https://chanonnicky.github.io/SD_system_website/
-**Admin:** https://chanonnicky.github.io/SD_system_website/admin.html
+**ระบบงานฝ่าย:** https://chanonnicky.github.io/SD_system_website/
+**Admin ฝ่ายโสต:** https://chanonnicky.github.io/SD_system_website/admin.html
+**Admin ฝ่ายธุรการ:** https://chanonnicky.github.io/SD_system_website/admin-docs.html
+**Admin ฝ่ายวัดประเมินผล:** https://chanonnicky.github.io/SD_system_website/admin-assess.html
 
-ระบบสารสนเทศภายในโรงเรียนเซนต์ดอมินิก ประกอบด้วย Portal หน้าแรกสำหรับเลือกฝ่าย และระบบงานฝ่ายโสตทัศนูปกรณ์ (แจ้งซ่อม, จองห้อง, ปฏิทิน) พัฒนาด้วย HTML + Tailwind CSS ใช้ Google Apps Script เป็น Backend และ Google Sheets เป็นฐานข้อมูล รองรับ PWA และแจ้งเตือนผ่าน LINE + FCM Push Notification
+ระบบสารสนเทศภายในโรงเรียนเซนต์ดอมินิก เป็น SPA ประกอบด้วย Portal เลือกฝ่าย, ระบบงานฝ่ายโสตทัศนูปกรณ์ (แจ้งซ่อม, จองห้อง, ปฏิทิน), หน้าสถานะตรวจข้อสอบฝ่ายวัดประเมินผล, และคลังเอกสารฝ่ายธุรการ พัฒนาด้วย HTML + Tailwind CSS ใช้ Google Apps Script เป็น Backend และ Google Sheets เป็นฐานข้อมูล รองรับ PWA และแจ้งเตือนผ่าน LINE + FCM Push Notification
 
 ---
 
@@ -16,9 +17,13 @@
 | **แจ้งซ่อมอุปกรณ์** | กรอกฟอร์ม → ส่ง GAS → บันทึก Sheets + แจ้งเตือน LINE + FCM Push |
 | **จองห้องประชุม** | เลือกห้อง / วันเวลา → ตรวจ conflict → บันทึก Sheets + แจ้งเตือน LINE + FCM Push |
 | **ติดตามสถานะ** | ค้นหาด้วยเลขที่ Ticket หรือชื่อผู้แจ้ง |
-| **ปฏิทินห้องประชุม** | ดูตารางการจองรายเดือน กรองตามห้อง |
-| **Admin Panel** | Login จำสถานะ 30 วัน, ดูงานค้าง/งานทั้งหมด, อัปเดตสถานะ, จัดการผู้ดูแล |
-| **Push Notification** | แจ้งเตือนมือถือ/เบราว์เซอร์ผ่าน Firebase Cloud Messaging (เฉพาะ Admin) |
+| **ปฏิทินห้องประชุม** | ดูตารางการจองรายเดือน กรองตามห้อง พร้อม "กำลังจะถึง" |
+| **สถานะตรวจข้อสอบ** | ฝ่ายวัดประเมินผล: ดูความคืบหน้าการตรวจข้อสอบแต่ละวิชา (view-only) |
+| **คลังเอกสาร** | ฝ่ายธุรการ: ดูสถานะเอกสาร (view-only) |
+| **Admin ฝ่ายโสต** | Login จำสถานะ 30 วัน, ดูงานค้าง/งานทั้งหมด, อัปเดตสถานะ, จัดการผู้ดูแล |
+| **Admin ฝ่ายวัดประเมินผล** | Login แยก, แก้ไขสถานะตรวจข้อสอบ, sync ผ่าน localStorage |
+| **Admin ฝ่ายธุรการ** | Login แยก, CRUD เอกสาร, sync ผ่าน localStorage |
+| **Push Notification** | แจ้งเตือนมือถือ/เบราว์เซอร์ผ่าน Firebase Cloud Messaging (เฉพาะ Admin ฝ่ายโสต) |
 | **กด Notification → เปิด Job** | แตะแจ้งเตือน → เปิดหน้า Admin ตรง modal ของงานนั้นเลย |
 | **PWA** | ติดตั้งเป็น App บนมือถือได้ (Add to Home Screen) |
 | **LINE Bot Commands** | พิมพ์คำสั่งใน LINE OA เพื่อดูข้อมูลและ quota |
@@ -56,17 +61,18 @@ LINE Chat (Bot Commands)
 
 ```
 SD_system_website/
-├── ระบบงานฝ่าย.html            ← Portal hub (เลือกฝ่าย) — หน้าแรกของระบบ
-├── index.html                  ← ฝ่ายโสต (แจ้งซ่อม / จอง / ติดตาม / ปฏิทิน)
-├── admin.html                  ← Admin Panel (login, งานค้าง, งานทั้งหมด, จัดการ admin, คู่มือ)
+├── index.html                  ← SPA หลัก: Portal + ฝ่ายโสต + ฝ่ายธุรการ + ฝ่ายวัดประเมินผล
+├── admin.html                  ← Admin Panel ฝ่ายโสต (login, งานค้าง, จัดการ admin, คู่มือ)
+├── admin-docs.html             ← Admin Panel ฝ่ายธุรการ (login, CRUD เอกสาร)
+├── admin-assess.html           ← Admin Panel ฝ่ายวัดประเมินผล (login, แก้สถานะตรวจข้อสอบ)
+├── ระบบงานฝ่าย.html            ← redirect ไป index.html
 ├── manifest.json               ← PWA Manifest
 ├── sw.js                       ← Service Worker (รับ Push Notification เบื้องหลัง)
 ├── rooms.js                    ← กำหนดห้องประชุม (แก้ไขเพื่อเพิ่ม/ลดห้อง)
+├── picture/
+│   ├── school_logo.webp        ← โลโก้โรงเรียน (แสดงใน top nav)
+│   └── app_logo.webp           ← โลโก้แอป (แสดงใน admin.html)
 ├── assets/
-│   ├── css/style.css
-│   ├── img/
-│   │   ├── school_logo.webp    ← โลโก้โรงเรียน (หน้าหลัก)
-│   │   └── app_logo.webp       ← โลโก้แอป (หน้า Admin)
 │   └── js/
 │       ├── app.js              ← JavaScript หลัก (index.html)
 │       ├── notifications.js    ← FCM permission + token registration

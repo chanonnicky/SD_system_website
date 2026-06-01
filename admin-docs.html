@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — ฝ่ายธุรการ โรงเรียนเซนต์ดอมินิก</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root {
+      --blue-900: #1e3a5f;
+      --blue-800: #1e40af;
+      --blue-700: #1d4ed8;
+      --blue-100: #dbeafe;
+      --ink: #1a1f36;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-600: #475569;
+      --canvas: #f8fafc;
+      --canvas-2: #f1f5f9;
+      --line-soft: #e2e8f0;
+      --red: #dc2626;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Sarabun', sans-serif; background: #f1f5f9; color: var(--ink); min-height: 100vh; }
+
+    /* LOGIN */
+    #loginScreen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, #1e3a5f, #1d4ed8); padding: 16px;
+    }
+    .login-card {
+      background: #fff; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      padding: 32px; max-width: 360px; width: 100%;
+    }
+    .login-icon {
+      width: 64px; height: 64px; background: var(--blue-100); color: #1d4ed8;
+      border-radius: 16px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.75rem; margin: 0 auto 12px;
+    }
+    .login-title { text-align: center; font-size: 1.2rem; font-weight: 700; color: var(--ink); }
+    .login-sub { text-align: center; font-size: .875rem; color: var(--slate-500); margin-top: 2px; }
+    .login-error {
+      display: none; margin: 14px 0; padding: 10px 14px; background: #fef2f2;
+      border: 1px solid #fecaca; border-radius: 10px; color: var(--red); font-size: .875rem; text-align: center;
+    }
+    .form-label { display: block; font-size: .875rem; font-weight: 600; color: var(--slate-600); margin-bottom: 4px; margin-top: 16px; }
+    .form-input {
+      width: 100%; border: 1px solid var(--line-soft); border-radius: 12px;
+      padding: 10px 14px; font-size: .9rem; font-family: inherit; outline: none; transition: border-color .15s;
+    }
+    .form-input:focus { border-color: #1d4ed8; box-shadow: 0 0 0 3px rgba(29,78,216,.12); }
+    .btn-login {
+      width: 100%; margin-top: 18px; padding: 11px; background: #1d4ed8;
+      color: #fff; border: none; border-radius: 12px; font-size: .9rem; font-weight: 600;
+      font-family: inherit; cursor: pointer; transition: background .15s;
+    }
+    .btn-login:hover { background: #1e40af; }
+    .btn-login:disabled { opacity: .6; cursor: not-allowed; }
+    .back-link { display: block; text-align: center; margin-top: 16px; color: #1d4ed8; font-size: .875rem; text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
+
+    /* DASHBOARD */
+    #dashboard { display: none; min-height: 100vh; }
+    header {
+      background: linear-gradient(90deg, #1e3a5f, #1e40af, #1d4ed8);
+      color: #fff; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 12px rgba(0,0,0,.15);
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-icon { width: 40px; height: 40px; background: rgba(255,255,255,.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .header-title { font-size: 1.05rem; font-weight: 700; line-height: 1.2; }
+    .header-sub { font-size: .78rem; color: rgba(255,255,255,.7); }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .btn-icon-header { padding: 7px 9px; border-radius: 8px; border: none; background: transparent; color: #fff; cursor: pointer; font-size: 1rem; transition: background .15s; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+    .btn-icon-header:hover { background: rgba(255,255,255,.15); }
+    .btn-logout { padding: 7px 14px; background: #dc2626; border: none; border-radius: 8px; color: #fff; font-size: .85rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: background .15s; }
+    .btn-logout:hover { background: #b91c1c; }
+
+    .main { max-width: 1000px; margin: 0 auto; padding: 24px 16px; }
+
+    /* STATS */
+    .stats-row { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat-card { background: #fff; border-radius: 14px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06); flex: 1; min-width: 140px; display: flex; align-items: flex-start; justify-content: space-between; }
+    .stat-num { font-size: 2rem; font-weight: 800; line-height: 1; margin-top: 8px; font-variant-numeric: tabular-nums; }
+    .stat-label { font-size: .86rem; font-weight: 600; color: var(--slate-500); }
+    .ic-box { width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    /* FILTER + SEARCH */
+    .toolbar { background: #fff; border-radius: 14px; padding: 14px 18px; box-shadow: 0 1px 4px rgba(0,0,0,.06); margin-bottom: 18px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .search-box { flex: 1; min-width: 180px; position: relative; }
+    .search-box input { width: 100%; border: 1px solid var(--line-soft); border-radius: 10px; padding: 8px 12px 8px 36px; font-size: .875rem; font-family: inherit; outline: none; }
+    .search-box input:focus { border-color: #1d4ed8; }
+    .search-box .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--slate-400); font-size: .85rem; }
+    .chip { padding: 5px 14px; border-radius: 999px; border: 1.5px solid var(--line-soft); background: #fff; font-size: .84rem; font-weight: 600; color: var(--slate-600); cursor: pointer; transition: all .15s; font-family: inherit; }
+    .chip:hover { border-color: #1d4ed8; color: #1d4ed8; }
+    .chip.active { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+    .btn-add { padding: 8px 16px; background: #1d4ed8; color: #fff; border: none; border-radius: 10px; font-size: .875rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: background .15s; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+    .btn-add:hover { background: #1e40af; }
+
+    /* TABLE */
+    .table-wrap { background: #fff; border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.06); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { padding: 12px 16px; font-size: .82rem; font-weight: 700; color: var(--slate-500); text-align: left; background: var(--canvas); border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid var(--line-soft); transition: background .1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #f8fafc; }
+    tbody td { padding: 12px 16px; font-size: .875rem; vertical-align: middle; }
+    .actions { display: flex; gap: 6px; }
+    .btn-sm { padding: 5px 11px; border-radius: 8px; border: none; font-size: .8rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 5px; }
+    .btn-edit { background: var(--canvas-2); color: var(--slate-600); }
+    .btn-edit:hover { background: var(--line-soft); }
+    .btn-del { background: #fef2f2; color: #dc2626; }
+    .btn-del:hover { background: #fee2e2; }
+
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: .78rem; font-weight: 700; }
+    .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+    .badge.pending { background: #fef9c3; color: #854d0e; }
+    .badge.process { background: #dbeafe; color: #1e40af; }
+    .badge.done    { background: #dcfce7; color: #15803d; }
+    .badge.cancel  { background: #f1f5f9; color: #64748b; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--slate-400); font-size: .95rem; }
+
+    /* MODAL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(14,26,55,.45); z-index: 900; align-items: center; justify-content: center; padding: 16px; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: #fff; border-radius: 20px; box-shadow: 0 20px 60px rgba(14,26,55,.25); max-width: 480px; width: 100%; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column; }
+    .modal-header { padding: 22px 24px 16px; border-bottom: 1px solid var(--line-soft); flex-shrink: 0; }
+    .modal-title { font-weight: 700; font-size: 1.05rem; color: var(--ink); }
+    .modal-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+    .modal-footer { padding: 14px 24px; border-top: 1px solid var(--line-soft); display: flex; gap: 8px; justify-content: flex-end; flex-shrink: 0; }
+    .field-label { font-size: .84rem; font-weight: 600; color: var(--slate-600); margin-bottom: 6px; }
+    .form-select { width: 100%; border: 1px solid var(--line-soft); border-radius: 10px; padding: 9px 12px; font-size: .875rem; font-family: inherit; outline: none; background: #fff; }
+    .form-select:focus { border-color: #1d4ed8; }
+    .form-textarea { width: 100%; border: 1px solid var(--line-soft); border-radius: 10px; padding: 9px 12px; font-size: .875rem; font-family: inherit; outline: none; resize: vertical; min-height: 80px; }
+    .form-textarea:focus { border-color: #1d4ed8; }
+    .btn-modal-ghost { padding: 9px 18px; background: transparent; border: 1.5px solid var(--line-soft); border-radius: 10px; font-size: .875rem; font-weight: 600; font-family: inherit; cursor: pointer; color: var(--slate-600); transition: all .15s; }
+    .btn-modal-ghost:hover { border-color: #94a3b8; background: var(--canvas-2); }
+    .btn-modal-primary { padding: 9px 18px; background: #1d4ed8; color: #fff; border: none; border-radius: 10px; font-size: .875rem; font-weight: 600; font-family: inherit; cursor: pointer; transition: background .15s; }
+    .btn-modal-primary:hover { background: #1e40af; }
+    .btn-modal-danger { padding: 9px 18px; background: #fef2f2; color: #dc2626; border: none; border-radius: 10px; font-size: .875rem; font-weight: 600; font-family: inherit; cursor: pointer; margin-right: auto; }
+    .btn-modal-danger:hover { background: #fee2e2; }
+
+    @media (max-width: 640px) {
+      thead th:nth-child(4), tbody td:nth-child(4),
+      thead th:nth-child(5), tbody td:nth-child(5) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="loginScreen">
+    <div class="login-card">
+      <div class="login-icon"><i class="fa-solid fa-file-lines"></i></div>
+      <div class="login-title">Admin Panel</div>
+      <div class="login-sub">ฝ่ายธุรการ · โรงเรียนเซนต์ดอมินิก</div>
+      <div class="login-error" id="loginError"></div>
+      <label class="form-label">ชื่อผู้ใช้</label>
+      <input type="text" id="usernameInput" class="form-input" placeholder="Username" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('passwordInput').focus()" />
+      <label class="form-label">รหัสผ่าน</label>
+      <input type="password" id="passwordInput" class="form-input" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()" />
+      <button class="btn-login" id="loginBtn" onclick="doLogin()">
+        <i class="fa-solid fa-unlock" style="margin-right:6px;"></i>เข้าสู่ระบบ Admin
+      </button>
+      <a href="./#docs" class="back-link"><i class="fa-solid fa-arrow-left" style="margin-right:4px;"></i>กลับหน้าหลัก</a>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard">
+    <header>
+      <div class="header-left">
+        <div class="header-icon"><i class="fa-solid fa-file-lines"></i></div>
+        <div>
+          <div class="header-title">Admin — ฝ่ายธุรการ</div>
+          <div class="header-sub">โรงเรียนเซนต์ดอมินิก</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <a href="./#docs" class="btn-icon-header" title="หน้าหลัก"><i class="fa-solid fa-house"></i></a>
+        <button class="btn-logout" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket" style="margin-right:4px;"></i>ออก</button>
+      </div>
+    </header>
+
+    <div class="main">
+      <div class="stats-row" id="statsArea"></div>
+
+      <div class="toolbar">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="searchInput" placeholder="ค้นหาชื่อ, เรื่อง..." oninput="render()" />
+        </div>
+        <div id="statusFilters" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+        <button class="btn-add" onclick="openNew()"><i class="fa-solid fa-plus"></i>เพิ่มเอกสาร</button>
+      </div>
+
+      <div class="table-wrap">
+        <div id="emptyState" class="empty-state" style="display:none;">
+          <i class="fa-solid fa-inbox" style="font-size:2rem;margin-bottom:10px;display:block;"></i>
+          ไม่พบเอกสารที่ค้นหา
+        </div>
+        <table id="docsTable">
+          <thead>
+            <tr>
+              <th>เลขที่</th>
+              <th>เรื่อง / ผู้ยื่น</th>
+              <th>ประเภท</th>
+              <th>วันที่</th>
+              <th>หมายเหตุ</th>
+              <th>สถานะ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT MODAL -->
+  <div class="modal-overlay" id="docModal" onclick="if(event.target===this)closeModal()">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">เพิ่มเอกสาร</div>
+      </div>
+      <div class="modal-body">
+        <div>
+          <div class="field-label">เรื่อง</div>
+          <input type="text" id="fSubject" class="form-input" placeholder="ชื่อเรื่อง" />
+        </div>
+        <div>
+          <div class="field-label">ผู้ยื่น</div>
+          <input type="text" id="fSubmitter" class="form-input" placeholder="ชื่อผู้ยื่น" />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <div class="field-label">ประเภทเอกสาร</div>
+            <select id="fType" class="form-select">
+              <option>หนังสือราชการ</option>
+              <option>บันทึกข้อความ</option>
+              <option>คำร้อง</option>
+              <option>รายงาน</option>
+              <option>อื่นๆ</option>
+            </select>
+          </div>
+          <div>
+            <div class="field-label">วันที่รับ</div>
+            <input type="date" id="fDate" class="form-input" style="font-family:inherit;" />
+          </div>
+        </div>
+        <div>
+          <div class="field-label">สถานะ</div>
+          <select id="fStatus" class="form-select">
+            <option value="รับเรื่อง">รับเรื่อง</option>
+            <option value="กำลังดำเนินการ">กำลังดำเนินการ</option>
+            <option value="เสร็จสิ้น">เสร็จสิ้น</option>
+            <option value="ยกเลิก">ยกเลิก</option>
+          </select>
+        </div>
+        <div>
+          <div class="field-label">หมายเหตุ</div>
+          <textarea id="fNote" class="form-textarea" placeholder="หมายเหตุ (ถ้ามี)"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal-danger" id="btnDelete" onclick="deleteDoc()" style="display:none;"><i class="fa-solid fa-trash" style="margin-right:4px;"></i>ลบ</button>
+        <button class="btn-modal-ghost" onclick="closeModal()">ยกเลิก</button>
+        <button class="btn-modal-primary" onclick="saveDoc()">บันทึก</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ── AUTH ────────────────────────────────────────────
+    const ADMIN_USERS = [
+      { username: 'admin', password: 'docs2025' },
+      { username: 'docs',  password: 'sddocs' },
+    ];
+    const SESSION_KEY = 'sdDocsAdmin';
+
+    function doLogin() {
+      const u = document.getElementById('usernameInput').value.trim();
+      const p = document.getElementById('passwordInput').value;
+      if (!u || !p) { showError('กรุณากรอกชื่อผู้ใช้และรหัสผ่าน'); return; }
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right:6px;"></i>กำลังเข้าสู่ระบบ...';
+      setTimeout(() => {
+        const ok = ADMIN_USERS.some(a => a.username === u && a.password === p);
+        if (ok) {
+          localStorage.setItem(SESSION_KEY, JSON.stringify({ user: u, exp: Date.now() + 30*24*60*60*1000 }));
+          showDashboard();
+        } else {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-unlock" style="margin-right:6px;"></i>เข้าสู่ระบบ Admin';
+          showError('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
+        }
+      }, 400);
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('loginError');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+
+    function doLogout() {
+      localStorage.removeItem(SESSION_KEY);
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('loginScreen').style.display = 'flex';
+    }
+
+    function showDashboard() {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadDocs();
+      render();
+    }
+
+    // ── DATA ────────────────────────────────────────────
+    const DEFAULT_DOCS = [
+      { id:1, subject:'ขอใช้ห้องสมุดนอกเวลา',         submitter:'ครูสมศรี',      type:'คำร้อง',        date:'2025-05-20', status:'เสร็จสิ้น',       note:'' },
+      { id:2, subject:'รายงานผลการประชุมผู้ปกครอง',    submitter:'ฝ่ายปกครอง',   type:'รายงาน',        date:'2025-05-22', status:'กำลังดำเนินการ', note:'รอผู้อำนวยการลงนาม' },
+      { id:3, subject:'หนังสือขอความอนุเคราะห์วิทยากร', submitter:'ครูวิภา',      type:'หนังสือราชการ', date:'2025-05-25', status:'รับเรื่อง',       note:'' },
+    ];
+    let nextId = 4;
+
+    let docs = [];
+    let statusFilter = 'ทั้งหมด';
+
+    function loadDocs() {
+      const saved = JSON.parse(localStorage.getItem('sdDocsData') || 'null');
+      if (saved) {
+        docs = saved;
+        nextId = Math.max(...docs.map(d => d.id), 0) + 1;
+      } else {
+        docs = DEFAULT_DOCS.map(d => ({...d}));
+        nextId = 4;
+      }
+    }
+
+    function saveDocs() {
+      localStorage.setItem('sdDocsData', JSON.stringify(docs));
+    }
+
+    // ── RENDER ──────────────────────────────────────────
+    const STATUS_MAP = {
+      'รับเรื่อง':       { cls:'pending', icon:'fa-inbox' },
+      'กำลังดำเนินการ': { cls:'process', icon:'fa-clock' },
+      'เสร็จสิ้น':      { cls:'done',    icon:'fa-circle-check' },
+      'ยกเลิก':         { cls:'cancel',  icon:'fa-ban' },
+    };
+
+    function fmtDate(iso) {
+      if (!iso) return '-';
+      const [y, m, d] = iso.split('-').map(Number);
+      const mth = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+      return `${d} ${mth[m]} ${y+543}`;
+    }
+
+    function render() {
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+
+      // Stats
+      const counts = { all: docs.length };
+      Object.keys(STATUS_MAP).forEach(s => { counts[s] = docs.filter(d => d.status === s).length; });
+      document.getElementById('statsArea').innerHTML = [
+        { label:'ทั้งหมด', key:'all', bg:'#dbeafe', color:'#1e40af', icon:'fa-folder' },
+        { label:'รับเรื่อง', key:'รับเรื่อง', bg:'#fef9c3', color:'#854d0e', icon:'fa-inbox' },
+        { label:'กำลังดำเนินการ', key:'กำลังดำเนินการ', bg:'#dbeafe', color:'#1e40af', icon:'fa-clock' },
+        { label:'เสร็จสิ้น', key:'เสร็จสิ้น', bg:'#dcfce7', color:'#15803d', icon:'fa-circle-check' },
+      ].map(s => `
+        <div class="stat-card">
+          <div><div class="stat-label">${s.label}</div><div class="stat-num tnum">${counts[s.key] ?? 0}</div></div>
+          <div class="ic-box" style="background:${s.bg};color:${s.color};"><i class="fa-solid ${s.icon}"></i></div>
+        </div>`).join('');
+
+      // Status filter chips
+      const opts = ['ทั้งหมด', 'รับเรื่อง', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก'];
+      document.getElementById('statusFilters').innerHTML = opts.map(s =>
+        `<button class="chip ${statusFilter === s ? 'active' : ''}" onclick="setStatus('${s}')">${s}</button>`
+      ).join('');
+
+      // Filter list
+      const list = docs.filter(d =>
+        (statusFilter === 'ทั้งหมด' || d.status === statusFilter) &&
+        (!q || d.subject.toLowerCase().includes(q) || d.submitter.toLowerCase().includes(q))
+      );
+
+      document.getElementById('emptyState').style.display = list.length ? 'none' : 'block';
+      document.getElementById('docsTable').style.display = list.length ? '' : 'none';
+
+      document.getElementById('tableBody').innerHTML = list.map(d => {
+        const sm = STATUS_MAP[d.status] || { cls:'cancel', icon:'fa-circle' };
+        return `<tr>
+          <td style="font-weight:600;color:#475569;font-variant-numeric:tabular-nums;">DOC-${String(d.id).padStart(3,'0')}</td>
+          <td>
+            <div style="font-weight:600;">${d.subject}</div>
+            <div style="font-size:.8rem;color:#64748b;">${d.submitter}</div>
+          </td>
+          <td style="color:#475569;">${d.type}</td>
+          <td style="color:#475569;">${fmtDate(d.date)}</td>
+          <td style="color:#64748b;font-size:.84rem;max-width:160px;">${d.note || '-'}</td>
+          <td><span class="badge ${sm.cls}"><span class="dot"></span>${d.status}</span></td>
+          <td>
+            <div class="actions">
+              <button class="btn-sm btn-edit" onclick="openEdit(${d.id})"><i class="fa-solid fa-pen-to-square"></i>แก้ไข</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function setStatus(s) { statusFilter = s; render(); }
+
+    // ── MODAL ───────────────────────────────────────────
+    let editingId = null;
+
+    function openNew() {
+      editingId = null;
+      document.getElementById('modalTitle').textContent = 'เพิ่มเอกสาร';
+      document.getElementById('btnDelete').style.display = 'none';
+      document.getElementById('fSubject').value = '';
+      document.getElementById('fSubmitter').value = '';
+      document.getElementById('fType').value = 'หนังสือราชการ';
+      document.getElementById('fDate').value = new Date().toISOString().slice(0,10);
+      document.getElementById('fStatus').value = 'รับเรื่อง';
+      document.getElementById('fNote').value = '';
+      document.getElementById('docModal').classList.add('open');
+    }
+
+    function openEdit(id) {
+      const d = docs.find(x => x.id === id);
+      if (!d) return;
+      editingId = id;
+      document.getElementById('modalTitle').textContent = 'แก้ไขเอกสาร';
+      document.getElementById('btnDelete').style.display = 'block';
+      document.getElementById('fSubject').value = d.subject;
+      document.getElementById('fSubmitter').value = d.submitter;
+      document.getElementById('fType').value = d.type;
+      document.getElementById('fDate').value = d.date;
+      document.getElementById('fStatus').value = d.status;
+      document.getElementById('fNote').value = d.note;
+      document.getElementById('docModal').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('docModal').classList.remove('open');
+      editingId = null;
+    }
+
+    function saveDoc() {
+      const subject   = document.getElementById('fSubject').value.trim();
+      const submitter = document.getElementById('fSubmitter').value.trim();
+      if (!subject || !submitter) { alert('กรุณากรอกเรื่องและผู้ยื่น'); return; }
+      const data = {
+        subject,
+        submitter,
+        type:   document.getElementById('fType').value,
+        date:   document.getElementById('fDate').value,
+        status: document.getElementById('fStatus').value,
+        note:   document.getElementById('fNote').value.trim(),
+      };
+      if (editingId) {
+        const idx = docs.findIndex(d => d.id === editingId);
+        docs[idx] = { ...docs[idx], ...data };
+      } else {
+        docs.unshift({ id: nextId++, ...data });
+      }
+      saveDocs();
+      closeModal();
+      render();
+    }
+
+    function deleteDoc() {
+      if (!editingId) return;
+      if (!confirm('ต้องการลบเอกสารนี้?')) return;
+      docs = docs.filter(d => d.id !== editingId);
+      saveDocs();
+      closeModal();
+      render();
+    }
+
+    // ── INIT ────────────────────────────────────────────
+    (function init() {
+      const sess = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+      if (sess && sess.exp > Date.now()) {
+        showDashboard();
+      }
+    })();
+  </script>
+</body>
+</html>
