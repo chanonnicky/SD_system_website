@@ -1,9 +1,6 @@
 # ระบบงานฝ่าย โรงเรียนเซนต์ดอมินิก
 
-**ระบบงานฝ่าย:** https://chanonnicky.github.io/SD_system_website/
-**Admin ฝ่ายโสต:** https://chanonnicky.github.io/SD_system_website/admin.html
-**Admin ฝ่ายธุรการ:** https://chanonnicky.github.io/SD_system_website/admin-docs.html
-**Admin ฝ่ายวัดประเมินผล:** https://chanonnicky.github.io/SD_system_website/admin-assess.html
+🌐 **[ระบบงานฝ่าย](https://chanonnicky.github.io/SD_system_website/)** · [Admin โสต](https://chanonnicky.github.io/SD_system_website/admin.html) · [Admin ธุรการ](https://chanonnicky.github.io/SD_system_website/admin-docs.html) · [Admin วัดประเมินผล](https://chanonnicky.github.io/SD_system_website/admin-assess.html)
 
 ระบบสารสนเทศภายในโรงเรียนเซนต์ดอมินิก เป็น SPA ประกอบด้วย Portal เลือกฝ่าย, ระบบงานฝ่ายโสตทัศนูปกรณ์ (แจ้งซ่อม, จองห้อง, ปฏิทิน), หน้าสถานะตรวจข้อสอบฝ่ายวัดประเมินผล, และคลังเอกสารฝ่ายธุรการ พัฒนาด้วย HTML + Tailwind CSS ใช้ Google Apps Script เป็น Backend และ Google Sheets เป็นฐานข้อมูล รองรับ PWA และแจ้งเตือนผ่าน LINE + FCM Push Notification
 
@@ -202,13 +199,13 @@ SD_system_website/
 git push origin main   # GitHub Actions auto-generate config.js และ deploy อัตโนมัติ ~1-2 นาที
 ```
 
-ดูสถานะ deploy ได้ที่: https://github.com/chanonnicky/SD_system_website/actions
+ดูสถานะ deploy ได้ที่: [GitHub Actions](https://github.com/chanonnicky/SD_system_website/actions)
 
 **เว็บไซต์ที่ deploy แล้ว:**
-- ระบบงานฝ่าย: https://chanonnicky.github.io/SD_system_website/
-- Admin ฝ่ายโสต: https://chanonnicky.github.io/SD_system_website/admin.html
-- Admin ฝ่ายธุรการ: https://chanonnicky.github.io/SD_system_website/admin-docs.html
-- Admin ฝ่ายวัดประเมินผล: https://chanonnicky.github.io/SD_system_website/admin-assess.html
+- [ระบบงานฝ่าย](https://chanonnicky.github.io/SD_system_website/)
+- [Admin ฝ่ายโสต](https://chanonnicky.github.io/SD_system_website/admin.html)
+- [Admin ฝ่ายธุรการ](https://chanonnicky.github.io/SD_system_website/admin-docs.html)
+- [Admin ฝ่ายวัดประเมินผล](https://chanonnicky.github.io/SD_system_website/admin-assess.html)
 
 **Backend (GAS):** ต้อง deploy ด้วยมือทุกครั้งที่แก้ `gas/Code.gs`
 > GAS Editor → Deploy → Manage Deployments → Edit → New Version → Deploy
