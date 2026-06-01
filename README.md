@@ -196,9 +196,22 @@ SD_system_website/
 `username | (ว่าง) | ชื่อจริง | บทบาท | วันที่ | เบอร์`
 
 ### 8. Deploy
+
+**Frontend (GitHub Pages):**
 ```bash
-git push origin main   # GitHub Actions deploy อัตโนมัติ ~1-2 นาที
+git push origin main   # GitHub Actions auto-generate config.js และ deploy อัตโนมัติ ~1-2 นาที
 ```
+
+ดูสถานะ deploy ได้ที่: https://github.com/chanonnicky/SD_system_website/actions
+
+**เว็บไซต์ที่ deploy แล้ว:**
+- ระบบงานฝ่าย: https://chanonnicky.github.io/SD_system_website/
+- Admin ฝ่ายโสต: https://chanonnicky.github.io/SD_system_website/admin.html
+- Admin ฝ่ายธุรการ: https://chanonnicky.github.io/SD_system_website/admin-docs.html
+- Admin ฝ่ายวัดประเมินผล: https://chanonnicky.github.io/SD_system_website/admin-assess.html
+
+**Backend (GAS):** ต้อง deploy ด้วยมือทุกครั้งที่แก้ `gas/Code.gs`
+> GAS Editor → Deploy → Manage Deployments → Edit → New Version → Deploy
 
 ---
 
