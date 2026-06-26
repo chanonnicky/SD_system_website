@@ -1470,8 +1470,8 @@ function sendFCMPush(title, body, ticket) {
   const accessToken = getServiceAccountAccessToken();
   if (!accessToken) return;
 
-  const icon    = 'https://chanonnicky.github.io/SD_AV_website/assets/img/school_logo.webp';
-  const baseUrl = 'https://chanonnicky.github.io/SD_AV_website/admin.html';
+  const icon    = 'https://chanonnicky.github.io/SD_system_website/assets/img/school_logo.webp';
+  const baseUrl = 'https://chanonnicky.github.io/SD_system_website/admin.html';
   const link    = ticket ? baseUrl + '?ticket=' + encodeURIComponent(ticket) : baseUrl;
   const fcmUrl  = 'https://fcm.googleapis.com/v1/projects/' + CONFIG.FCM_PROJECT_ID + '/messages:send';
   const stale   = [];

@@ -1,0 +1,13 @@
+name = "sd-system-proxy"
+main = "src/worker.js"
+compatibility_date = "2024-09-01"
+
+# Environment variables (non-secret defaults)
+# Set secrets via: wrangler secret put BACKEND_URL
+[vars]
+ALLOWED_ORIGIN = "https://chanonnicky.github.io"
+
+# Optional: route on custom domain (uncomment + set zone_id if you own a domain)
+# [[routes]]
+# pattern = "api.sd.ac.th/*"
+# zone_id = "your-zone-id"

@@ -4,8 +4,13 @@
 // ============================================================
 window.APP_CONFIG = {
 
-  // 1. Google Apps Script Web App URL
+  // 1. Google Apps Script Web App URL (legacy — for image uploads only)
   GAS_URL: '',
+
+  // 1b. Cloudflare Worker URL (HTTPS proxy to JSP backend on MySQL)
+  //     Used by admin.html for all admin operations + index.html for data fetch
+  //     Deploy via: cd worker && npx wrangler@4 deploy
+  WORKER_URL: 'https://sd-system-proxy.chanon-b.workers.dev',
 
   // 2. Google Spreadsheet ID
   SPREADSHEET_ID: '',

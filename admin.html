@@ -540,6 +540,12 @@
   let _allSort = 'newest';
   let _pendingSort = 'newest';
 
+  // API URL helper — prefers Cloudflare Worker (MySQL backend) over legacy GAS (Sheets)
+  function apiUrl() {
+    const cfg = window.APP_CONFIG || {};
+    return cfg.WORKER_URL || cfg.GAS_URL || '';
+  }
+
   // ============================================================
   // AUTH
   // ============================================================
@@ -552,7 +558,7 @@
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังตรวจสอบ...';
     document.getElementById('loginError').classList.add('hidden');
 
-    fetch(window.APP_CONFIG.GAS_URL, {
+    fetch(apiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ type: 'adminLogin', username, secret: (window.APP_CONFIG || {}).CLIENT_SECRET || '' }),
@@ -560,11 +566,13 @@
       .then(r => r.json())
       .then(data => {
         if (data.success) {
-          _session = { username, name: data.name };
+          // JSP returns full name in "username" key; GAS returned in "name" key — accept either
+          const displayName = data.username || data.name || username;
+          _session = { username, name: displayName };
           localStorage.setItem('adminSession', JSON.stringify({ ..._session, expiresAt: Date.now() + 30 * 86400000 }));
           document.getElementById('loginScreen').classList.add('hidden');
           document.getElementById('dashboard').classList.remove('hidden');
-          document.getElementById('adminNameDisplay').textContent = data.name || username;
+          document.getElementById('adminNameDisplay').textContent = displayName;
           fetchPending();
           fetchAll();
           loadAdmins();
@@ -622,7 +630,7 @@
     document.getElementById('pendingList').innerHTML = '';
     document.getElementById('emptyPending').classList.add('hidden');
 
-    fetch(window.APP_CONFIG.GAS_URL, {
+    fetch(apiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(authBody({ type: 'adminGetData' })),
@@ -700,7 +708,7 @@
     document.getElementById('loadingAll').classList.remove('hidden');
     document.getElementById('allList').innerHTML = '';
     document.getElementById('emptyAll').classList.add('hidden');
-    fetch(window.APP_CONFIG.GAS_URL, {
+    fetch(apiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(authBody({ type: 'adminGetAllData' })),
@@ -897,7 +905,7 @@
   // STATUS UPDATE
   // ============================================================
   function updateStatus(ticket, status) {
-    fetch(window.APP_CONFIG.GAS_URL, {
+    fetch(apiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(authBody({ type: 'updateStatus', ticket, status })),
@@ -922,7 +930,7 @@
     document.getElementById('adminList').innerHTML = '';
     document.getElementById('emptyAdmins').classList.add('hidden');
 
-    fetch(window.APP_CONFIG.GAS_URL, {
+    fetch(apiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(authBody({ type: 'getAdmins' })),
@@ -942,28 +950,30 @@
     const list = document.getElementById('adminList');
     list.innerHTML = '';
     if (!admins.length) { document.getElementById('emptyAdmins').classList.remove('hidden'); return; }
-    admins.forEach((a, i) => {
+    admins.forEach((a) => {
+      const displayName = a.full_name || a.name || a.username;
+      const addedAt = a.created_at || a.addedAt || '';
       list.insertAdjacentHTML('beforeend', `
         <div class="card flex items-center gap-3">
           <div class="w-11 h-11 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
             <i class="fa-solid fa-user text-blue-600"></i>
           </div>
           <div class="flex-1 min-w-0">
-            <div class="font-semibold text-slate-800">${esc(a.name)}</div>
+            <div class="font-semibold text-slate-800">${esc(displayName)}</div>
             <div class="text-xs text-slate-500 font-mono">@${esc(a.username)}</div>
             <div class="text-xs text-slate-500 mt-0.5">
               ${a.role ? `<span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-md mr-1">${esc(a.role)}</span>` : ''}
               ${a.phone ? `<span class="text-slate-500"><i class="fa-solid fa-phone text-xs mr-0.5"></i>${esc(a.phone)}</span>` : ''}
             </div>
-            <div class="text-xs text-slate-400 mt-0.5">เพิ่มเมื่อ ${esc(a.addedAt)}</div>
+            <div class="text-xs text-slate-400 mt-0.5">เพิ่มเมื่อ ${esc(addedAt)}</div>
           </div>
           <div class="flex gap-1 flex-shrink-0">
-            <button onclick="openEditAdmin(${i},'${esc(a.name)}','${esc(a.role)}','${esc(a.phone || '')}')"
+            <button onclick="openEditAdmin('${esc(a.username)}','${esc(displayName)}','${esc(a.role)}','${esc(a.phone || '')}')"
               class="p-2 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="แก้ไข">
               <i class="fa-solid fa-pen text-sm"></i>
             </button>
             ${a.username !== _session.username ? `
-            <button onclick="removeAdmin(${i},'${esc(a.name)}')"
+            <button onclick="removeAdmin('${esc(a.username)}','${esc(displayName)}')"
               class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="ลบ">
               <i class="fa-solid fa-trash text-sm"></i>
             </button>` : `<span class="text-xs text-slate-400 self-center px-1">(คุณ)</span>`}
@@ -980,10 +990,10 @@
     const phone       = document.getElementById('newAdminPhone').value.trim();
     if (!name || !newUsername) { showToast('error', 'กรุณากรอกชื่อและ username'); return; }
 
-    fetch(window.APP_CONFIG.GAS_URL, {
+    fetch(apiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(authBody({ type: 'addAdmin', name, newUsername, role, phone })),
+      body: JSON.stringify(authBody({ type: 'addDeptAdmin', fullName: name, newUsername, role, phone })),
     })
       .then(r => r.json())
       .then(data => {
@@ -996,8 +1006,8 @@
       .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
   }
 
-  function openEditAdmin(rowIndex, name, role, phone) {
-    document.getElementById('editRowIndex').value = rowIndex;
+  function openEditAdmin(username, name, role, phone) {
+    document.getElementById('editRowIndex').value = username;
     document.getElementById('editName').value  = name;
     document.getElementById('editRole').value  = role;
     document.getElementById('editPhone').value = phone || '';
@@ -1010,16 +1020,16 @@
   }
 
   function saveEditAdmin() {
-    const rowIndex = parseInt(document.getElementById('editRowIndex').value);
+    const targetUsername = document.getElementById('editRowIndex').value;
     const name  = document.getElementById('editName').value.trim();
     const role  = document.getElementById('editRole').value.trim();
     const phone = document.getElementById('editPhone').value.trim();
     if (!name) { showToast('error', 'กรุณากรอกชื่อ'); return; }
 
-    fetch(window.APP_CONFIG.GAS_URL, {
+    fetch(apiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(authBody({ type: 'editAdmin', rowIndex, name, role, phone })),
+      body: JSON.stringify(authBody({ type: 'updateDeptAdmin', username: targetUsername, fullName: name, role, phone })),
     })
       .then(r => r.json())
       .then(data => {
@@ -1032,12 +1042,12 @@
       .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
   }
 
-  function removeAdmin(rowIndex, name) {
+  function removeAdmin(targetUsername, name) {
     if (!confirm(`ต้องการลบ "${name}" ออกจากผู้ดูแลหรือไม่?`)) return;
-    fetch(window.APP_CONFIG.GAS_URL, {
+    fetch(apiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(authBody({ type: 'removeAdmin', rowIndex })),
+      body: JSON.stringify(authBody({ type: 'deleteDeptAdmin', username_to_delete: targetUsername })),
     })
       .then(r => r.json())
       .then(data => {
@@ -1100,7 +1110,7 @@
         serviceWorkerRegistration: _notifSwReg,
       });
       if (!token) { showToast('error', 'ไม่สามารถรับ FCM token ได้ — ตรวจสอบ VAPID key'); return; }
-      const res = await fetch(window.APP_CONFIG.GAS_URL, {
+      const res = await fetch(apiUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({ type: 'registerFCMToken', token, userAgent: navigator.userAgent, secret: (window.APP_CONFIG||{}).CLIENT_SECRET||'' }),
@@ -1178,7 +1188,7 @@
 
       // Step 4: Send to GAS
       try {
-        const res = await fetch(window.APP_CONFIG.GAS_URL, {
+        const res = await fetch(apiUrl(), {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain' },
           body: JSON.stringify({ type: 'registerFCMToken', token, userAgent: navigator.userAgent, secret: (window.APP_CONFIG||{}).CLIENT_SECRET||'' }),
@@ -1240,7 +1250,7 @@
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังส่ง...';
     diag.className = 'mb-4 hidden p-3 rounded-xl text-sm';
 
-    fetch(window.APP_CONFIG.GAS_URL, {
+    fetch(apiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(authBody({ type: 'testFCM' })),
