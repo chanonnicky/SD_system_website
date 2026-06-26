@@ -21,11 +21,8 @@
       html, body { background: white !important; color: #000 !important; font-family: Sarabun, sans-serif !important; }
       /* Hide chrome — nav, tabs, buttons, all cards/stat cards that aren't tables */
       .no-print, nav, header:not(.print-header), #adminTabNav, .tab-btn, button, footer { display: none !important; }
-      /* Hide the colorful summary/KPI cards and stat boxes — keep only tables and the print header */
+      /* Hide stat cards + status/KPI summary cards (the .grid containers); keep only repair/booking tables */
       #reportResults > .grid { display: none !important; }
-      /* Hide stat numbers + status/KPI mini cards (they used .card wrapper); show only the data tables */
-      #reportResults > .card .text-3xl,
-      #reportResults > .card .text-xs { display: none !important; }
       .print-only { display: block !important; }
       .print-area { display: block !important; }
 
