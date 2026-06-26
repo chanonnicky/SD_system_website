@@ -540,10 +540,15 @@
   let _allSort = 'newest';
   let _pendingSort = 'newest';
 
-  // API URL helper — prefers Cloudflare Worker (MySQL backend) over legacy GAS (Sheets)
+  // API URL helper — MUST use Cloudflare Worker (MySQL backend). No GAS fallback.
   function apiUrl() {
     const cfg = window.APP_CONFIG || {};
-    return cfg.WORKER_URL || cfg.GAS_URL || '';
+    if (!cfg.WORKER_URL) {
+      console.error('[Config] WORKER_URL missing — admin.html requires Worker proxy');
+      alert('การตั้งค่าระบบไม่ครบ — WORKER_URL ขาด ติดต่อ admin');
+      throw new Error('WORKER_URL not configured');
+    }
+    return cfg.WORKER_URL;
   }
 
   // ============================================================
