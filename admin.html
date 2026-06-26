@@ -223,7 +223,10 @@
             </div>
             <div class="form-group">
               <label class="form-label">บทบาท</label>
-              <input type="text" id="newAdminRole" class="form-input" placeholder="ช่างเทคนิค" />
+              <select id="newAdminRole" class="form-input">
+                <option value="team">ทีมทำงาน (team)</option>
+                <option value="admin">admin หัวหน้า</option>
+              </select>
             </div>
             <div class="form-group">
               <label class="form-label">เบอร์มือถือ</label>
@@ -704,7 +707,10 @@
       </div>
       <div class="form-group mb-3">
         <label class="form-label">บทบาท</label>
-        <input type="text" id="editRole" class="form-input" />
+        <select id="editRole" class="form-input">
+          <option value="team">ทีมทำงาน (team)</option>
+          <option value="admin">admin หัวหน้า</option>
+        </select>
       </div>
       <div class="form-group mb-4">
         <label class="form-label">เบอร์มือถือ</label>
@@ -774,11 +780,12 @@
         if (data.success) {
           // JSP returns full name in "username" key; GAS returned in "name" key — accept either
           const displayName = data.username || data.name || username;
-          _session = { username, name: displayName };
+          _session = { username, name: displayName, role: data.role || '' };
           localStorage.setItem('adminSession', JSON.stringify({ ..._session, expiresAt: Date.now() + 30 * 86400000 }));
           document.getElementById('loginScreen').classList.add('hidden');
           document.getElementById('dashboard').classList.remove('hidden');
           document.getElementById('adminNameDisplay').textContent = displayName;
+          applyRoleVisibility();
           fetchPending();
           fetchAll();
           loadAdmins();
@@ -811,13 +818,31 @@
   }
 
   function authBody(extra) {
-    return Object.assign({ username: _session.username, secret: (window.APP_CONFIG || {}).CLIENT_SECRET || '' }, extra);
+    // actor_username = always the logged-in user (used for role-based auth)
+    // username = may be overridden by `extra` (e.g. for update/delete admin where target row is identified by username)
+    return Object.assign({
+      username: _session.username,
+      actor_username: _session.username,
+      secret: (window.APP_CONFIG || {}).CLIENT_SECRET || ''
+    }, extra);
   }
 
   // ============================================================
   // TABS
   // ============================================================
+  // Hide admin-management tab for non-admin roles (team role = view-only)
+  function applyRoleVisibility() {
+    const isHead = (_session && _session.role === 'admin');
+    const adminTabBtn = document.querySelector('[data-tab="admins"]');
+    if (adminTabBtn) adminTabBtn.style.display = isHead ? '' : 'none';
+  }
+
   function showAdminTab(tab) {
+    // Block non-admin from accessing admin management even via direct call
+    if (tab === 'admins' && _session && _session.role !== 'admin') {
+      showToast('error', 'ไม่มีสิทธิ์เข้าถึงหน้าจัดการ Admin');
+      return;
+    }
     document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
     document.querySelectorAll('#adminTabNav .tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-' + tab).classList.remove('hidden');
