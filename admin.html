@@ -1172,8 +1172,7 @@
 
   function downloadPdfReport() {
     if (!_reportData) { showToast('error', 'ยังไม่มีข้อมูล กรุณาสร้างรายงานก่อน'); return; }
-    showToast('success', 'กรุณาเลือก "Save as PDF" / "บันทึกเป็น PDF" ในหน้าจอพิมพ์');
-    setTimeout(() => window.print(), 600);
+    window.print();
   }
 
   // ============================================================
