@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin — ฝ่ายโสตทัศนศึกษา โรงเรียนเซนต์ดอมินิก</title>
+  <title>Admin — งานโสตและอาคารสถานที่ โรงเรียนเซนต์ดอมินิก</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -79,7 +79,7 @@
       <div class="text-center mb-6">
         <img src="assets/img/app_logo.webp" alt="logo" class="h-16 w-16 mx-auto mb-3 rounded-xl object-contain" />
         <h1 class="text-xl font-bold text-slate-800">Admin Panel</h1>
-        <p class="text-slate-500 text-sm">ฝ่ายโสตทัศนศึกษา · โรงเรียนเซนต์ดอมินิก</p>
+        <p class="text-slate-500 text-sm">งานโสตและอาคารสถานที่ · โรงเรียนเซนต์ดอมินิก</p>
       </div>
       <div id="loginError" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm text-center"></div>
       <div class="form-group">
@@ -324,9 +324,9 @@
           <div class="mb-4">
             <div class="text-xs text-slate-500 mb-2 font-semibold flex items-center gap-2">
               <span>สถานะ</span>
-              <button type="button" onclick="toggleAllStatus(true)" class="text-blue-600 hover:underline">เลือกทั้งหมด</button>
+              <button type="button" onclick="toggleAllReportStatuses(true)" class="text-blue-600 hover:underline">เลือกทั้งหมด</button>
               <span>·</span>
-              <button type="button" onclick="toggleAllStatus(false)" class="text-slate-500 hover:underline">ล้าง</button>
+              <button type="button" onclick="toggleAllReportStatuses(false)" class="text-slate-500 hover:underline">ล้าง</button>
             </div>
             <div class="flex flex-wrap gap-3">
               <label class="flex items-center gap-2 cursor-pointer">
@@ -377,7 +377,7 @@
             <img src="assets/img/school_logo.webp" alt="logo">
             <div class="title-block">
               <h1>โรงเรียนเซนต์ดอมินิก</h1>
-              <h2>รายงานสรุปงานฝ่ายโสตทัศนูปกรณ์</h2>
+              <h2>รายงานสรุปงานงานโสตและอาคารสถานที่</h2>
               <div class="meta" id="reportPrintRange"></div>
               <div class="meta" id="reportPrintGenerated"></div>
             </div>
@@ -952,7 +952,7 @@
     }
   }
 
-  function toggleAllStatus(checked) {
+  function toggleAllReportStatuses(checked) {
     document.querySelectorAll('.rpt-status').forEach(cb => cb.checked = checked);
   }
 
@@ -1110,7 +1110,7 @@
 
     // ========== Summary sheet (first) ==========
     const sumRows = [
-      ['รายงานสรุปงานฝ่ายโสตทัศนูปกรณ์'],
+      ['รายงานสรุปงานงานโสตและอาคารสถานที่'],
       ['โรงเรียนเซนต์ดอมินิก'],
       [`ช่วงเวลา: ${d.dateFrom} ถึง ${d.dateTo}`],
       [`สร้างเมื่อ: ${new Date().toLocaleString('th-TH')}`],

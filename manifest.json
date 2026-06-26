@@ -1,6 +1,6 @@
 {
-  "name": "งานโสตทัศนูปกรณ์ โรงเรียนเซนต์ดอมินิก",
-  "short_name": "AV โสต",
+  "name": "งานโสตและอาคารสถานที่ โรงเรียนเซนต์ดอมินิก",
+  "short_name": "โสต-อาคาร",
   "description": "ระบบแจ้งซ่อมและจองห้องประชุม",
   "start_url": "/SD_system_website/",
   "scope": "/SD_system_website/",

@@ -25,7 +25,7 @@ messaging.onBackgroundMessage((payload) => {
   const icon  = data.icon  || DEFAULT_ICON;
   const image = data.image || DEFAULT_IMAGE;
   const tag   = data.ticket || data.tag || ('av-' + Date.now());
-  self.registration.showNotification(data.title || 'AV โสตทัศนูปกรณ์', {
+  self.registration.showNotification(data.title || 'งานโสตและอาคารสถานที่', {
     body: data.body || '',
     icon: icon,
     badge: icon,
