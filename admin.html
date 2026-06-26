@@ -15,49 +15,43 @@
     @media print {
       @page {
         size: A4 landscape;
-        margin: 12mm 10mm 14mm 10mm;
+        margin: 14mm 12mm 14mm 12mm;
         @bottom-right { content: "หน้า " counter(page) " / " counter(pages); font-family: Sarabun, sans-serif; font-size: 9pt; color: #666; }
       }
-      html, body { background: white !important; color: #000 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      html, body { background: white !important; color: #000 !important; font-family: Sarabun, sans-serif !important; }
+      /* Hide chrome — nav, tabs, buttons, all cards/stat cards that aren't tables */
       .no-print, nav, header:not(.print-header), #adminTabNav, .tab-btn, button, footer { display: none !important; }
+      /* Hide the colorful summary/KPI cards and stat boxes — keep only tables and the print header */
+      #reportResults > .grid { display: none !important; }
+      /* Hide stat numbers + status/KPI mini cards (they used .card wrapper); show only the data tables */
+      #reportResults > .card .text-3xl,
+      #reportResults > .card .text-xs { display: none !important; }
       .print-only { display: block !important; }
       .print-area { display: block !important; }
 
-      /* Report header (school + title + range) */
-      .print-header { display: flex !important; align-items: center; gap: 14px; border-bottom: 2px solid #1d4ed8; padding-bottom: 10px; margin-bottom: 14px; }
-      .print-header img { height: 56px; width: 56px; object-fit: contain; }
-      .print-header .title-block { flex: 1; }
-      .print-header h1 { font-size: 18pt; font-weight: 700; margin: 0; color: #1d4ed8 !important; }
-      .print-header h2 { font-size: 13pt; font-weight: 600; margin: 2px 0; color: #111 !important; }
-      .print-header .meta { font-size: 10pt; color: #444 !important; margin-top: 2px; }
+      /* Plain report header — text only, minimal */
+      .print-header { display: block !important; text-align: center; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1.5px solid #000; }
+      .print-header img { display: none; }
+      .print-header h1 { font-size: 15pt; font-weight: 700; margin: 0; color: #000 !important; }
+      .print-header h2 { font-size: 12pt; font-weight: 600; margin: 2px 0; color: #000 !important; }
+      .print-header .meta { font-size: 9pt; color: #333 !important; margin-top: 2px; }
 
-      /* Stats / cards */
-      .card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; border-radius: 6px !important; padding: 10px !important; page-break-inside: avoid; margin-bottom: 8px !important; }
-      .card h3 { font-size: 11pt !important; font-weight: 700; margin-bottom: 6px !important; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+      /* Strip card chrome — no shadow/borders/padding so tables print plainly */
+      .card { box-shadow: none !important; border: none !important; border-radius: 0 !important; padding: 0 !important; margin-bottom: 12px !important; page-break-inside: auto !important; }
+      .card h3 { font-size: 11pt !important; font-weight: 700; margin: 8px 0 4px !important; color: #000 !important; }
+      .card h3 i { display: none; } /* icon */
 
-      /* Stat number cards */
-      .grid { gap: 6px !important; }
-      .grid > .card { text-align: center; }
-      .grid > .card .text-3xl { font-size: 16pt !important; font-weight: 700; }
-      .grid > .card .text-xs { font-size: 8pt !important; color: #555 !important; }
+      /* Tables — plain black-and-white report style */
+      table { width: 100% !important; font-size: 9pt !important; border-collapse: collapse !important; margin-bottom: 4px; }
+      thead { display: table-header-group; } /* repeat header on each page */
+      thead th { background: #f1f5f9 !important; padding: 4px 5px !important; text-align: left; font-weight: 700; border: 1px solid #000 !important; color: #000 !important; }
+      tbody td { padding: 3px 5px !important; border: 1px solid #555 !important; vertical-align: top; color: #000 !important; }
+      tbody tr { page-break-inside: avoid; }
 
-      /* Tables */
-      table { width: 100% !important; font-size: 8.5pt !important; border-collapse: collapse !important; }
-      thead { background: #1d4ed8 !important; color: #fff !important; }
-      thead th { padding: 5px 4px !important; text-align: left; font-weight: 600; border: 1px solid #1d4ed8 !important; }
-      tbody td { padding: 4px !important; border: 1px solid #cbd5e1 !important; vertical-align: top; }
-      tbody tr:nth-child(even) { background: #f1f5f9 !important; }
-
-      /* Section page breaks */
-      .report-repair-section, .report-booking-section { page-break-inside: auto; }
-      .card { page-break-inside: avoid; }
-
-      /* Hide colors but keep status badges visible */
-      .bg-blue-100, .bg-orange-100, .bg-emerald-100, .bg-red-100, .bg-amber-100 { background: transparent !important; }
-      .bg-blue-700, .bg-blue-600, .bg-amber-600, .bg-emerald-600, .bg-red-600 { background: transparent !important; }
-      .text-blue-700, .text-amber-700, .text-emerald-700, .text-orange-700, .text-red-700 { color: #111 !important; font-weight: 700; }
-      /* Status badge */
-      [class*="bg-"][class*="text-"] { border: 1px solid #999; padding: 1px 4px !important; border-radius: 4px; }
+      /* Remove status badge backgrounds — keep just text */
+      [class*="bg-blue-"], [class*="bg-orange-"], [class*="bg-emerald-"], [class*="bg-red-"], [class*="bg-amber-"] { background: transparent !important; }
+      [class*="text-blue-"], [class*="text-amber-"], [class*="text-emerald-"], [class*="text-orange-"], [class*="text-red-"] { color: #000 !important; }
+      [class*="rounded"] { border-radius: 0 !important; }
     }
   </style>
   <script>
