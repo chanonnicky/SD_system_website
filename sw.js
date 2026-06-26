@@ -15,14 +15,25 @@ const messaging = firebase.messaging();
 // รับ push เมื่อแอปอยู่ background
 // Backend ส่ง data-only payload (no notification field) เพื่อไม่ให้ FCM auto-display
 // → SW เป็นที่เดียวที่เรียก showNotification, ไม่ซ้ำ
+const ORIGIN  = 'https://chanonnicky.github.io/SD_system_website';
+const DEFAULT_ICON  = ORIGIN + '/assets/img/school_logo.webp';
+const DEFAULT_IMAGE = ORIGIN + '/assets/img/school_logo.webp';
+
 messaging.onBackgroundMessage((payload) => {
   const data = payload.data || {};
-  const url  = data.url || 'https://chanonnicky.github.io/SD_system_website/admin.html';
-  const icon = data.icon || '/SD_system_website/assets/img/school_logo.webp';
+  const url   = data.url   || (ORIGIN + '/admin.html');
+  const icon  = data.icon  || DEFAULT_ICON;
+  const image = data.image || DEFAULT_IMAGE;
+  const tag   = data.ticket || data.tag || ('av-' + Date.now());
   self.registration.showNotification(data.title || 'AV โสตทัศนูปกรณ์', {
     body: data.body || '',
     icon: icon,
     badge: icon,
+    image: image,
+    tag: tag,
+    renotify: true,
+    requireInteraction: true,
+    vibrate: [200, 100, 200],
     data: { url },
   });
 });
