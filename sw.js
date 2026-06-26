@@ -13,14 +13,16 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 // รับ push เมื่อแอปอยู่ background
+// Backend ส่ง data-only payload (no notification field) เพื่อไม่ให้ FCM auto-display
+// → SW เป็นที่เดียวที่เรียก showNotification, ไม่ซ้ำ
 messaging.onBackgroundMessage((payload) => {
-  const n    = payload.notification || {};
   const data = payload.data || {};
   const url  = data.url || 'https://chanonnicky.github.io/SD_system_website/admin.html';
-  self.registration.showNotification(n.title || 'AV โสตทัศนูปกรณ์', {
-    body: n.body || '',
-    icon: '/SD_system_website/assets/img/school_logo.webp',
-    badge: '/SD_system_website/assets/img/school_logo.webp',
+  const icon = data.icon || '/SD_system_website/assets/img/school_logo.webp';
+  self.registration.showNotification(data.title || 'AV โสตทัศนูปกรณ์', {
+    body: data.body || '',
+    icon: icon,
+    badge: icon,
     data: { url },
   });
 });
