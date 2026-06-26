@@ -13,15 +13,51 @@
     /* Hide print-only elements normally */
     .print-only { display: none; }
     @media print {
-      @page { size: A4 landscape; margin: 10mm; }
-      body { background: white !important; }
-      .no-print, nav, header, #adminTabNav, button { display: none !important; }
+      @page {
+        size: A4 landscape;
+        margin: 12mm 10mm 14mm 10mm;
+        @bottom-right { content: "หน้า " counter(page) " / " counter(pages); font-family: Sarabun, sans-serif; font-size: 9pt; color: #666; }
+      }
+      html, body { background: white !important; color: #000 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      .no-print, nav, header:not(.print-header), #adminTabNav, .tab-btn, button, footer { display: none !important; }
       .print-only { display: block !important; }
       .print-area { display: block !important; }
-      .card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; page-break-inside: avoid; }
-      table { font-size: 9pt !important; }
-      h1, h2, h3 { color: #111 !important; }
-      .bg-blue-100, .bg-blue-700, .bg-amber-100, .bg-emerald-100, .bg-orange-100 { background: transparent !important; border: 1px solid #999; }
+
+      /* Report header (school + title + range) */
+      .print-header { display: flex !important; align-items: center; gap: 14px; border-bottom: 2px solid #1d4ed8; padding-bottom: 10px; margin-bottom: 14px; }
+      .print-header img { height: 56px; width: 56px; object-fit: contain; }
+      .print-header .title-block { flex: 1; }
+      .print-header h1 { font-size: 18pt; font-weight: 700; margin: 0; color: #1d4ed8 !important; }
+      .print-header h2 { font-size: 13pt; font-weight: 600; margin: 2px 0; color: #111 !important; }
+      .print-header .meta { font-size: 10pt; color: #444 !important; margin-top: 2px; }
+
+      /* Stats / cards */
+      .card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; border-radius: 6px !important; padding: 10px !important; page-break-inside: avoid; margin-bottom: 8px !important; }
+      .card h3 { font-size: 11pt !important; font-weight: 700; margin-bottom: 6px !important; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+
+      /* Stat number cards */
+      .grid { gap: 6px !important; }
+      .grid > .card { text-align: center; }
+      .grid > .card .text-3xl { font-size: 16pt !important; font-weight: 700; }
+      .grid > .card .text-xs { font-size: 8pt !important; color: #555 !important; }
+
+      /* Tables */
+      table { width: 100% !important; font-size: 8.5pt !important; border-collapse: collapse !important; }
+      thead { background: #1d4ed8 !important; color: #fff !important; }
+      thead th { padding: 5px 4px !important; text-align: left; font-weight: 600; border: 1px solid #1d4ed8 !important; }
+      tbody td { padding: 4px !important; border: 1px solid #cbd5e1 !important; vertical-align: top; }
+      tbody tr:nth-child(even) { background: #f1f5f9 !important; }
+
+      /* Section page breaks */
+      .report-repair-section, .report-booking-section { page-break-inside: auto; }
+      .card { page-break-inside: avoid; }
+
+      /* Hide colors but keep status badges visible */
+      .bg-blue-100, .bg-orange-100, .bg-emerald-100, .bg-red-100, .bg-amber-100 { background: transparent !important; }
+      .bg-blue-700, .bg-blue-600, .bg-amber-600, .bg-emerald-600, .bg-red-600 { background: transparent !important; }
+      .text-blue-700, .text-amber-700, .text-emerald-700, .text-orange-700, .text-red-700 { color: #111 !important; font-weight: 700; }
+      /* Status badge */
+      [class*="bg-"][class*="text-"] { border: 1px solid #999; padding: 1px 4px !important; border-radius: 4px; }
     }
   </style>
   <script>
@@ -254,26 +290,68 @@
         <!-- Filter card (hidden when printing) -->
         <div class="card no-print">
           <h2 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
-            <i class="fa-solid fa-filter text-blue-600"></i>เลือกช่วงเวลารายงาน
+            <i class="fa-solid fa-filter text-blue-600"></i>เลือกตัวกรองรายงาน
           </h2>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+
+          <!-- Date range -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
             <div>
-              <label class="text-xs text-slate-500 mb-1 block">วันที่เริ่ม</label>
+              <label class="text-xs text-slate-500 mb-1 block font-semibold">วันที่เริ่ม</label>
               <input type="date" id="reportDateFrom" class="form-input">
             </div>
             <div>
-              <label class="text-xs text-slate-500 mb-1 block">วันที่สิ้นสุด</label>
+              <label class="text-xs text-slate-500 mb-1 block font-semibold">วันที่สิ้นสุด</label>
               <input type="date" id="reportDateTo" class="form-input">
             </div>
-            <div class="flex items-end">
-              <button onclick="loadReport()" id="reportLoadBtn" class="btn-primary w-full">
-                <i class="fa-solid fa-magnifying-glass mr-2"></i>สร้างรายงาน
-              </button>
+          </div>
+
+          <!-- Type checkboxes -->
+          <div class="mb-4">
+            <label class="text-xs text-slate-500 mb-2 block font-semibold">ประเภทงาน</label>
+            <div class="flex flex-wrap gap-3">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="rptTypeRepair" checked class="w-4 h-4 accent-blue-600">
+                <span class="text-sm"><i class="fa-solid fa-wrench text-blue-600 mr-1"></i>แจ้งซ่อม</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="rptTypeBooking" checked class="w-4 h-4 accent-amber-600">
+                <span class="text-sm"><i class="fa-solid fa-calendar-check text-amber-600 mr-1"></i>จองห้องประชุม</span>
+              </label>
             </div>
           </div>
+
+          <!-- Status checkboxes -->
+          <div class="mb-4">
+            <label class="text-xs text-slate-500 mb-2 block font-semibold">สถานะ
+              <button onclick="toggleAllStatus(true)" class="ml-2 text-blue-600 hover:underline">เลือกทั้งหมด</button> ·
+              <button onclick="toggleAllStatus(false)" class="text-slate-500 hover:underline">ล้าง</button>
+            </label>
+            <div class="flex flex-wrap gap-3">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" data-status="รับเรื่อง" checked class="rpt-status w-4 h-4 accent-blue-600">
+                <span class="text-sm px-2 py-0.5 rounded-md bg-blue-100 text-blue-700">รับเรื่อง</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" data-status="กำลังดำเนินการ" checked class="rpt-status w-4 h-4 accent-orange-600">
+                <span class="text-sm px-2 py-0.5 rounded-md bg-orange-100 text-orange-700">กำลังดำเนินการ</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" data-status="เสร็จสิ้น" checked class="rpt-status w-4 h-4 accent-emerald-600">
+                <span class="text-sm px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-700">เสร็จสิ้น</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" data-status="ยกเลิก" class="rpt-status w-4 h-4 accent-red-600">
+                <span class="text-sm px-2 py-0.5 rounded-md bg-red-100 text-red-700">ยกเลิก</span>
+              </label>
+            </div>
+          </div>
+
+          <button onclick="loadReport()" id="reportLoadBtn" class="btn-primary w-full">
+            <i class="fa-solid fa-magnifying-glass mr-2"></i>สร้างรายงาน
+          </button>
           <div class="text-xs text-slate-500 mt-2">
             <i class="fa-solid fa-circle-info mr-1"></i>
-            ค่าเริ่มต้น: 30 วันล่าสุดถึงวันนี้
+            ค่าเริ่มต้น: 30 วันล่าสุด · ประเภททั้งหมด · ไม่รวม "ยกเลิก"
           </div>
         </div>
 
@@ -292,13 +370,16 @@
         <!-- Report results (printable) -->
         <div id="reportResults" class="hidden space-y-5 print-area">
 
-          <!-- Print-only header -->
-          <div class="print-only text-center mb-4">
-            <h1 class="text-xl font-bold">รายงานระบบฝ่ายโสตทัศนูปกรณ์</h1>
-            <h2 class="text-base">โรงเรียนเซนต์ดอมินิก</h2>
-            <div class="text-sm mt-1" id="reportPrintRange"></div>
-            <div class="text-xs mt-1" id="reportPrintGenerated"></div>
-          </div>
+          <!-- Print-only header — school logo + title + meta -->
+          <header class="print-header print-only">
+            <img src="assets/img/school_logo.webp" alt="logo">
+            <div class="title-block">
+              <h1>โรงเรียนเซนต์ดอมินิก</h1>
+              <h2>รายงานสรุปงานฝ่ายโสตทัศนูปกรณ์</h2>
+              <div class="meta" id="reportPrintRange"></div>
+              <div class="meta" id="reportPrintGenerated"></div>
+            </div>
+          </header>
 
           <!-- Action buttons (hidden when printing) -->
           <div class="card no-print flex flex-wrap gap-2">
@@ -323,7 +404,7 @@
 
           <!-- Status summary -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="card">
+            <div class="card report-repair-section">
               <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
                 <i class="fa-solid fa-wrench text-blue-600"></i>สรุปแจ้งซ่อมตามสถานะ
               </h3>
@@ -334,7 +415,7 @@
                 <tbody id="rptRepairStatus"></tbody>
               </table>
             </div>
-            <div class="card">
+            <div class="card report-booking-section">
               <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
                 <i class="fa-solid fa-calendar-check text-amber-600"></i>สรุปจองห้องตามสถานะ
               </h3>
@@ -349,7 +430,7 @@
 
           <!-- KPI by admin -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="card">
+            <div class="card report-repair-section">
               <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
                 <i class="fa-solid fa-user-gear text-blue-600"></i>KPI แจ้งซ่อม (ตามผู้รับผิดชอบ)
               </h3>
@@ -360,7 +441,7 @@
                 <tbody id="rptRepairKpi"></tbody>
               </table>
             </div>
-            <div class="card">
+            <div class="card report-booking-section">
               <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
                 <i class="fa-solid fa-user-gear text-amber-600"></i>KPI จองห้อง (ตามผู้รับผิดชอบ)
               </h3>
@@ -374,7 +455,7 @@
           </div>
 
           <!-- Repair table -->
-          <div class="card">
+          <div class="card report-repair-section">
             <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
               <i class="fa-solid fa-wrench text-blue-600"></i>รายการแจ้งซ่อม
               <span id="rptRepairCount" class="ml-auto text-xs text-slate-500"></span>
@@ -400,7 +481,7 @@
           </div>
 
           <!-- Booking table -->
-          <div class="card">
+          <div class="card report-booking-section">
             <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
               <i class="fa-solid fa-calendar-check text-amber-600"></i>รายการจองห้องประชุม
               <span id="rptBookingCount" class="ml-auto text-xs text-slate-500"></span>
@@ -869,11 +950,24 @@
     }
   }
 
+  function toggleAllStatus(checked) {
+    document.querySelectorAll('.rpt-status').forEach(cb => cb.checked = checked);
+  }
+
   function loadReport() {
     const from = document.getElementById('reportDateFrom').value;
     const to   = document.getElementById('reportDateTo').value;
     if (!from || !to) { showToast('error', 'กรุณาเลือกช่วงวันที่'); return; }
     if (from > to) { showToast('error', 'วันที่เริ่มต้องไม่เกินวันที่สิ้นสุด'); return; }
+
+    const types = [];
+    if (document.getElementById('rptTypeRepair').checked) types.push('repair');
+    if (document.getElementById('rptTypeBooking').checked) types.push('booking');
+    if (!types.length) { showToast('error', 'กรุณาเลือกอย่างน้อย 1 ประเภทงาน'); return; }
+
+    const statuses = [];
+    document.querySelectorAll('.rpt-status:checked').forEach(cb => statuses.push(cb.dataset.status));
+    if (!statuses.length) { showToast('error', 'กรุณาเลือกอย่างน้อย 1 สถานะ'); return; }
 
     const btn = document.getElementById('reportLoadBtn');
     btn.disabled = true;
@@ -885,7 +979,10 @@
     fetch(apiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(authBody({ type: 'reportData', dateFrom: from, dateTo: to })),
+      body: JSON.stringify(authBody({
+        type: 'reportData', dateFrom: from, dateTo: to,
+        types: types.join(','), statuses: statuses.join(',')
+      })),
     })
       .then(r => r.json())
       .then(data => {
@@ -910,7 +1007,7 @@
   }
 
   function renderReport(d) {
-    // Print header (date range + generated time)
+    // Print header (date range + generated time + filters)
     const fmtThai = s => {
       const [y, m, day] = s.split('-');
       return `${day}/${m}/${y}`;
@@ -918,7 +1015,13 @@
     document.getElementById('reportPrintRange').textContent =
       `ช่วงเวลา ${fmtThai(d.dateFrom)} ถึง ${fmtThai(d.dateTo)}`;
     document.getElementById('reportPrintGenerated').textContent =
-      `สร้างรายงานเมื่อ ${new Date().toLocaleString('th-TH')}`;
+      `สร้างรายงานเมื่อ ${new Date().toLocaleString('th-TH')} · กรอง: สถานะ ${(d.statuses || '').replace(/,/g, ', ')}`;
+
+    // Show/hide repair vs booking sections based on filters
+    const showRepair  = (d.types || '').indexOf('repair')  >= 0;
+    const showBooking = (d.types || '').indexOf('booking') >= 0;
+    document.querySelectorAll('.report-repair-section').forEach(el => el.style.display = showRepair ? '' : 'none');
+    document.querySelectorAll('.report-booking-section').forEach(el => el.style.display = showBooking ? '' : 'none');
 
     // Top stat cards
     const repairs = d.repairs || [];
@@ -986,36 +1089,97 @@
     if (typeof XLSX === 'undefined') { showToast('error', 'รอโหลด library กรุณาลองใหม่'); return; }
     const d = _reportData;
     const wb = XLSX.utils.book_new();
+    const showRepair  = (d.types || '').indexOf('repair')  >= 0;
+    const showBooking = (d.types || '').indexOf('booking') >= 0;
 
-    // Repair sheet
-    const repairRows = [['Ticket','วันที่','ผู้แจ้ง','เบอร์','อุปกรณ์','สถานที่','อาการ','สถานะ','ผู้รับผิดชอบ']];
-    (d.repairs || []).forEach(r => repairRows.push([
-      r.ticket, (r.createdAt||'').substring(0,10), r.name, r.phone, r.equipment, r.location, r.description||'', r.status, r.updatedBy||''
-    ]));
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(repairRows), 'แจ้งซ่อม');
+    // Helper: build a sheet from rows with bold header + column widths + freeze first row
+    const buildSheet = (rows, widths) => {
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      ws['!cols'] = widths.map(w => ({ wch: w }));
+      ws['!freeze'] = { ySplit: 1 };
+      // Apply bold style to header row (xlsx-js style format)
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const cell = ws[XLSX.utils.encode_cell({ r: 0, c })];
+        if (cell) cell.s = { font: { bold: true, color: { rgb: 'FFFFFFFF' } }, fill: { fgColor: { rgb: 'FF1D4ED8' } }, alignment: { horizontal: 'center', vertical: 'center' } };
+      }
+      return ws;
+    };
 
-    // Booking sheet
-    const bookingRows = [['Ticket','วันใช้','เริ่ม','สิ้นสุด','ห้อง','ผู้จอง','เบอร์','จำนวนคน','วัตถุประสงค์','อุปกรณ์','สถานะ','ผู้รับผิดชอบ']];
-    (d.bookings || []).forEach(b => bookingRows.push([
-      b.ticket, b.date, b.startTime, b.endTime, b.room, b.name, b.phone, b.attendees, b.purpose, b.equipment, b.status, b.updatedBy||''
-    ]));
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(bookingRows), 'จองห้องประชุม');
+    // ========== Summary sheet (first) ==========
+    const sumRows = [
+      ['รายงานสรุปงานฝ่ายโสตทัศนูปกรณ์'],
+      ['โรงเรียนเซนต์ดอมินิก'],
+      [`ช่วงเวลา: ${d.dateFrom} ถึง ${d.dateTo}`],
+      [`สร้างเมื่อ: ${new Date().toLocaleString('th-TH')}`],
+      [],
+      ['ยอดรวม'],
+      ['รายการ', 'จำนวน'],
+      ['แจ้งซ่อมรวม', (d.repairs || []).length],
+      ['จองห้องประชุมรวม', (d.bookings || []).length],
+      ['เสร็จสิ้นแล้ว', [...(d.repairs||[]), ...(d.bookings||[])].filter(j => j.status === 'เสร็จสิ้น').length],
+      ['กำลังดำเนินการ', [...(d.repairs||[]), ...(d.bookings||[])].filter(j => ['รับเรื่อง','กำลังดำเนินการ'].includes(j.status)).length],
+      [],
+    ];
+    if (showRepair && (d.repairStatusSummary||[]).length) {
+      sumRows.push(['สรุปแจ้งซ่อมตามสถานะ']);
+      sumRows.push(['สถานะ','จำนวน']);
+      d.repairStatusSummary.forEach(i => sumRows.push([i.status, i.count]));
+      sumRows.push([]);
+    }
+    if (showBooking && (d.bookingStatusSummary||[]).length) {
+      sumRows.push(['สรุปจองห้องตามสถานะ']);
+      sumRows.push(['สถานะ','จำนวน']);
+      d.bookingStatusSummary.forEach(i => sumRows.push([i.status, i.count]));
+      sumRows.push([]);
+    }
+    if (showRepair && (d.repairKpi||[]).length) {
+      sumRows.push(['KPI แจ้งซ่อม (ตามผู้รับผิดชอบ)']);
+      sumRows.push(['ผู้รับผิดชอบ','จำนวน']);
+      d.repairKpi.forEach(i => sumRows.push([i.admin, i.count]));
+      sumRows.push([]);
+    }
+    if (showBooking && (d.bookingKpi||[]).length) {
+      sumRows.push(['KPI จองห้อง (ตามผู้รับผิดชอบ)']);
+      sumRows.push(['ผู้รับผิดชอบ','จำนวน']);
+      d.bookingKpi.forEach(i => sumRows.push([i.admin, i.count]));
+    }
+    const sumWs = XLSX.utils.aoa_to_sheet(sumRows);
+    sumWs['!cols'] = [{ wch: 35 }, { wch: 12 }];
+    sumWs['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } },
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 1 } },
+      { s: { r: 2, c: 0 }, e: { r: 2, c: 1 } },
+      { s: { r: 3, c: 0 }, e: { r: 3, c: 1 } },
+    ];
+    XLSX.utils.book_append_sheet(wb, sumWs, 'สรุป');
 
-    // Summary sheet
-    const sumRows = [['ประเภท','รายการ','จำนวน'], ['', '', '']];
-    (d.repairStatusSummary || []).forEach(i => sumRows.push(['แจ้งซ่อม-สถานะ', i.status, i.count]));
-    (d.bookingStatusSummary || []).forEach(i => sumRows.push(['จองห้อง-สถานะ', i.status, i.count]));
-    (d.repairKpi || []).forEach(i => sumRows.push(['แจ้งซ่อม-ผู้รับผิดชอบ', i.admin, i.count]));
-    (d.bookingKpi || []).forEach(i => sumRows.push(['จองห้อง-ผู้รับผิดชอบ', i.admin, i.count]));
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sumRows), 'สรุป');
+    // ========== Repair sheet ==========
+    if (showRepair) {
+      const repairRows = [['Ticket','วันที่แจ้ง','ผู้แจ้ง','เบอร์โทร','อุปกรณ์','สถานที่','อาการ','สถานะ','ผู้รับผิดชอบ']];
+      (d.repairs || []).forEach(r => repairRows.push([
+        r.ticket, (r.createdAt||'').substring(0,10), r.name||'', r.phone||'', r.equipment||'', r.location||'', r.description||'', r.status||'', r.updatedBy||''
+      ]));
+      const repairWidths = [16, 12, 22, 14, 22, 24, 35, 14, 18];
+      XLSX.utils.book_append_sheet(wb, buildSheet(repairRows, repairWidths), 'แจ้งซ่อม');
+    }
+
+    // ========== Booking sheet ==========
+    if (showBooking) {
+      const bookingRows = [['Ticket','วันใช้','เริ่ม','สิ้นสุด','ห้อง','ผู้จอง','เบอร์โทร','จำนวนคน','วัตถุประสงค์','อุปกรณ์','หมายเหตุ','สถานะ','ผู้รับผิดชอบ']];
+      (d.bookings || []).forEach(b => bookingRows.push([
+        b.ticket, b.date, b.startTime, b.endTime, b.room||'', b.name||'', b.phone||'', b.attendees||'', b.purpose||'', b.equipment||'', b.note||'', b.status||'', b.updatedBy||''
+      ]));
+      const bookingWidths = [16, 12, 8, 8, 20, 22, 14, 10, 30, 20, 25, 14, 18];
+      XLSX.utils.book_append_sheet(wb, buildSheet(bookingRows, bookingWidths), 'จองห้องประชุม');
+    }
 
     XLSX.writeFile(wb, `รายงาน_${d.dateFrom}_${d.dateTo}.xlsx`);
   }
 
   function downloadPdfReport() {
     if (!_reportData) { showToast('error', 'ยังไม่มีข้อมูล กรุณาสร้างรายงานก่อน'); return; }
-    // For Thai PDF support without bundling fonts, use browser print → "Save as PDF"
-    showToast('success', 'กรุณาเลือก "Save as PDF" ในหน้าจอพิมพ์');
+    showToast('success', 'กรุณาเลือก "Save as PDF" / "บันทึกเป็น PDF" ในหน้าจอพิมพ์');
     setTimeout(() => window.print(), 600);
   }
 
