@@ -322,10 +322,12 @@
 
           <!-- Status checkboxes -->
           <div class="mb-4">
-            <label class="text-xs text-slate-500 mb-2 block font-semibold">สถานะ
-              <button onclick="toggleAllStatus(true)" class="ml-2 text-blue-600 hover:underline">เลือกทั้งหมด</button> ·
-              <button onclick="toggleAllStatus(false)" class="text-slate-500 hover:underline">ล้าง</button>
-            </label>
+            <div class="text-xs text-slate-500 mb-2 font-semibold flex items-center gap-2">
+              <span>สถานะ</span>
+              <button type="button" onclick="toggleAllStatus(true)" class="text-blue-600 hover:underline">เลือกทั้งหมด</button>
+              <span>·</span>
+              <button type="button" onclick="toggleAllStatus(false)" class="text-slate-500 hover:underline">ล้าง</button>
+            </div>
             <div class="flex flex-wrap gap-3">
               <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" data-status="รับเรื่อง" checked class="rpt-status w-4 h-4 accent-blue-600">
