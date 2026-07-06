@@ -1648,7 +1648,7 @@
       </div>
       <div class="bg-indigo-50 rounded-xl p-3 mb-2 text-center">
         <div class="font-bold text-indigo-800"><i class="fa-solid fa-box mr-1"></i>${esc(b.equipment)} <span class="text-indigo-600">x${esc(b.qty)}</span></div>
-        <div class="text-sm text-indigo-600">${esc(b.date)}</div>
+        <div class="text-sm text-indigo-600">${esc(b.date)}${(b.endDate && b.endDate !== b.date) ? ' → ' + esc(b.endDate) : ''}</div>
         <div class="text-sm text-slate-600">${esc(b.startTime)} – ${esc(b.endTime)} น.</div>
       </div>
       <div class="space-y-1.5 text-sm text-slate-600">
