@@ -514,6 +514,10 @@
                 <input type="checkbox" id="rptTypeBooking" checked class="w-4 h-4 accent-amber-600">
                 <span class="text-sm"><i class="fa-solid fa-calendar-check text-amber-600 mr-1"></i>จองห้องประชุม</span>
               </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" id="rptTypeEquipment" checked class="w-4 h-4 accent-indigo-600">
+                <span class="text-sm"><i class="fa-solid fa-box text-indigo-600 mr-1"></i>จองอุปกรณ์</span>
+              </label>
             </div>
           </div>
 
@@ -702,6 +706,46 @@
                   </tr>
                 </thead>
                 <tbody id="rptBookingTable"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Equipment: status + KPI -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 report-equipment-section">
+            <div class="card">
+              <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-box text-indigo-600"></i>สรุปจองอุปกรณ์ตามสถานะ</h3>
+              <table class="w-full text-sm"><thead class="text-slate-500 text-xs border-b"><tr><th class="text-left py-1.5">สถานะ</th><th class="text-right py-1.5">จำนวน</th></tr></thead><tbody id="rptEquipmentStatus"></tbody></table>
+            </div>
+            <div class="card">
+              <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2"><i class="fa-solid fa-user-gear text-indigo-600"></i>KPI จองอุปกรณ์ (ตามผู้รับผิดชอบ)</h3>
+              <table class="w-full text-sm"><thead class="text-slate-500 text-xs border-b"><tr><th class="text-left py-1.5">ผู้รับผิดชอบ</th><th class="text-right py-1.5">จำนวน</th></tr></thead><tbody id="rptEquipmentKpi"></tbody></table>
+            </div>
+          </div>
+
+          <!-- Equipment table -->
+          <div class="card report-equipment-section">
+            <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2">
+              <i class="fa-solid fa-box text-indigo-600"></i>รายการจองอุปกรณ์
+              <span id="rptEquipmentCount" class="ml-auto text-xs text-slate-500"></span>
+            </h3>
+            <div class="overflow-x-auto">
+              <table class="w-full text-xs">
+                <thead class="text-slate-500 border-b">
+                  <tr>
+                    <th class="text-left py-1.5 px-1.5">Ticket</th>
+                    <th class="text-left py-1.5 px-1.5">วันยืม</th>
+                    <th class="text-left py-1.5 px-1.5">วันคืน</th>
+                    <th class="text-left py-1.5 px-1.5">เวลา</th>
+                    <th class="text-left py-1.5 px-1.5">อุปกรณ์</th>
+                    <th class="text-left py-1.5 px-1.5">จำนวน</th>
+                    <th class="text-left py-1.5 px-1.5">ผู้จอง</th>
+                    <th class="text-left py-1.5 px-1.5">เบอร์</th>
+                    <th class="text-left py-1.5 px-1.5">วัตถุประสงค์</th>
+                    <th class="text-left py-1.5 px-1.5">สถานะ</th>
+                    <th class="text-left py-1.5 px-1.5">ผู้รับผิดชอบ</th>
+                  </tr>
+                </thead>
+                <tbody id="rptEquipmentTable"></tbody>
               </table>
             </div>
           </div>
@@ -1177,6 +1221,7 @@
     const types = [];
     if (document.getElementById('rptTypeRepair').checked) types.push('repair');
     if (document.getElementById('rptTypeBooking').checked) types.push('booking');
+    if (document.getElementById('rptTypeEquipment').checked) types.push('equipment');
     if (!types.length) { showToast('error', 'กรุณาเลือกอย่างน้อย 1 ประเภทงาน'); return; }
 
     const statuses = [];
@@ -1234,14 +1279,17 @@
     // Show/hide repair vs booking sections based on filters
     const showRepair  = (d.types || '').indexOf('repair')  >= 0;
     const showBooking = (d.types || '').indexOf('booking') >= 0;
+    const showEquipment = (d.types || '').indexOf('equipment') >= 0;
     document.querySelectorAll('.report-repair-section').forEach(el => el.style.display = showRepair ? '' : 'none');
     document.querySelectorAll('.report-booking-section').forEach(el => el.style.display = showBooking ? '' : 'none');
+    document.querySelectorAll('.report-equipment-section').forEach(el => el.style.display = showEquipment ? '' : 'none');
 
     // Top stat cards
     const repairs = d.repairs || [];
     const bookings = d.bookings || [];
-    const doneCount = [...repairs, ...bookings].filter(j => j.status === 'เสร็จสิ้น').length;
-    const pendingCount = [...repairs, ...bookings].filter(j => ['รับเรื่อง','กำลังดำเนินการ'].includes(j.status)).length;
+    const equips = d.equipmentBookings || [];
+    const doneCount = [...repairs, ...bookings, ...equips].filter(j => j.status === 'เสร็จสิ้น').length;
+    const pendingCount = [...repairs, ...bookings, ...equips].filter(j => ['รับเรื่อง','กำลังดำเนินการ'].includes(j.status)).length;
     document.getElementById('rptStatRepairTotal').textContent  = repairs.length;
     document.getElementById('rptStatBookingTotal').textContent = bookings.length;
     document.getElementById('rptStatDone').textContent         = doneCount;
@@ -1253,6 +1301,7 @@
     `).join('') || '<tr><td colspan="2" class="py-3 text-center text-slate-400">ไม่มีข้อมูล</td></tr>';
     document.getElementById('rptRepairStatus').innerHTML  = renderStatusRows(d.repairStatusSummary || []);
     document.getElementById('rptBookingStatus').innerHTML = renderStatusRows(d.bookingStatusSummary || []);
+    document.getElementById('rptEquipmentStatus').innerHTML = renderStatusRows(d.equipmentStatusSummary || []);
 
     // KPI tables
     const renderKpiRows = items => items.map(i => `
@@ -1260,6 +1309,7 @@
     `).join('') || '<tr><td colspan="2" class="py-3 text-center text-slate-400">ไม่มีข้อมูล</td></tr>';
     document.getElementById('rptRepairKpi').innerHTML  = renderKpiRows(d.repairKpi || []);
     document.getElementById('rptBookingKpi').innerHTML = renderKpiRows(d.bookingKpi || []);
+    document.getElementById('rptEquipmentKpi').innerHTML = renderKpiRows(d.equipmentKpi || []);
 
     // Repair table
     const fmtDate = s => s ? s.substring(0, 10) : '';
@@ -1294,6 +1344,23 @@
         <td class="py-1.5 px-1.5">${esc(b.updatedBy || '-')}</td>
       </tr>
     `).join('') || '<tr><td colspan="10" class="py-3 text-center text-slate-400">ไม่มีข้อมูล</td></tr>';
+
+    document.getElementById('rptEquipmentCount').textContent = `(${equips.length} รายการ)`;
+    document.getElementById('rptEquipmentTable').innerHTML = equips.map(b => `
+      <tr class="border-b border-slate-100 hover:bg-slate-50">
+        <td class="py-1.5 px-1.5 font-mono">${esc(b.ticket)}</td>
+        <td class="py-1.5 px-1.5">${esc(b.date)}</td>
+        <td class="py-1.5 px-1.5">${esc(b.endDate || b.date)}</td>
+        <td class="py-1.5 px-1.5">${esc(b.startTime)}-${esc(b.endTime)}</td>
+        <td class="py-1.5 px-1.5">${esc(b.equipment)}</td>
+        <td class="py-1.5 px-1.5 text-center">${esc(b.qty)}</td>
+        <td class="py-1.5 px-1.5">${esc(b.name)}</td>
+        <td class="py-1.5 px-1.5 font-mono">${esc(b.phone || '')}</td>
+        <td class="py-1.5 px-1.5">${esc(b.purpose || '')}</td>
+        <td class="py-1.5 px-1.5">${badge(b.status)}</td>
+        <td class="py-1.5 px-1.5">${esc(b.updatedBy || '-')}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="11" class="py-3 text-center text-slate-400">ไม่มีข้อมูล</td></tr>';
   }
 
   function printReport() { window.print(); }
@@ -1305,6 +1372,7 @@
     const wb = XLSX.utils.book_new();
     const showRepair  = (d.types || '').indexOf('repair')  >= 0;
     const showBooking = (d.types || '').indexOf('booking') >= 0;
+    const showEquipment = (d.types || '').indexOf('equipment') >= 0;
 
     // Helper: build a sheet from rows with bold header + column widths + freeze first row
     const buildSheet = (rows, widths) => {
@@ -1331,8 +1399,9 @@
       ['รายการ', 'จำนวน'],
       ['แจ้งซ่อมรวม', (d.repairs || []).length],
       ['จองห้องประชุมรวม', (d.bookings || []).length],
-      ['เสร็จสิ้นแล้ว', [...(d.repairs||[]), ...(d.bookings||[])].filter(j => j.status === 'เสร็จสิ้น').length],
-      ['กำลังดำเนินการ', [...(d.repairs||[]), ...(d.bookings||[])].filter(j => ['รับเรื่อง','กำลังดำเนินการ'].includes(j.status)).length],
+      ['จองอุปกรณ์รวม', (d.equipmentBookings || []).length],
+      ['เสร็จสิ้นแล้ว', [...(d.repairs||[]), ...(d.bookings||[]), ...(d.equipmentBookings||[])].filter(j => j.status === 'เสร็จสิ้น').length],
+      ['กำลังดำเนินการ', [...(d.repairs||[]), ...(d.bookings||[]), ...(d.equipmentBookings||[])].filter(j => ['รับเรื่อง','กำลังดำเนินการ'].includes(j.status)).length],
       [],
     ];
     if (showRepair && (d.repairStatusSummary||[]).length) {
@@ -1347,6 +1416,12 @@
       d.bookingStatusSummary.forEach(i => sumRows.push([i.status, i.count]));
       sumRows.push([]);
     }
+    if (showEquipment && (d.equipmentStatusSummary||[]).length) {
+      sumRows.push(['สรุปจองอุปกรณ์ตามสถานะ']);
+      sumRows.push(['สถานะ','จำนวน']);
+      d.equipmentStatusSummary.forEach(i => sumRows.push([i.status, i.count]));
+      sumRows.push([]);
+    }
     if (showRepair && (d.repairKpi||[]).length) {
       sumRows.push(['KPI แจ้งซ่อม (ตามผู้รับผิดชอบ)']);
       sumRows.push(['ผู้รับผิดชอบ','จำนวน']);
@@ -1357,6 +1432,12 @@
       sumRows.push(['KPI จองห้อง (ตามผู้รับผิดชอบ)']);
       sumRows.push(['ผู้รับผิดชอบ','จำนวน']);
       d.bookingKpi.forEach(i => sumRows.push([i.admin, i.count]));
+      sumRows.push([]);
+    }
+    if (showEquipment && (d.equipmentKpi||[]).length) {
+      sumRows.push(['KPI จองอุปกรณ์ (ตามผู้รับผิดชอบ)']);
+      sumRows.push(['ผู้รับผิดชอบ','จำนวน']);
+      d.equipmentKpi.forEach(i => sumRows.push([i.admin, i.count]));
     }
     const sumWs = XLSX.utils.aoa_to_sheet(sumRows);
     sumWs['!cols'] = [{ wch: 35 }, { wch: 12 }];
@@ -1386,6 +1467,15 @@
       ]));
       const bookingWidths = [16, 12, 8, 8, 20, 22, 14, 10, 30, 20, 25, 14, 18];
       XLSX.utils.book_append_sheet(wb, buildSheet(bookingRows, bookingWidths), 'จองห้องประชุม');
+    }
+
+    if (showEquipment) {
+      const equipRows = [['Ticket','วันยืม','วันคืน','เริ่ม','สิ้นสุด','อุปกรณ์','จำนวน','ผู้จอง','เบอร์โทร','วัตถุประสงค์','หมายเหตุ','สถานะ','ผู้รับผิดชอบ']];
+      (d.equipmentBookings || []).forEach(b => equipRows.push([
+        b.ticket, b.date, b.endDate||b.date, b.startTime, b.endTime, b.equipment||'', b.qty||'', b.name||'', b.phone||'', b.purpose||'', b.note||'', b.status||'', b.updatedBy||''
+      ]));
+      const equipWidths = [16, 12, 12, 8, 8, 20, 8, 22, 14, 30, 25, 14, 18];
+      XLSX.utils.book_append_sheet(wb, buildSheet(equipRows, equipWidths), 'จองอุปกรณ์');
     }
 
     XLSX.writeFile(wb, `รายงาน_${d.dateFrom}_${d.dateTo}.xlsx`);
