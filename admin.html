@@ -131,6 +131,9 @@
           <button onclick="showAdminTab('rooms')" class="tab-btn" data-tab="rooms">
             <i class="fa-solid fa-door-open mr-2"></i>จัดการห้อง
           </button>
+          <button onclick="showAdminTab('equipment')" class="tab-btn" data-tab="equipment">
+            <i class="fa-solid fa-box-seam mr-2"></i>จัดการอุปกรณ์
+          </button>
           <button onclick="showAdminTab('report')" class="tab-btn" data-tab="report">
             <i class="fa-solid fa-file-lines mr-2"></i>พิมพ์รายงาน
           </button>
@@ -369,6 +372,92 @@
               ยกเลิก
             </button>
             <button onclick="saveRoom()" class="flex-1 py-2 px-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium">
+              บันทึก
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== TAB: จัดการอุปกรณ์ ===== -->
+      <section id="tab-equipment" class="tab-content hidden">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-slate-700">
+            <i class="fa-solid fa-box-seam mr-2 text-blue-600"></i>อุปกรณ์ทั้งหมด
+          </h3>
+          <button onclick="openEquipModal(null)" class="btn-primary px-4">
+            <i class="fa-solid fa-plus mr-2"></i>เพิ่มอุปกรณ์
+          </button>
+        </div>
+        <div id="loadingEquip" class="text-center py-10 text-slate-400">
+          <i class="fa-solid fa-spinner fa-spin text-3xl"></i>
+        </div>
+        <div id="equipList" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
+        <div id="emptyEquip" class="hidden text-center py-10 text-slate-400">
+          <i class="fa-solid fa-box text-4xl mb-3"></i>
+          <p>ยังไม่มีอุปกรณ์ในระบบ</p>
+        </div>
+      </section>
+
+      <!-- ===== EDIT/ADD EQUIPMENT MODAL ===== -->
+      <div id="equipModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+          <h3 id="equipModalTitle" class="text-lg font-bold text-slate-800">เพิ่มอุปกรณ์</h3>
+          <input type="hidden" id="equipIsEdit" value="0" />
+          <div class="grid sm:grid-cols-2 gap-3">
+            <div class="sm:col-span-2">
+              <label class="form-label required">รหัสอุปกรณ์ (id)</label>
+              <input type="text" id="equipId" class="form-input" placeholder="เช่น โปรเจกเตอร์" />
+              <p id="equipIdHint" class="text-xs text-slate-400 mt-1">ใช้เป็นค่าอ้างอิงในการจอง — ตั้งครั้งเดียว แก้ไม่ได้ภายหลัง</p>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="form-label required">ชื่อที่แสดง (label)</label>
+              <input type="text" id="equipLabel" class="form-input" placeholder="เช่น โปรเจกเตอร์ Full HD" />
+            </div>
+            <div>
+              <label class="form-label">ชื่อย่อ</label>
+              <input type="text" id="equipShort" class="form-input" placeholder="เช่น โปรเจกเตอร์" />
+            </div>
+            <div>
+              <label class="form-label required">จำนวนสต็อก (ชิ้น)</label>
+              <input type="number" id="equipStock" class="form-input" placeholder="5" min="0" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="form-label">หมวดหมู่</label>
+              <input type="text" id="equipCategory" class="form-input" placeholder="เช่น อุปกรณ์ภาพ / อุปกรณ์เสียง" />
+            </div>
+            <div>
+              <label class="form-label">ไอคอน (FontAwesome)</label>
+              <input type="text" id="equipIcon" class="form-input" placeholder="fa-box" />
+              <p class="text-xs text-slate-400 mt-1">เช่น fa-video, fa-microphone, fa-laptop</p>
+            </div>
+            <div>
+              <label class="form-label">ลำดับการแสดง</label>
+              <input type="number" id="equipSortOrder" class="form-input" placeholder="0" />
+            </div>
+            <div>
+              <label class="form-label">สีไอคอน (tailwind)</label>
+              <input type="text" id="equipIconColor" class="form-input" placeholder="text-blue-700" />
+            </div>
+            <div>
+              <label class="form-label">พื้นหลังไอคอน (tailwind)</label>
+              <input type="text" id="equipIconBg" class="form-input" placeholder="bg-blue-200" />
+            </div>
+            <div class="sm:col-span-2">
+              <label class="form-label">คุณสมบัติ / features <span class="text-xs text-slate-400">(บรรทัดละ 1 รายการ · ไม่รองรับ emoji)</span></label>
+              <textarea id="equipFeatures" class="form-input" rows="3" placeholder="Full HD&#10;HDMI"></textarea>
+            </div>
+            <div class="sm:col-span-2">
+              <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                <input type="checkbox" id="equipActive" class="w-4 h-4" checked />
+                เปิดใช้งาน (แสดงในหน้าจองอุปกรณ์)
+              </label>
+            </div>
+          </div>
+          <div class="flex gap-2 pt-1">
+            <button onclick="document.getElementById('equipModal').classList.add('hidden')" class="flex-1 py-2 px-3 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 text-sm font-medium">
+              ยกเลิก
+            </button>
+            <button onclick="saveEquip()" class="flex-1 py-2 px-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 text-sm font-medium">
               บันทึก
             </button>
           </div>
@@ -1021,12 +1110,17 @@
       showToast('error', 'ไม่มีสิทธิ์เข้าถึงหน้าจัดการห้อง');
       return;
     }
+    if (tab === 'equipment' && _session && _session.role !== 'admin') {
+      showToast('error', 'ไม่มีสิทธิ์เข้าถึงหน้าจัดการอุปกรณ์');
+      return;
+    }
     document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
     document.querySelectorAll('#adminTabNav .tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-' + tab).classList.remove('hidden');
     document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
     if (tab === 'admins') loadAdmins();
     if (tab === 'rooms') loadRooms();
+    if (tab === 'equipment') loadEquipment();
     if (tab === 'all' && !_allRepairs.length && !_allBookings.length) fetchAll();
     if (tab === 'report') initReportDates();
   }
@@ -1880,6 +1974,130 @@
       .then(res => res.json())
       .then(data => {
         if (data.success) { showToast('success', `ลบห้อง "${r.label}" แล้ว ✅`); loadRooms(); }
+        else showToast('error', data.error || 'ลบไม่สำเร็จ');
+      })
+      .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
+  }
+
+  // ============================================================
+  // EQUIPMENT MANAGEMENT (table dept_equipment — ผ่าน worker → JSP)
+  // ============================================================
+  let _equipment = [];
+
+  function loadEquipment() {
+    document.getElementById('loadingEquip').classList.remove('hidden');
+    document.getElementById('equipList').innerHTML = '';
+    document.getElementById('emptyEquip').classList.add('hidden');
+    fetch(apiUrl(), {
+      method: 'POST', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(authBody({ type: 'getEquipment' })),
+    })
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('loadingEquip').classList.add('hidden');
+        if (data.success) { _equipment = data.equipment || []; renderEquipment(_equipment); }
+        else showToast('error', 'โหลดข้อมูลอุปกรณ์ไม่สำเร็จ: ' + data.error);
+      })
+      .catch(() => { document.getElementById('loadingEquip').classList.add('hidden'); showToast('error', 'ไม่สามารถเชื่อมต่อได้'); });
+  }
+
+  function renderEquipment(items) {
+    const list = document.getElementById('equipList');
+    list.innerHTML = '';
+    if (!items.length) { document.getElementById('emptyEquip').classList.remove('hidden'); return; }
+    items.forEach((r, i) => {
+      const status = r.active
+        ? '<span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded-md text-xs">เปิดใช้</span>'
+        : '<span class="bg-red-100 text-red-700 px-1.5 py-0.5 rounded-md text-xs">ปิดใช้</span>';
+      const feats = (r.features || []).map(f => `<span class="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-xs">${esc(f)}</span>`).join(' ');
+      list.insertAdjacentHTML('beforeend', `
+        <div class="card flex items-start gap-3">
+          <div class="w-11 h-11 ${esc(r.iconBg || 'bg-slate-200')} rounded-full flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid ${esc(r.icon || 'fa-box')} ${esc(r.iconColor || 'text-slate-700')}"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold text-slate-800 truncate">${esc(r.label)}</div>
+            <div class="text-xs text-slate-500">${esc(r.category || '')}</div>
+            <div class="text-xs text-slate-500 mt-0.5"><i class="fa-solid fa-boxes-stacked mr-1"></i>สต็อก ${r.stock != null ? r.stock : '-'} ชิ้น · ${status}</div>
+            <div class="flex flex-wrap gap-1 mt-1">${feats}</div>
+          </div>
+          <div class="flex flex-col gap-1 flex-shrink-0">
+            <button onclick="openEquipModal(${i})" class="p-2 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg" title="แก้ไข"><i class="fa-solid fa-pen text-sm"></i></button>
+            <button onclick="deleteEquip(${i})" class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg" title="ลบ"><i class="fa-solid fa-trash text-sm"></i></button>
+          </div>
+        </div>
+      `);
+    });
+  }
+
+  function openEquipModal(index) {
+    const isEdit = index !== null && index !== undefined;
+    document.getElementById('equipIsEdit').value = isEdit ? '1' : '0';
+    document.getElementById('equipModalTitle').textContent = isEdit ? 'แก้ไขอุปกรณ์' : 'เพิ่มอุปกรณ์';
+    const idEl = document.getElementById('equipId');
+    idEl.readOnly = isEdit;
+    idEl.classList.toggle('bg-slate-100', isEdit);
+    document.getElementById('equipIdHint').textContent = isEdit
+      ? 'รหัสอุปกรณ์แก้ไม่ได้ (ผูกกับข้อมูลการจองเดิม)'
+      : 'ใช้เป็นค่าอ้างอิงในการจอง — ตั้งครั้งเดียว แก้ไม่ได้ภายหลัง';
+    const r = isEdit ? _equipment[index] : {};
+    idEl.value = r.id || '';
+    document.getElementById('equipLabel').value = r.label || '';
+    document.getElementById('equipShort').value = r.short || '';
+    document.getElementById('equipStock').value = (r.stock != null ? r.stock : '');
+    document.getElementById('equipCategory').value = r.category || '';
+    document.getElementById('equipIcon').value = r.icon || '';
+    document.getElementById('equipIconColor').value = r.iconColor || '';
+    document.getElementById('equipIconBg').value = r.iconBg || '';
+    document.getElementById('equipSortOrder').value = (r.sortOrder != null ? r.sortOrder : '');
+    document.getElementById('equipFeatures').value = (r.features || []).join('\n');
+    document.getElementById('equipActive').checked = isEdit ? !!r.active : true;
+    document.getElementById('equipModal').classList.remove('hidden');
+    document.getElementById(isEdit ? 'equipLabel' : 'equipId').focus();
+  }
+
+  function saveEquip() {
+    if (!_session || _session.role !== 'admin') { showToast('error', 'ไม่มีสิทธิ์ (เฉพาะ admin หัวหน้า)'); return; }
+    const isEdit = document.getElementById('equipIsEdit').value === '1';
+    const id = document.getElementById('equipId').value.trim();
+    const label = document.getElementById('equipLabel').value.trim();
+    if (!id) { showToast('error', 'กรุณากรอกรหัสอุปกรณ์'); return; }
+    if (!label) { showToast('error', 'กรุณากรอกชื่ออุปกรณ์'); return; }
+    const features = document.getElementById('equipFeatures').value.split('\n').map(s => s.trim()).filter(Boolean);
+    const payload = {
+      type: isEdit ? 'updateEquipment' : 'addEquipment',
+      id, label,
+      short: document.getElementById('equipShort').value.trim(),
+      stock: document.getElementById('equipStock').value.trim(),
+      category: document.getElementById('equipCategory').value.trim(),
+      icon: document.getElementById('equipIcon').value.trim(),
+      iconColor: document.getElementById('equipIconColor').value.trim(),
+      iconBg: document.getElementById('equipIconBg').value.trim(),
+      sortOrder: document.getElementById('equipSortOrder').value.trim(),
+      active: document.getElementById('equipActive').checked ? 1 : 0,
+      features,
+    };
+    fetch(apiUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(authBody(payload)) })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          showToast('success', isEdit ? 'บันทึกอุปกรณ์แล้ว ✅' : `เพิ่มอุปกรณ์ "${label}" แล้ว ✅`);
+          document.getElementById('equipModal').classList.add('hidden');
+          loadEquipment();
+        } else showToast('error', data.error || 'บันทึกไม่สำเร็จ');
+      })
+      .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
+  }
+
+  function deleteEquip(index) {
+    if (!_session || _session.role !== 'admin') { showToast('error', 'ไม่มีสิทธิ์ลบ (เฉพาะ admin หัวหน้า)'); return; }
+    const r = _equipment[index];
+    if (!r) return;
+    if (!confirm(`ลบอุปกรณ์ "${r.label}" จริงหรือ?\n(การจองเดิมที่ใช้อุปกรณ์นี้จะยังคงอยู่)`)) return;
+    fetch(apiUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(authBody({ type: 'deleteEquipment', id_to_delete: r.id })) })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) { showToast('success', `ลบอุปกรณ์ "${r.label}" แล้ว ✅`); loadEquipment(); }
         else showToast('error', data.error || 'ลบไม่สำเร็จ');
       })
       .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
