@@ -2199,8 +2199,10 @@
         <div class="card flex items-center gap-3">
           <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-mobile-screen"></i></div>
           <div class="flex-1 min-w-0">
-            <div class="font-semibold text-slate-800 text-sm">${esc(deviceName(d.user_agent))} <span class="text-xs text-slate-400 font-mono">…${esc((d.token || '').slice(-6))}</span></div>
-            <div class="text-xs text-slate-400">ใช้งานล่าสุด: ${esc(d.last_seen || '-')}</div>
+            <input type="text" value="${esc(d.owner || '')}" placeholder="ระบุชื่อเจ้าของเครื่อง…"
+                   onchange="setDeviceOwner('${esc(d.token)}', this.value)"
+                   class="form-input text-sm py-1 font-semibold w-full ${d.owner ? '' : 'border-amber-300 bg-amber-50'}" title="แก้ชื่อแล้ว Enter หรือคลิกออก" />
+            <div class="text-xs text-slate-400 mt-0.5">${esc(deviceName(d.user_agent))} · …${esc((d.token || '').slice(-6))} · ล่าสุด ${esc(d.last_seen || '-')}</div>
           </div>
           <select onchange="setDeviceNotifType('${esc(d.token)}', this.value)" class="form-input text-sm py-1.5 w-32 flex-shrink-0">${opts}</select>
         </div>
@@ -2215,6 +2217,17 @@
       .then(data => {
         if (data.success) showToast('success', 'อัปเดตประเภทแจ้งเตือนแล้ว ✅');
         else showToast('error', data.error || 'อัปเดตไม่สำเร็จ');
+      })
+      .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
+  }
+
+  function setDeviceOwner(token, owner) {
+    if (!_session || _session.role !== 'admin') { showToast('error', 'เฉพาะหัวหน้าทีม'); return; }
+    fetch(apiUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(authBody({ type: 'setDeviceOwner', token, owner: (owner || '').trim() })) })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) { showToast('success', 'บันทึกชื่อเจ้าของเครื่องแล้ว ✅'); loadNotifDevices(true); }
+        else showToast('error', data.error || 'บันทึกไม่สำเร็จ');
       })
       .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
   }
@@ -2275,7 +2288,7 @@
       const res = await fetch(apiUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ type: 'registerFCMToken', token, userAgent: navigator.userAgent, secret: (window.APP_CONFIG||{}).CLIENT_SECRET||'' }),
+        body: JSON.stringify({ type: 'registerFCMToken', token, userAgent: navigator.userAgent, owner: (_session && _session.name) || '', secret: (window.APP_CONFIG||{}).CLIENT_SECRET||'' }),
       });
       const data = await res.json().catch(() => ({}));
       if (data.success === false) {
@@ -2353,7 +2366,7 @@
         const res = await fetch(apiUrl(), {
           method: 'POST',
           headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify({ type: 'registerFCMToken', token, userAgent: navigator.userAgent, secret: (window.APP_CONFIG||{}).CLIENT_SECRET||'' }),
+          body: JSON.stringify({ type: 'registerFCMToken', token, userAgent: navigator.userAgent, owner: (_session && _session.name) || '', secret: (window.APP_CONFIG||{}).CLIENT_SECRET||'' }),
         });
         const data = await res.json().catch(() => ({}));
         step(data.success !== false ? 'บันทึก token ใน Sheets แล้ว ✅' : `บันทึก token ล้มเหลว: ${data.error}`, data.success !== false);
