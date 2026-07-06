@@ -125,6 +125,9 @@
           <button onclick="showAdminTab('all')" class="tab-btn" data-tab="all">
             <i class="fa-solid fa-table-list mr-2"></i>งานทั้งหมด
           </button>
+          <button onclick="showAdminTab('dashboard')" class="tab-btn" data-tab="dashboard">
+            <i class="fa-solid fa-chart-column mr-2"></i>แดชบอร์ดอุปกรณ์
+          </button>
           <button onclick="showAdminTab('admins')" class="tab-btn" data-tab="admins">
             <i class="fa-solid fa-users-gear mr-2"></i>จัดการ Admin
           </button>
@@ -468,6 +471,17 @@
           </div>
         </div>
       </div>
+
+      <!-- ===== TAB: แดชบอร์ดอุปกรณ์ ===== -->
+      <section id="tab-dashboard" class="tab-content hidden">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-slate-700"><i class="fa-solid fa-chart-column mr-2 text-blue-600"></i>สถานะสต็อกอุปกรณ์ (ตอนนี้)</h3>
+          <button onclick="loadEquipmentDashboard(true)" class="px-3 py-2 rounded-lg border border-slate-300 text-slate-600 text-sm hover:bg-slate-50"><i class="fa-solid fa-rotate mr-1"></i>รีเฟรช</button>
+        </div>
+        <p class="text-sm text-slate-500 mb-4">แสดงว่าตอนนี้อุปกรณ์แต่ละชิ้นว่างกี่ชิ้น ถูกยืมอยู่กี่ชิ้น และใครถืออยู่</p>
+        <div id="loadingDash" class="text-center py-10 text-slate-400"><i class="fa-solid fa-spinner fa-spin text-3xl"></i></div>
+        <div id="dashList" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
+      </section>
 
       <!-- ===== TAB: จัดการแจ้งเตือนทีม ===== -->
       <section id="tab-notif" class="tab-content hidden">
@@ -1187,6 +1201,7 @@
     if (tab === 'rooms') loadRooms();
     if (tab === 'equipment') loadEquipment();
     if (tab === 'notif') loadNotifDevices();
+    if (tab === 'dashboard') loadEquipmentDashboard();
     if (tab === 'all' && !_allRepairs.length && !_allBookings.length) fetchAll();
     if (tab === 'report') initReportDates();
   }
@@ -2245,6 +2260,59 @@
         else showToast('error', data.error || 'ลบไม่สำเร็จ');
       })
       .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
+  }
+
+  // ============================================================
+  // EQUIPMENT DASHBOARD (stock usage now — dept_equipment + current bookings)
+  // ============================================================
+  let _dashLoaded = false;
+  function loadEquipmentDashboard(force) {
+    if (_dashLoaded && !force) return;
+    _dashLoaded = true;
+    document.getElementById('loadingDash').classList.remove('hidden');
+    document.getElementById('dashList').innerHTML = '';
+    fetch(apiUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(authBody({ type: 'equipmentUsage' })) })
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('loadingDash').classList.add('hidden');
+        if (data.success) renderEquipmentDashboard(data.equipment || [], data.current || []);
+        else showToast('error', data.error || 'โหลดไม่สำเร็จ');
+      })
+      .catch(() => { document.getElementById('loadingDash').classList.add('hidden'); _dashLoaded = false; showToast('error', 'ไม่สามารถเชื่อมต่อได้'); });
+  }
+  function renderEquipmentDashboard(equipment, current) {
+    const byEquip = {};
+    current.forEach(c => { (byEquip[c.equipment] = byEquip[c.equipment] || []).push(c); });
+    const list = document.getElementById('dashList');
+    list.innerHTML = equipment.map(e => {
+      const holders = byEquip[e.id] || [];
+      const inUse = holders.reduce((s, h) => s + (parseInt(h.qty) || 0), 0);
+      const avail = Math.max(0, (e.stock || 0) - inUse);
+      const pct = e.stock ? Math.round(inUse / e.stock * 100) : 0;
+      const barColor = avail === 0 ? 'bg-red-500' : (avail <= (e.stock * 0.3) ? 'bg-amber-500' : 'bg-emerald-500');
+      const holderRows = holders.length ? holders.map(h => `
+        <div class="flex items-start gap-2 text-xs text-slate-600 border-t border-slate-100 pt-1.5 mt-1.5">
+          <i class="fa-solid fa-user text-slate-400 mt-0.5"></i>
+          <div class="flex-1 min-w-0">
+            <div class="font-medium">${esc(h.name)} <span class="text-indigo-600">x${esc(h.qty)}</span> <span class="text-slate-400 font-mono">${esc(h.ticket)}</span></div>
+            <div class="text-slate-400">คืน ${esc(h.endDate || h.date)} ${esc(h.endTime)} น. · ${esc(h.purpose || '')}</div>
+          </div>
+        </div>`).join('') : '<div class="text-xs text-slate-400 mt-2">— ว่างทั้งหมด ไม่มีใครยืมอยู่ —</div>';
+      return `
+        <div class="card">
+          <div class="flex items-center gap-3 mb-2">
+            <div class="w-10 h-10 ${esc(e.iconBg || 'bg-slate-200')} rounded-full flex items-center justify-center flex-shrink-0"><i class="fa-solid ${esc(e.icon || 'fa-box')} ${esc(e.iconColor || 'text-slate-700')}"></i></div>
+            <div class="flex-1 min-w-0">
+              <div class="font-semibold text-slate-800 truncate">${esc(e.label)}</div>
+              <div class="text-xs text-slate-400">${esc(e.category || '')}</div>
+            </div>
+            <div class="text-right"><div class="text-lg font-bold ${avail === 0 ? 'text-red-600' : 'text-emerald-600'}">${avail}</div><div class="text-[10px] text-slate-400">ว่าง/${e.stock || 0}</div></div>
+          </div>
+          <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden"><div class="h-full ${barColor}" style="width:${pct}%"></div></div>
+          <div class="text-xs text-slate-500 mt-1">ถูกยืมอยู่ ${inUse} ชิ้น${holders.length ? (' · ' + holders.length + ' รายการ') : ''}</div>
+          ${holderRows}
+        </div>`;
+    }).join('') || '<div class="col-span-full text-center py-10 text-slate-400">ยังไม่มีอุปกรณ์</div>';
   }
 
   // ============================================================
