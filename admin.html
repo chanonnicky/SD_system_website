@@ -134,6 +134,9 @@
           <button onclick="showAdminTab('equipment')" class="tab-btn" data-tab="equipment">
             <i class="fa-solid fa-box-seam mr-2"></i>จัดการอุปกรณ์
           </button>
+          <button onclick="showAdminTab('notif')" class="tab-btn" data-tab="notif">
+            <i class="fa-solid fa-bell mr-2"></i>แจ้งเตือนทีม
+          </button>
           <button onclick="showAdminTab('report')" class="tab-btn" data-tab="report">
             <i class="fa-solid fa-file-lines mr-2"></i>พิมพ์รายงาน
           </button>
@@ -464,6 +467,18 @@
           </div>
         </div>
       </div>
+
+      <!-- ===== TAB: จัดการแจ้งเตือนทีม ===== -->
+      <section id="tab-notif" class="tab-content hidden">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-slate-700"><i class="fa-solid fa-bell mr-2 text-blue-600"></i>อุปกรณ์ที่รับแจ้งเตือน (ทีม)</h3>
+          <button onclick="loadNotifDevices(true)" class="px-3 py-2 rounded-lg border border-slate-300 text-slate-600 text-sm hover:bg-slate-50"><i class="fa-solid fa-rotate mr-1"></i>รีเฟรช</button>
+        </div>
+        <p class="text-sm text-slate-500 mb-4">หัวหน้าทีมกำหนดได้ว่าแต่ละเครื่องจะรับแจ้งเตือนงานประเภทไหน (แจ้งซ่อม / จองห้อง / จองอุปกรณ์ / ทั้งหมด)</p>
+        <div id="loadingNotif" class="text-center py-10 text-slate-400"><i class="fa-solid fa-spinner fa-spin text-3xl"></i></div>
+        <div id="notifDeviceList" class="space-y-3"></div>
+        <div id="emptyNotif" class="hidden text-center py-10 text-slate-400"><i class="fa-solid fa-bell-slash text-4xl mb-3"></i><p>ยังไม่มีอุปกรณ์ลงทะเบียนรับแจ้งเตือน</p></div>
+      </section>
 
       <!-- ===== TAB: พิมพ์รายงาน ===== -->
       <section id="tab-report" class="tab-content hidden space-y-5">
@@ -1115,6 +1130,10 @@
       showToast('error', 'ไม่มีสิทธิ์เข้าถึงหน้าจัดการอุปกรณ์');
       return;
     }
+    if (tab === 'notif' && _session && _session.role !== 'admin') {
+      showToast('error', 'ไม่มีสิทธิ์เข้าถึงหน้าจัดการแจ้งเตือน');
+      return;
+    }
     document.querySelectorAll('.tab-content').forEach(s => s.classList.add('hidden'));
     document.querySelectorAll('#adminTabNav .tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-' + tab).classList.remove('hidden');
@@ -1122,6 +1141,7 @@
     if (tab === 'admins') loadAdmins();
     if (tab === 'rooms') loadRooms();
     if (tab === 'equipment') loadEquipment();
+    if (tab === 'notif') loadNotifDevices();
     if (tab === 'all' && !_allRepairs.length && !_allBookings.length) fetchAll();
     if (tab === 'report') initReportDates();
   }
@@ -2128,6 +2148,73 @@
       .then(data => {
         if (data.success) { showToast('success', `ลบอุปกรณ์ "${r.label}" แล้ว ✅`); loadEquipment(); }
         else showToast('error', data.error || 'ลบไม่สำเร็จ');
+      })
+      .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
+  }
+
+  // ============================================================
+  // NOTIFICATION DEVICE MANAGEMENT (dept_fcm_token — head only)
+  // ============================================================
+  let _notifDevices = [], _notifLoaded = false;
+  const NOTIF_TYPES = [
+    { v: 'both',      label: 'ทั้งหมด' },
+    { v: 'repair',    label: 'แจ้งซ่อม' },
+    { v: 'booking',   label: 'จองห้อง' },
+    { v: 'equipment', label: 'จองอุปกรณ์' },
+  ];
+
+  function loadNotifDevices(force) {
+    if (_notifLoaded && !force) return;
+    _notifLoaded = true;
+    document.getElementById('loadingNotif').classList.remove('hidden');
+    document.getElementById('notifDeviceList').innerHTML = '';
+    document.getElementById('emptyNotif').classList.add('hidden');
+    fetch(apiUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(authBody({ type: 'getRegisteredTokens' })) })
+      .then(r => r.json())
+      .then(data => {
+        document.getElementById('loadingNotif').classList.add('hidden');
+        if (data.success) { _notifDevices = data.tokens || []; renderNotifDevices(); }
+        else showToast('error', data.error || 'โหลดไม่สำเร็จ');
+      })
+      .catch(() => { document.getElementById('loadingNotif').classList.add('hidden'); _notifLoaded = false; showToast('error', 'ไม่สามารถเชื่อมต่อได้'); });
+  }
+
+  function deviceName(ua) {
+    ua = ua || '';
+    if (/iphone/i.test(ua)) return 'iPhone';
+    if (/ipad/i.test(ua)) return 'iPad';
+    if (/android/i.test(ua)) return 'Android';
+    if (/windows/i.test(ua)) return 'Windows PC';
+    if (/macintosh|mac os/i.test(ua)) return 'Mac';
+    return 'อุปกรณ์';
+  }
+
+  function renderNotifDevices() {
+    const list = document.getElementById('notifDeviceList');
+    list.innerHTML = '';
+    if (!_notifDevices.length) { document.getElementById('emptyNotif').classList.remove('hidden'); return; }
+    _notifDevices.forEach(d => {
+      const opts = NOTIF_TYPES.map(t => `<option value="${t.v}" ${d.notification_type === t.v ? 'selected' : ''}>${t.label}</option>`).join('');
+      list.insertAdjacentHTML('beforeend', `
+        <div class="card flex items-center gap-3">
+          <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-mobile-screen"></i></div>
+          <div class="flex-1 min-w-0">
+            <div class="font-semibold text-slate-800 text-sm">${esc(deviceName(d.user_agent))} <span class="text-xs text-slate-400 font-mono">…${esc((d.token || '').slice(-6))}</span></div>
+            <div class="text-xs text-slate-400">ใช้งานล่าสุด: ${esc(d.last_seen || '-')}</div>
+          </div>
+          <select onchange="setDeviceNotifType('${esc(d.token)}', this.value)" class="form-input text-sm py-1.5 w-32 flex-shrink-0">${opts}</select>
+        </div>
+      `);
+    });
+  }
+
+  function setDeviceNotifType(token, notificationType) {
+    if (!_session || _session.role !== 'admin') { showToast('error', 'เฉพาะหัวหน้าทีม'); return; }
+    fetch(apiUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(authBody({ type: 'setNotificationType', token, notificationType })) })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) showToast('success', 'อัปเดตประเภทแจ้งเตือนแล้ว ✅');
+        else showToast('error', data.error || 'อัปเดตไม่สำเร็จ');
       })
       .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
   }
