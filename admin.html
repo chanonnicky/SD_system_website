@@ -2217,6 +2217,7 @@
             <label class="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" value="booking" ${chk('booking')} onchange="onNotifCheck(this,'${tok}')" class="w-4 h-4"> จองห้อง</label>
             <label class="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" value="equipment" ${chk('equipment')} onchange="onNotifCheck(this,'${tok}')" class="w-4 h-4"> จองอุปกรณ์</label>
           </div>
+          <button onclick="deleteDevice('${tok}')" class="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg flex-shrink-0" title="ลบอุปกรณ์นี้ออกจากรายการ"><i class="fa-solid fa-trash text-sm"></i></button>
         </div>
       `);
     });
@@ -2246,6 +2247,20 @@
       .then(data => {
         if (data.success) { showToast('success', 'บันทึกชื่อเจ้าของเครื่องแล้ว ✅'); loadNotifDevices(true); }
         else showToast('error', data.error || 'บันทึกไม่สำเร็จ');
+      })
+      .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
+  }
+
+  function deleteDevice(token) {
+    if (!_session || _session.role !== 'admin') { showToast('error', 'เฉพาะหัวหน้าทีม'); return; }
+    const d = _notifDevices.find(x => x.token === token);
+    const label = (d && d.owner) ? d.owner : (d ? deviceName(d.user_agent) : 'อุปกรณ์นี้');
+    if (!confirm(`ลบอุปกรณ์ "${label}" ออกจากรายการรับแจ้งเตือน?\n(เครื่องนี้จะไม่ได้รับแจ้งเตือนอีก จนกว่าจะลงทะเบียนใหม่)`)) return;
+    fetch(apiUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(authBody({ type: 'deleteFCMToken', token })) })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) { showToast('success', 'ลบอุปกรณ์แล้ว ✅'); loadNotifDevices(true); }
+        else showToast('error', data.error || 'ลบไม่สำเร็จ');
       })
       .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
   }
