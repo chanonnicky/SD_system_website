@@ -132,7 +132,7 @@
             <i class="fa-solid fa-door-open mr-2"></i>จัดการห้อง
           </button>
           <button onclick="showAdminTab('equipment')" class="tab-btn" data-tab="equipment">
-            <i class="fa-solid fa-box-seam mr-2"></i>จัดการอุปกรณ์
+            <i class="fa-solid fa-box mr-2"></i>จัดการอุปกรณ์
           </button>
           <button onclick="showAdminTab('notif')" class="tab-btn" data-tab="notif">
             <i class="fa-solid fa-bell mr-2"></i>แจ้งเตือนทีม
@@ -174,6 +174,7 @@
               <button onclick="filterPending('all')"     class="room-filter active" data-f="all"><i class="fa-solid fa-layer-group mr-1"></i>ทั้งหมด</button>
               <button onclick="filterPending('repair')"  class="room-filter" data-f="repair"><i class="fa-solid fa-screwdriver-wrench mr-1"></i>แจ้งซ่อม</button>
               <button onclick="filterPending('booking')" class="room-filter" data-f="booking"><i class="fa-solid fa-calendar mr-1"></i>จองห้อง</button>
+              <button onclick="filterPending('equipment')" class="room-filter" data-f="equipment"><i class="fa-solid fa-box mr-1"></i>จองอุปกรณ์</button>
             </div>
             <div class="flex items-center gap-2">
               <span class="text-xs text-slate-400 whitespace-nowrap">เรียงตาม</span>
@@ -212,7 +213,7 @@
               <button onclick="filterAll('all')"     class="room-filter active" data-af="all"><i class="fa-solid fa-layer-group mr-1"></i>ทั้งหมด</button>
               <button onclick="filterAll('repair')"  class="room-filter" data-af="repair"><i class="fa-solid fa-screwdriver-wrench mr-1"></i>แจ้งซ่อม</button>
               <button onclick="filterAll('booking')" class="room-filter" data-af="booking"><i class="fa-solid fa-calendar mr-1"></i>จองห้อง</button>
-              <button onclick="filterAll('equipment')" class="room-filter" data-af="equipment"><i class="fa-solid fa-box-seam mr-1"></i>จองอุปกรณ์</button>
+              <button onclick="filterAll('equipment')" class="room-filter" data-af="equipment"><i class="fa-solid fa-box mr-1"></i>จองอุปกรณ์</button>
             </div>
             <div class="flex items-center gap-2">
               <span class="text-xs text-slate-400 whitespace-nowrap">เรียงตาม</span>
@@ -386,7 +387,7 @@
       <section id="tab-equipment" class="tab-content hidden">
         <div class="flex items-center justify-between mb-4">
           <h3 class="font-semibold text-slate-700">
-            <i class="fa-solid fa-box-seam mr-2 text-blue-600"></i>อุปกรณ์ทั้งหมด
+            <i class="fa-solid fa-box mr-2 text-blue-600"></i>อุปกรณ์ทั้งหมด
           </h3>
           <button onclick="openEquipModal(null)" class="btn-primary px-4">
             <i class="fa-solid fa-plus mr-2"></i>เพิ่มอุปกรณ์
@@ -1019,7 +1020,7 @@
   // STATE
   // ============================================================
   let _session = null;
-  let _pendingRepairs = [], _pendingBookings = [], _pendingFilter = 'all';
+  let _pendingRepairs = [], _pendingBookings = [], _pendingEquip = [], _pendingFilter = 'all';
   let _pendingStatuses = new Set(['รับเรื่อง', 'กำลังดำเนินการ']);
   let _allRepairs = [], _allBookings = [], _allEquipBookings = [], _allFilter = 'all';
   let _allStatuses = new Set(['รับเรื่อง', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก']);
@@ -1084,7 +1085,7 @@
   function doLogout() {
     localStorage.removeItem('adminSession');
     _session = null;
-    _pendingRepairs = []; _pendingBookings = [];
+    _pendingRepairs = []; _pendingBookings = []; _pendingEquip = [];
     document.getElementById('dashboard').classList.add('hidden');
     document.getElementById('loginScreen').classList.remove('hidden');
     document.getElementById('usernameInput').value = '';
@@ -1415,6 +1416,7 @@
         if (data.success) {
           _pendingRepairs  = data.repairs  || [];
           _pendingBookings = data.bookings || [];
+          _pendingEquip    = data.equipmentBookings || [];
           renderPending();
           updateStats();
         } else showToast('error', data.error || 'โหลดข้อมูลไม่สำเร็จ');
@@ -1462,18 +1464,21 @@
       return b.ticket.localeCompare(a.ticket); // newest
     };
 
-    const repairs  = (_pendingFilter !== 'booking' ? _pendingRepairs  : [])
-                       .filter(r => _pendingStatuses.has(r.status)).sort(sortFn);
-    const bookings = (_pendingFilter !== 'repair'  ? _pendingBookings : [])
-                       .filter(b => _pendingStatuses.has(b.status)).sort(sortFn);
+    const showR = (_pendingFilter === 'all' || _pendingFilter === 'repair');
+    const showB = (_pendingFilter === 'all' || _pendingFilter === 'booking');
+    const showE = (_pendingFilter === 'all' || _pendingFilter === 'equipment');
+    const repairs  = (showR ? _pendingRepairs  : []).filter(r => _pendingStatuses.has(r.status)).sort(sortFn);
+    const bookings = (showB ? _pendingBookings : []).filter(b => _pendingStatuses.has(b.status)).sort(sortFn);
+    const equips   = (showE ? _pendingEquip    : []).filter(b => _pendingStatuses.has(b.status)).sort(sortFn);
 
-    if (!repairs.length && !bookings.length) {
+    if (!repairs.length && !bookings.length && !equips.length) {
       document.getElementById('emptyPending').classList.remove('hidden');
       return;
     }
     document.getElementById('emptyPending').classList.add('hidden');
     repairs.forEach(r  => list.insertAdjacentHTML('beforeend', repairCard(r)));
     bookings.forEach(b => list.insertAdjacentHTML('beforeend', bookingCard(b)));
+    equips.forEach(b   => list.insertAdjacentHTML('beforeend', equipmentCard(b)));
   }
 
   // ============================================================
@@ -1642,7 +1647,7 @@
         <span>${badge(b.status)}</span>
       </div>
       <div class="bg-indigo-50 rounded-xl p-3 mb-2 text-center">
-        <div class="font-bold text-indigo-800"><i class="fa-solid fa-box-seam mr-1"></i>${esc(b.equipment)} <span class="text-indigo-600">x${esc(b.qty)}</span></div>
+        <div class="font-bold text-indigo-800"><i class="fa-solid fa-box mr-1"></i>${esc(b.equipment)} <span class="text-indigo-600">x${esc(b.qty)}</span></div>
         <div class="text-sm text-indigo-600">${esc(b.date)}</div>
         <div class="text-sm text-slate-600">${esc(b.startTime)} – ${esc(b.endTime)} น.</div>
       </div>
@@ -1663,7 +1668,7 @@
   let _modalJob = null;
 
   function openJobDetail(ticket) {
-    const job = [..._pendingRepairs, ..._pendingBookings, ..._allRepairs, ..._allBookings, ..._allEquipBookings]
+    const job = [..._pendingRepairs, ..._pendingBookings, ..._pendingEquip, ..._allRepairs, ..._allBookings, ..._allEquipBookings]
       .find(j => j.ticket === ticket);
     if (!job) return;
     _modalJob = job;
@@ -2290,14 +2295,14 @@
     } catch (err) { console.error('[Notif] init error:', err); return false; }
   }
 
-  async function registerNotifToken() {
+  async function registerNotifToken(silent) {
     if (!_notifMessaging || !_notifSwReg || !window.APP_CONFIG) return;
     try {
       const token = await _notifMessaging.getToken({
         vapidKey: window.APP_CONFIG.FIREBASE_VAPID,
         serviceWorkerRegistration: _notifSwReg,
       });
-      if (!token) { showToast('error', 'ไม่สามารถรับ FCM token ได้ — ตรวจสอบ VAPID key'); return; }
+      if (!token) { if (!silent) showToast('error', 'ไม่สามารถรับ FCM token ได้ — ตรวจสอบ VAPID key'); return; }
       const res = await fetch(apiUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
@@ -2305,13 +2310,13 @@
       });
       const data = await res.json().catch(() => ({}));
       if (data.success === false) {
-        showToast('error', 'บันทึก token ไม่สำเร็จ: ' + (data.error || 'unknown'));
+        if (!silent) showToast('error', 'บันทึก token ไม่สำเร็จ: ' + (data.error || 'unknown'));
       } else {
-        showToast('success', 'เปิดรับการแจ้งเตือนสำเร็จ ✅');
+        if (!silent) showToast('success', 'เปิดรับการแจ้งเตือนสำเร็จ ✅');
       }
     } catch (err) {
       console.error('[Notif] token error:', err);
-      showToast('error', 'ลงทะเบียนการแจ้งเตือนไม่สำเร็จ: ' + err.message);
+      if (!silent) showToast('error', 'ลงทะเบียนการแจ้งเตือนไม่สำเร็จ: ' + err.message);
     }
   }
 
@@ -2495,7 +2500,7 @@
     if (!ticket) return;
     const tryOpen = (attempts) => {
       if (attempts <= 0) return;
-      const job = [..._pendingRepairs, ..._pendingBookings, ..._allRepairs, ..._allBookings, ..._allEquipBookings]
+      const job = [..._pendingRepairs, ..._pendingBookings, ..._pendingEquip, ..._allRepairs, ..._allBookings, ..._allEquipBookings]
         .find(j => j.ticket === ticket);
       if (job) { openJobDetail(ticket); }
       else setTimeout(() => tryOpen(attempts - 1), 800);
