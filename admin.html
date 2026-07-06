@@ -2155,13 +2155,7 @@
   // ============================================================
   // NOTIFICATION DEVICE MANAGEMENT (dept_fcm_token — head only)
   // ============================================================
-  let _notifDevices = [], _notifLoaded = false;
-  const NOTIF_TYPES = [
-    { v: 'both',      label: 'ทั้งหมด' },
-    { v: 'repair',    label: 'แจ้งซ่อม' },
-    { v: 'booking',   label: 'จองห้อง' },
-    { v: 'equipment', label: 'จองอุปกรณ์' },
-  ];
+  let _notifDevices = [], _notifAdmins = [], _notifLoaded = false;
 
   function loadNotifDevices(force) {
     if (_notifLoaded && !force) return;
@@ -2169,12 +2163,14 @@
     document.getElementById('loadingNotif').classList.remove('hidden');
     document.getElementById('notifDeviceList').innerHTML = '';
     document.getElementById('emptyNotif').classList.add('hidden');
-    fetch(apiUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(authBody({ type: 'getRegisteredTokens' })) })
-      .then(r => r.json())
-      .then(data => {
+    const post = (t) => fetch(apiUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(authBody({ type: t })) }).then(r => r.json());
+    Promise.all([post('getRegisteredTokens'), post('getAdmins').catch(() => ({}))])
+      .then(([d1, d2]) => {
         document.getElementById('loadingNotif').classList.add('hidden');
-        if (data.success) { _notifDevices = data.tokens || []; renderNotifDevices(); }
-        else showToast('error', data.error || 'โหลดไม่สำเร็จ');
+        if (!d1.success) { showToast('error', d1.error || 'โหลดไม่สำเร็จ'); return; }
+        _notifAdmins = ((d2 && d2.admins) || []).map(a => a.full_name || a.name || a.username).filter(Boolean);
+        _notifDevices = d1.tokens || [];
+        renderNotifDevices();
       })
       .catch(() => { document.getElementById('loadingNotif').classList.add('hidden'); _notifLoaded = false; showToast('error', 'ไม่สามารถเชื่อมต่อได้'); });
   }
@@ -2194,20 +2190,37 @@
     list.innerHTML = '';
     if (!_notifDevices.length) { document.getElementById('emptyNotif').classList.remove('hidden'); return; }
     _notifDevices.forEach(d => {
-      const opts = NOTIF_TYPES.map(t => `<option value="${t.v}" ${d.notification_type === t.v ? 'selected' : ''}>${t.label}</option>`).join('');
+      const tok = esc(d.token);
+      // owner dropdown จากรายชื่อทีม (getAdmins) + คงค่าปัจจุบันถ้าไม่อยู่ในรายชื่อ
+      const names = _notifAdmins.slice();
+      if (d.owner && names.indexOf(d.owner) === -1) names.unshift(d.owner);
+      const ownerOpts = '<option value="">— เลือกเจ้าของ —</option>' +
+        names.map(n => `<option value="${esc(n)}" ${d.owner === n ? 'selected' : ''}>${esc(n)}</option>`).join('');
+      // notification checkboxes จาก comma-list ('both' = ทุกงาน)
+      const nt = d.notification_type || '';
+      const all = (nt === 'both');
+      const chk = (v) => (all || nt.split(',').indexOf(v) !== -1) ? 'checked' : '';
       list.insertAdjacentHTML('beforeend', `
-        <div class="card flex items-center gap-3">
+        <div class="card flex flex-col sm:flex-row sm:items-center gap-3">
           <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-mobile-screen"></i></div>
           <div class="flex-1 min-w-0">
-            <input type="text" value="${esc(d.owner || '')}" placeholder="ระบุชื่อเจ้าของเครื่อง…"
-                   onchange="setDeviceOwner('${esc(d.token)}', this.value)"
-                   class="form-input text-sm py-1 font-semibold w-full ${d.owner ? '' : 'border-amber-300 bg-amber-50'}" title="แก้ชื่อแล้ว Enter หรือคลิกออก" />
+            <select onchange="setDeviceOwner('${tok}', this.value)" class="form-input text-sm py-1 font-semibold w-full ${d.owner ? '' : 'border-amber-300 bg-amber-50'}">${ownerOpts}</select>
             <div class="text-xs text-slate-400 mt-0.5">${esc(deviceName(d.user_agent))} · …${esc((d.token || '').slice(-6))} · ล่าสุด ${esc(d.last_seen || '-')}</div>
           </div>
-          <select onchange="setDeviceNotifType('${esc(d.token)}', this.value)" class="form-input text-sm py-1.5 w-32 flex-shrink-0">${opts}</select>
+          <div class="flex flex-wrap gap-x-4 gap-y-1.5 text-sm flex-shrink-0" data-devicetok="${tok}">
+            <label class="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" value="repair" ${chk('repair')} onchange="onNotifCheck(this,'${tok}')" class="w-4 h-4"> แจ้งซ่อม</label>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" value="booking" ${chk('booking')} onchange="onNotifCheck(this,'${tok}')" class="w-4 h-4"> จองห้อง</label>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" value="equipment" ${chk('equipment')} onchange="onNotifCheck(this,'${tok}')" class="w-4 h-4"> จองอุปกรณ์</label>
+          </div>
         </div>
       `);
     });
+  }
+
+  function onNotifCheck(el, token) {
+    const grp = el.closest('[data-devicetok]');
+    const checked = Array.prototype.slice.call(grp.querySelectorAll('input[type=checkbox]:checked')).map(c => c.value);
+    setDeviceNotifType(token, checked.join(','));   // '' = ปิดทั้งหมด
   }
 
   function setDeviceNotifType(token, notificationType) {
