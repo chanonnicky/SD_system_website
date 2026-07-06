@@ -209,6 +209,7 @@
               <button onclick="filterAll('all')"     class="room-filter active" data-af="all"><i class="fa-solid fa-layer-group mr-1"></i>ทั้งหมด</button>
               <button onclick="filterAll('repair')"  class="room-filter" data-af="repair"><i class="fa-solid fa-screwdriver-wrench mr-1"></i>แจ้งซ่อม</button>
               <button onclick="filterAll('booking')" class="room-filter" data-af="booking"><i class="fa-solid fa-calendar mr-1"></i>จองห้อง</button>
+              <button onclick="filterAll('equipment')" class="room-filter" data-af="equipment"><i class="fa-solid fa-box-seam mr-1"></i>จองอุปกรณ์</button>
             </div>
             <div class="flex items-center gap-2">
               <span class="text-xs text-slate-400 whitespace-nowrap">เรียงตาม</span>
@@ -1005,7 +1006,7 @@
   let _session = null;
   let _pendingRepairs = [], _pendingBookings = [], _pendingFilter = 'all';
   let _pendingStatuses = new Set(['รับเรื่อง', 'กำลังดำเนินการ']);
-  let _allRepairs = [], _allBookings = [], _allFilter = 'all';
+  let _allRepairs = [], _allBookings = [], _allEquipBookings = [], _allFilter = 'all';
   let _allStatuses = new Set(['รับเรื่อง', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก']);
   let _allSort = 'newest';
   let _pendingSort = 'newest';
@@ -1472,6 +1473,7 @@
         if (data.success) {
           _allRepairs  = data.repairs  || [];
           _allBookings = data.bookings || [];
+          _allEquipBookings = data.equipmentBookings || [];
           renderAll();
         } else showToast('error', data.error || 'โหลดข้อมูลไม่สำเร็จ');
       })
@@ -1515,15 +1517,20 @@
       }
       return b.ticket.localeCompare(a.ticket);
     };
-    const repairs  = (_allFilter !== 'booking' ? _allRepairs  : []).filter(r => _allStatuses.has(r.status)).sort(sortFn);
-    const bookings = (_allFilter !== 'repair'  ? _allBookings : []).filter(b => _allStatuses.has(b.status)).sort(sortFn);
-    if (!repairs.length && !bookings.length) {
+    const showRepair  = (_allFilter === 'all' || _allFilter === 'repair');
+    const showBooking = (_allFilter === 'all' || _allFilter === 'booking');
+    const showEquip   = (_allFilter === 'all' || _allFilter === 'equipment');
+    const repairs  = (showRepair  ? _allRepairs       : []).filter(r => _allStatuses.has(r.status)).sort(sortFn);
+    const bookings = (showBooking ? _allBookings      : []).filter(b => _allStatuses.has(b.status)).sort(sortFn);
+    const equips   = (showEquip   ? _allEquipBookings : []).filter(b => _allStatuses.has(b.status)).sort(sortFn);
+    if (!repairs.length && !bookings.length && !equips.length) {
       document.getElementById('emptyAll').classList.remove('hidden');
       return;
     }
     document.getElementById('emptyAll').classList.add('hidden');
     repairs.forEach(r  => list.insertAdjacentHTML('beforeend', repairCard(r)));
     bookings.forEach(b => list.insertAdjacentHTML('beforeend', bookingCard(b)));
+    equips.forEach(b   => list.insertAdjacentHTML('beforeend', equipmentCard(b)));
   }
 
   function updateStats() {
@@ -1608,13 +1615,35 @@
     </div>`;
   }
 
+  function equipmentCard(b) {
+    return `<div class="card cursor-pointer hover:shadow-md hover:border-blue-200 border border-transparent transition-all" onclick="openJobDetail('${esc(b.ticket)}')">
+      <div class="flex justify-between items-start mb-2">
+        <span class="font-bold text-indigo-700 text-sm font-mono">${esc(b.ticket)}</span>
+        <span>${badge(b.status)}</span>
+      </div>
+      <div class="bg-indigo-50 rounded-xl p-3 mb-2 text-center">
+        <div class="font-bold text-indigo-800"><i class="fa-solid fa-box-seam mr-1"></i>${esc(b.equipment)} <span class="text-indigo-600">x${esc(b.qty)}</span></div>
+        <div class="text-sm text-indigo-600">${esc(b.date)}</div>
+        <div class="text-sm text-slate-600">${esc(b.startTime)} – ${esc(b.endTime)} น.</div>
+      </div>
+      <div class="space-y-1.5 text-sm text-slate-600">
+        <div class="flex gap-2"><i class="fa-solid fa-user w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(b.name)}</span></div>
+        <div class="flex gap-2"><i class="fa-solid fa-phone w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(b.phone)}</span></div>
+        <div class="flex gap-2 text-xs text-slate-400"><i class="fa-solid fa-comment w-4 mt-0.5 flex-shrink-0"></i><span>${esc(b.purpose)}</span></div>
+      </div>
+      <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-1">
+        <span>กดเพื่อแก้ไขสถานะ</span><i class="fa-solid fa-chevron-right text-xs"></i>
+      </div>
+    </div>`;
+  }
+
   // ============================================================
   // JOB DETAIL MODAL
   // ============================================================
   let _modalJob = null;
 
   function openJobDetail(ticket) {
-    const job = [..._pendingRepairs, ..._pendingBookings, ..._allRepairs, ..._allBookings]
+    const job = [..._pendingRepairs, ..._pendingBookings, ..._allRepairs, ..._allBookings, ..._allEquipBookings]
       .find(j => j.ticket === ticket);
     if (!job) return;
     _modalJob = job;
@@ -2353,7 +2382,7 @@
     if (!ticket) return;
     const tryOpen = (attempts) => {
       if (attempts <= 0) return;
-      const job = [..._pendingRepairs, ..._pendingBookings, ..._allRepairs, ..._allBookings]
+      const job = [..._pendingRepairs, ..._pendingBookings, ..._allRepairs, ..._allBookings, ..._allEquipBookings]
         .find(j => j.ticket === ticket);
       if (job) { openJobDetail(ticket); }
       else setTimeout(() => tryOpen(attempts - 1), 800);
