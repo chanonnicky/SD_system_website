@@ -1778,6 +1778,7 @@
     if (!job) return;
     _modalJob = job;
     const isRepair = ticket.startsWith('REP');
+    const isEquip  = ticket.startsWith('EQ');
 
     document.getElementById('modalTicket').textContent = job.ticket;
     document.getElementById('modalStatusBadge').innerHTML = badge(job.status);
@@ -1796,7 +1797,16 @@
           class="w-full rounded-xl object-contain max-h-[70vh] sm:max-h-80 border border-slate-200 bg-slate-50 hover:opacity-90 transition-opacity"
           onerror="this.parentElement.innerHTML='<p class=\'text-xs text-slate-400 mt-3\'><i class=\'fa-solid fa-image mr-1\'></i>ไม่สามารถโหลดรูปได้</p>'" />
         <p class="text-xs text-slate-400 text-center mt-2"><i class="fa-solid fa-up-right-from-square mr-1"></i>แตะเพื่อดูเต็มขนาด</p>
-      </a>` : ''}` : `
+      </a>` : ''}` : isEquip ? `
+      <div class="bg-indigo-50 rounded-xl p-3 mb-4 text-center">
+        <div class="font-bold text-indigo-800"><i class="fa-solid fa-box mr-1"></i>${esc(job.equipment)} <span class="text-indigo-600">x${esc(job.qty)}</span></div>
+        <div class="text-sm text-indigo-600">ยืม ${esc(job.date)} ${esc(job.startTime)} น.${(job.endDate && job.endDate !== job.date) ? ' → คืน ' + esc(job.endDate) + ' ' + esc(job.endTime) + ' น.' : ' – ' + esc(job.endTime) + ' น.'}</div>
+      </div>
+      <div class="space-y-3 text-sm text-slate-600">
+        <div class="flex gap-3"><i class="fa-solid fa-user w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(job.name)}</span></div>
+        <div class="flex gap-3"><i class="fa-solid fa-phone w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(job.phone)}</span></div>
+        <div class="flex gap-3 text-xs text-slate-400"><i class="fa-solid fa-comment w-4 mt-0.5 flex-shrink-0"></i><span>${esc(job.purpose)}</span></div>
+      </div>` : `
       <div class="bg-blue-50 rounded-xl p-3 mb-4 text-center">
         <div class="font-bold text-blue-800">${esc(job.room)}</div>
         <div class="text-sm text-blue-600">${esc(job.date)}</div>
