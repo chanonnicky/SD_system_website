@@ -125,6 +125,9 @@
           <button onclick="showAdminTab('all')" class="tab-btn" data-tab="all">
             <i class="fa-solid fa-table-list mr-2"></i>งานทั้งหมด
           </button>
+          <button onclick="showAdminTab('calendar')" class="tab-btn" data-tab="calendar">
+            <i class="fa-solid fa-calendar-days mr-2"></i>ปฏิทิน
+          </button>
           <button onclick="showAdminTab('dashboard')" class="tab-btn" data-tab="dashboard">
             <i class="fa-solid fa-chart-column mr-2"></i>แดชบอร์ดอุปกรณ์
           </button>
@@ -471,6 +474,31 @@
           </div>
         </div>
       </div>
+
+      <!-- ===== TAB: ปฏิทิน ===== -->
+      <section id="tab-calendar" class="tab-content hidden">
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <div class="inline-flex rounded-lg border border-slate-200 overflow-hidden text-sm">
+            <button id="calModeRoom" onclick="calSetMode('room')" class="px-4 py-2 font-medium bg-blue-600 text-white"><i class="fa-solid fa-door-open mr-1"></i>จองห้อง</button>
+            <button id="calModeEquip" onclick="calSetMode('equip')" class="px-4 py-2 font-medium bg-white text-slate-600"><i class="fa-solid fa-box mr-1"></i>จองอุปกรณ์</button>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="calNav(-1)" class="w-9 h-9 rounded-lg border border-slate-200 hover:bg-slate-50"><i class="fa-solid fa-chevron-left"></i></button>
+            <div id="calMonthLabel" class="font-bold text-slate-700 min-w-[150px] text-center"></div>
+            <button onclick="calNav(1)" class="w-9 h-9 rounded-lg border border-slate-200 hover:bg-slate-50"><i class="fa-solid fa-chevron-right"></i></button>
+            <button onclick="calToday()" class="px-3 py-2 rounded-lg border border-slate-200 text-sm hover:bg-slate-50">วันนี้</button>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-3 text-xs text-slate-500 mb-3">
+          <span><span class="inline-block w-3 h-3 rounded bg-amber-300 align-middle mr-1"></span>รับเรื่อง</span>
+          <span><span class="inline-block w-3 h-3 rounded bg-blue-300 align-middle mr-1"></span>กำลังดำเนินการ</span>
+          <span><span class="inline-block w-3 h-3 rounded bg-green-300 align-middle mr-1"></span>เสร็จสิ้น</span>
+        </div>
+        <div class="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-slate-400 mb-1">
+          <div>อา</div><div>จ</div><div>อ</div><div>พ</div><div>พฤ</div><div>ศ</div><div class="text-red-400">ส</div>
+        </div>
+        <div id="calGrid" class="grid grid-cols-7 gap-1"></div>
+      </section>
 
       <!-- ===== TAB: แดชบอร์ดอุปกรณ์ ===== -->
       <section id="tab-dashboard" class="tab-content hidden">
@@ -1202,6 +1230,7 @@
     if (tab === 'equipment') loadEquipment();
     if (tab === 'notif') loadNotifDevices();
     if (tab === 'dashboard') loadEquipmentDashboard();
+    if (tab === 'calendar') loadCalendarTab();
     if (tab === 'all' && !_allRepairs.length && !_allBookings.length) fetchAll();
     if (tab === 'report') initReportDates();
   }
@@ -2270,6 +2299,77 @@
         else showToast('error', data.error || 'ลบไม่สำเร็จ');
       })
       .catch(() => showToast('error', 'ไม่สามารถเชื่อมต่อได้'));
+  }
+
+  // ============================================================
+  // CALENDAR (booking schedule — แยก ห้อง / อุปกรณ์)
+  // ============================================================
+  let _calMode = 'room', _calY = null, _calM = null;
+  const CAL_MONTHS = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  function loadCalendarTab() {
+    if (_calY == null) { const n = new Date(); _calY = n.getFullYear(); _calM = n.getMonth() + 1; }
+    fetchCalMonth();
+  }
+  function calSetMode(m) {
+    _calMode = m;
+    document.getElementById('calModeRoom').className = 'px-4 py-2 font-medium ' + (m === 'room' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600');
+    document.getElementById('calModeEquip').className = 'px-4 py-2 font-medium ' + (m === 'equip' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600');
+    fetchCalMonth();
+  }
+  function calNav(delta) {
+    _calM += delta;
+    if (_calM < 1) { _calM = 12; _calY--; }
+    if (_calM > 12) { _calM = 1; _calY++; }
+    fetchCalMonth();
+  }
+  function calToday() { const n = new Date(); _calY = n.getFullYear(); _calM = n.getMonth() + 1; fetchCalMonth(); }
+  function fetchCalMonth() {
+    document.getElementById('calMonthLabel').textContent = CAL_MONTHS[_calM - 1] + ' ' + _calY;
+    document.getElementById('calGrid').innerHTML = '<div class="col-span-7 text-center py-10 text-slate-400"><i class="fa-solid fa-spinner fa-spin text-2xl"></i></div>';
+    const type = _calMode === 'equip' ? 'equipmentMonthBookings' : 'monthBookings';
+    fetch(apiUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(authBody({ type, year: _calY, month: _calM })) })
+      .then(r => r.json())
+      .then(data => renderCalendarGrid((data && data.data) || []))
+      .catch(() => { document.getElementById('calGrid').innerHTML = '<div class="col-span-7 text-center py-10 text-red-500">โหลดไม่สำเร็จ</div>'; });
+  }
+  function calStatusColor(s) {
+    if (s === 'เสร็จสิ้น') return 'bg-green-100 text-green-800 border-l-2 border-green-400';
+    if (s === 'กำลังดำเนินการ') return 'bg-blue-100 text-blue-800 border-l-2 border-blue-400';
+    return 'bg-amber-100 text-amber-800 border-l-2 border-amber-400';
+  }
+  function renderCalendarGrid(events) {
+    const pad2 = v => ('0' + v).slice(-2);
+    const byDate = {};
+    events.forEach(ev => { (byDate[ev.date] = byDate[ev.date] || []).push(ev); });
+    const firstDow = new Date(_calY, _calM - 1, 1).getDay();
+    const days = new Date(_calY, _calM, 0).getDate();
+    const n = new Date(); const todayStr = n.getFullYear() + '-' + pad2(n.getMonth() + 1) + '-' + pad2(n.getDate());
+    let html = '';
+    for (let i = 0; i < firstDow; i++) html += '<div class="min-h-[90px] bg-slate-50/50 rounded"></div>';
+    for (let d = 1; d <= days; d++) {
+      const ds = _calY + '-' + pad2(_calM) + '-' + pad2(d);
+      const evs = (byDate[ds] || []).sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+      const pills = evs.map(ev => {
+        const label = _calMode === 'equip' ? (ev.room + (ev.qty ? ' x' + ev.qty : '')) : ev.room;
+        return `<div onclick="calClick('${esc(ev.ticket)}')" title="${esc(ev.ticket)} · ${esc(label)} · ${esc(ev.startTime)}-${esc(ev.endTime)} · ${esc(ev.name)}" class="${calStatusColor(ev.status)} text-[10px] leading-tight px-1 py-0.5 rounded mb-0.5 truncate cursor-pointer hover:brightness-95"><span class="font-mono">${esc(ev.startTime)}</span> ${esc(label)}</div>`;
+      }).join('');
+      const isToday = ds === todayStr;
+      html += `<div class="min-h-[90px] border border-slate-100 rounded p-1 ${isToday ? 'ring-2 ring-blue-400 bg-blue-50/30' : 'bg-white'}"><div class="text-xs font-semibold ${isToday ? 'text-blue-600' : 'text-slate-500'} mb-0.5">${d}</div>${pills}</div>`;
+    }
+    document.getElementById('calGrid').innerHTML = html;
+  }
+  function calClick(ticket) {
+    fetch(apiUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(authBody({ type: 'getTicket', ticket })) })
+      .then(r => r.json())
+      .then(res => {
+        if (!res.data) { showToast('error', 'ไม่พบรายการ'); return; }
+        const d = res.data;
+        if (ticket.startsWith('EQ')) { if (!_allEquipBookings.some(j => j.ticket === ticket)) _allEquipBookings.push(d); }
+        else if (ticket.startsWith('REP')) { if (!_allRepairs.some(j => j.ticket === ticket)) _allRepairs.push(d); }
+        else { if (!_allBookings.some(j => j.ticket === ticket)) _allBookings.push(d); }
+        openJobDetail(ticket);
+      })
+      .catch(() => showToast('error', 'โหลดไม่สำเร็จ'));
   }
 
   // ============================================================
