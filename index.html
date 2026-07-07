@@ -742,16 +742,8 @@
                   </div>
                   <div class="form-group sm:col-span-2">
                     <label class="form-label required">อุปกรณ์ที่ต้องการซ่อม</label>
-                    <select name="equipment" id="equipmentSelect" class="form-input" required onchange="toggleEquipmentOther(this)">
-                      <option value="">-- เลือกอุปกรณ์ --</option>
-                      <option value="ไมโครโฟน">🎤 ไมโครโฟน</option>
-                      <option value="ลำโพง / เครื่องเสียง">🔊 ลำโพง / เครื่องเสียง</option>
-                      <option value="โปรเจกเตอร์">📽️ โปรเจกเตอร์</option>
-                      <option value="จอภาพ / จอ LED">🖥️ จอภาพ / จอ LED</option>
-                      <option value="สายสัญญาณ / Adapter">🔌 สายสัญญาณ / Adapter</option>
-                      <option value="อื่นๆ">⚙️ อื่นๆ</option>
-                    </select>
-                    <input type="text" name="equipmentOther" id="equipmentOther" class="form-input mt-2 hidden" placeholder="ระบุอุปกรณ์ที่ต้องการซ่อม" />
+                    <input type="text" name="equipment" id="equipmentSelect" class="form-input" required
+                           placeholder="พิมพ์ชื่ออุปกรณ์ที่ต้องการซ่อม เช่น ไมโครโฟน ห้องประชุม A / โปรเจกเตอร์ ชั้น 3" maxlength="200" />
                   </div>
                   <div class="form-group sm:col-span-2">
                     <label class="form-label required">สถานที่อุปกรณ์อยู่</label>
