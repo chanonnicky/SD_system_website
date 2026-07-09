@@ -1767,6 +1767,8 @@
         <div class="flex gap-2"><i class="fa-solid fa-phone w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(b.phone)}</span></div>
         <div class="flex gap-2"><i class="fa-solid fa-users w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(b.attendees)} คน</span></div>
         <div class="flex gap-2 text-xs text-slate-400"><i class="fa-solid fa-comment w-4 mt-0.5 flex-shrink-0"></i><span>${esc(b.purpose)}</span></div>
+        ${b.equipment ? `<div class="flex gap-2"><i class="fa-solid fa-toolbox w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(b.equipment)}</span></div>` : ''}
+        ${b.note ? `<div class="flex gap-2 text-xs text-slate-400"><i class="fa-solid fa-note-sticky w-4 mt-0.5 flex-shrink-0"></i><span>${esc(b.note)}</span></div>` : ''}
       </div>
       <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-end text-xs text-slate-400 gap-1">
         <span>กดเพื่อแก้ไขสถานะ</span><i class="fa-solid fa-chevron-right text-xs"></i>
@@ -1846,6 +1848,8 @@
         <div class="flex gap-3"><i class="fa-solid fa-phone w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(job.phone)}</span></div>
         <div class="flex gap-3"><i class="fa-solid fa-users w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(job.attendees)} คน</span></div>
         <div class="flex gap-3 text-xs text-slate-400"><i class="fa-solid fa-comment w-4 mt-0.5 flex-shrink-0"></i><span>${esc(job.purpose)}</span></div>
+        ${job.equipment ? `<div class="flex gap-3"><i class="fa-solid fa-toolbox w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span><span class="text-slate-400">อุปกรณ์ที่ขอ:</span> ${esc(job.equipment)}</span></div>` : ''}
+        ${job.note ? `<div class="flex gap-3 text-xs text-slate-400"><i class="fa-solid fa-note-sticky w-4 mt-0.5 flex-shrink-0"></i><span>${esc(job.note)}</span></div>` : ''}
       </div>`;
 
     document.getElementById('modalBtns').innerHTML = `
