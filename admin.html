@@ -573,12 +573,12 @@
             </div>
             <div class="flex flex-wrap gap-3">
               <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" data-status="รับเรื่อง" checked class="rpt-status w-4 h-4 accent-blue-600">
-                <span class="text-sm px-2 py-0.5 rounded-md bg-blue-100 text-blue-700">รับเรื่อง</span>
+                <input type="checkbox" data-status="รับเรื่อง,รอดำเนินการ" checked class="rpt-status w-4 h-4 accent-blue-600">
+                <span class="text-sm px-2 py-0.5 rounded-md bg-blue-100 text-blue-700">รับเรื่อง/รอดำเนินการ</span>
               </label>
               <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" data-status="กำลังดำเนินการ" checked class="rpt-status w-4 h-4 accent-orange-600">
-                <span class="text-sm px-2 py-0.5 rounded-md bg-orange-100 text-orange-700">กำลังดำเนินการ</span>
+                <input type="checkbox" data-status="กำลังดำเนินการ,จองห้องสำเร็จ" checked class="rpt-status w-4 h-4 accent-orange-600">
+                <span class="text-sm px-2 py-0.5 rounded-md bg-orange-100 text-orange-700">กำลังดำเนินการ/จองห้องสำเร็จ</span>
               </label>
               <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" data-status="เสร็จสิ้น" checked class="rpt-status w-4 h-4 accent-emerald-600">
@@ -1269,7 +1269,7 @@
     if (!types.length) { showToast('error', 'กรุณาเลือกอย่างน้อย 1 ประเภทงาน'); return; }
 
     const statuses = [];
-    document.querySelectorAll('.rpt-status:checked').forEach(cb => statuses.push(cb.dataset.status));
+    document.querySelectorAll('.rpt-status:checked').forEach(cb => cb.dataset.status.split(',').forEach(s => statuses.push(s)));
     if (!statuses.length) { showToast('error', 'กรุณาเลือกอย่างน้อย 1 สถานะ'); return; }
 
     const btn = document.getElementById('reportLoadBtn');
@@ -1333,7 +1333,7 @@
     const bookings = d.bookings || [];
     const equips = d.equipmentBookings || [];
     const doneCount = [...repairs, ...bookings, ...equips].filter(j => j.status === 'เสร็จสิ้น').length;
-    const pendingCount = [...repairs, ...bookings, ...equips].filter(j => ['รับเรื่อง','กำลังดำเนินการ'].includes(j.status)).length;
+    const pendingCount = [...repairs, ...bookings, ...equips].filter(j => ['รับเรื่อง','กำลังดำเนินการ','รอดำเนินการ','จองห้องสำเร็จ'].includes(j.status)).length;
     document.getElementById('rptStatRepairTotal').textContent  = repairs.length;
     document.getElementById('rptStatBookingTotal').textContent = bookings.length;
     document.getElementById('rptStatDone').textContent         = doneCount;
@@ -1445,7 +1445,7 @@
       ['จองห้องประชุมรวม', (d.bookings || []).length],
       ['จองอุปกรณ์รวม', (d.equipmentBookings || []).length],
       ['เสร็จสิ้นแล้ว', [...(d.repairs||[]), ...(d.bookings||[]), ...(d.equipmentBookings||[])].filter(j => j.status === 'เสร็จสิ้น').length],
-      ['กำลังดำเนินการ', [...(d.repairs||[]), ...(d.bookings||[]), ...(d.equipmentBookings||[])].filter(j => ['รับเรื่อง','กำลังดำเนินการ'].includes(j.status)).length],
+      ['กำลังดำเนินการ', [...(d.repairs||[]), ...(d.bookings||[]), ...(d.equipmentBookings||[])].filter(j => ['รับเรื่อง','กำลังดำเนินการ','รอดำเนินการ','จองห้องสำเร็จ'].includes(j.status)).length],
       [],
     ];
     if (showRepair && (d.repairStatusSummary||[]).length) {
@@ -1703,12 +1703,16 @@
   const STATUS_LABEL = {
     'รับเรื่อง':       'มีงานใหม่',
     'กำลังดำเนินการ': 'กำลังดำเนินงาน',
+    'รอดำเนินการ':    'รอดำเนินการ',
+    'จองห้องสำเร็จ':   'จองห้องสำเร็จ',
     'เสร็จสิ้น':       'เสร็จสิ้น',
     'ยกเลิก':          'ยกเลิก',
   };
   const S = {
     'รับเรื่อง':       'bg-yellow-100 text-yellow-700',
     'กำลังดำเนินการ': 'bg-blue-100 text-blue-700',
+    'รอดำเนินการ':    'bg-yellow-100 text-yellow-700',
+    'จองห้องสำเร็จ':   'bg-blue-100 text-blue-700',
     'เสร็จสิ้น':       'bg-green-100 text-green-700',
     'ยกเลิก':          'bg-red-100 text-red-700',
   };
@@ -1824,6 +1828,7 @@
     _modalJob = job;
     const isRepair = ticket.startsWith('REP');
     const isEquip  = ticket.startsWith('EQ');
+    const isBooking = !isRepair && !isEquip;
 
     document.getElementById('modalTicket').textContent = job.ticket;
     document.getElementById('modalStatusBadge').innerHTML = badge(job.status);
@@ -1866,7 +1871,11 @@
         ${noteBoxHtml(job.note)}
       </div>`;
 
-    document.getElementById('modalBtns').innerHTML = `
+    document.getElementById('modalBtns').innerHTML = isBooking ? `
+      <button onclick="updateStatus('${esc(job.ticket)}','รอดำเนินการ')"   class="px-3 py-2 bg-yellow-50 text-yellow-700 rounded-xl hover:bg-yellow-100 transition-colors font-medium text-sm">🟡 รอดำเนินการ</button>
+      <button onclick="updateStatus('${esc(job.ticket)}','จองห้องสำเร็จ')" class="px-3 py-2 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors font-medium text-sm">✅ จองห้องสำเร็จ</button>
+      <button onclick="updateStatus('${esc(job.ticket)}','เสร็จสิ้น')"       class="px-3 py-2 bg-green-50 text-green-700 rounded-xl hover:bg-green-100 transition-colors font-medium text-sm">🏁 เสร็จสิ้น</button>
+      <button onclick="updateStatus('${esc(job.ticket)}','ยกเลิก')"           class="px-3 py-2 bg-red-50 text-red-700 rounded-xl hover:bg-red-100 transition-colors font-medium text-sm">❌ ยกเลิก</button>` : `
       <button onclick="updateStatus('${esc(job.ticket)}','กำลังดำเนินการ')" class="px-3 py-2 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors font-medium text-sm">🔵 กำลังดำเนินงาน</button>
       <button onclick="updateStatus('${esc(job.ticket)}','เสร็จสิ้น')"       class="px-3 py-2 bg-green-50 text-green-700 rounded-xl hover:bg-green-100 transition-colors font-medium text-sm">✅ เสร็จสิ้น</button>
       <button onclick="updateStatus('${esc(job.ticket)}','ยกเลิก')"           class="px-3 py-2 bg-red-50 text-red-700 rounded-xl hover:bg-red-100 transition-colors font-medium text-sm col-span-2">❌ ยกเลิก</button>`;
@@ -2352,7 +2361,7 @@
   }
   function calStatusColor(s) {
     if (s === 'เสร็จสิ้น') return 'bg-green-100 text-green-800 border-l-2 border-green-400';
-    if (s === 'กำลังดำเนินการ') return 'bg-blue-100 text-blue-800 border-l-2 border-blue-400';
+    if (s === 'กำลังดำเนินการ' || s === 'จองห้องสำเร็จ') return 'bg-blue-100 text-blue-800 border-l-2 border-blue-400';
     return 'bg-amber-100 text-amber-800 border-l-2 border-amber-400';
   }
   function renderCalendarGrid(events) {
