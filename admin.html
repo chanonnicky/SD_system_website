@@ -196,7 +196,9 @@
           <div class="flex flex-wrap gap-2 items-center">
             <span class="text-xs text-slate-400">สถานะ:</span>
             <button onclick="toggleStatusFilter('รับเรื่อง')"       class="room-filter active" data-s="รับเรื่อง">🟡 มีงานใหม่</button>
+            <button onclick="toggleStatusFilter('รอดำเนินการ')"     class="room-filter active" data-s="รอดำเนินการ">🟡 รอดำเนินการ</button>
             <button onclick="toggleStatusFilter('กำลังดำเนินการ')" class="room-filter active" data-s="กำลังดำเนินการ">🔵 กำลังดำเนินงาน</button>
+            <button onclick="toggleStatusFilter('จองห้องสำเร็จ')"   class="room-filter active" data-s="จองห้องสำเร็จ">🔵 จองห้องสำเร็จ</button>
           </div>
         </div>
         <div id="loadingPending" class="text-center py-16 text-slate-400">
@@ -234,7 +236,9 @@
           <div class="flex flex-wrap gap-2 items-center">
             <span class="text-xs text-slate-400">สถานะ:</span>
             <button onclick="toggleAllStatus('รับเรื่อง')"       class="room-filter active" data-as="รับเรื่อง">🟡 มีงานใหม่</button>
+            <button onclick="toggleAllStatus('รอดำเนินการ')"     class="room-filter active" data-as="รอดำเนินการ">🟡 รอดำเนินการ</button>
             <button onclick="toggleAllStatus('กำลังดำเนินการ')" class="room-filter active" data-as="กำลังดำเนินการ">🔵 กำลังดำเนินงาน</button>
+            <button onclick="toggleAllStatus('จองห้องสำเร็จ')"   class="room-filter active" data-as="จองห้องสำเร็จ">🔵 จองห้องสำเร็จ</button>
             <button onclick="toggleAllStatus('เสร็จสิ้น')"       class="room-filter active" data-as="เสร็จสิ้น">✅ เสร็จสิ้น</button>
             <button onclick="toggleAllStatus('ยกเลิก')"           class="room-filter active" data-as="ยกเลิก">❌ ยกเลิก</button>
           </div>
@@ -1107,9 +1111,9 @@
   // ============================================================
   let _session = null;
   let _pendingRepairs = [], _pendingBookings = [], _pendingEquip = [], _pendingFilter = 'all';
-  let _pendingStatuses = new Set(['รับเรื่อง', 'กำลังดำเนินการ']);
+  let _pendingStatuses = new Set(['รับเรื่อง', 'กำลังดำเนินการ', 'รอดำเนินการ', 'จองห้องสำเร็จ']);
   let _allRepairs = [], _allBookings = [], _allEquipBookings = [], _allFilter = 'all';
-  let _allStatuses = new Set(['รับเรื่อง', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก']);
+  let _allStatuses = new Set(['รับเรื่อง', 'กำลังดำเนินการ', 'รอดำเนินการ', 'จองห้องสำเร็จ', 'เสร็จสิ้น', 'ยกเลิก']);
   let _allSort = 'newest';
   let _pendingSort = 'newest';
 
@@ -1592,7 +1596,7 @@
     const sortFn = (a, b) => {
       if (_pendingSort === 'oldest') return a.ticket.localeCompare(b.ticket);
       if (_pendingSort === 'status') {
-        const order = ['รับเรื่อง', 'รอดำเนินการ', 'กำลังดำเนินการ'];
+        const order = ['รับเรื่อง', 'รอดำเนินการ', 'กำลังดำเนินการ', 'จองห้องสำเร็จ'];
         return order.indexOf(a.status) - order.indexOf(b.status);
       }
       return b.ticket.localeCompare(a.ticket); // newest
@@ -1671,7 +1675,7 @@
     const sortFn = (a, b) => {
       if (_allSort === 'oldest') return a.ticket.localeCompare(b.ticket);
       if (_allSort === 'status') {
-        const order = ['รับเรื่อง', 'กำลังดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก'];
+        const order = ['รับเรื่อง', 'รอดำเนินการ', 'กำลังดำเนินการ', 'จองห้องสำเร็จ', 'เสร็จสิ้น', 'ยกเลิก'];
         return order.indexOf(a.status) - order.indexOf(b.status);
       }
       return b.ticket.localeCompare(a.ticket);
