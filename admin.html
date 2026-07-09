@@ -1317,7 +1317,7 @@
     // Print header (date range + generated time + filters)
     const fmtThai = s => {
       const [y, m, day] = s.split('-');
-      return `${day}/${m}/${y}`;
+      return `${day}-${m}-${y}`;
     };
     document.getElementById('reportPrintRange').textContent =
       `ช่วงเวลา ${fmtThai(d.dateFrom)} ถึง ${fmtThai(d.dateTo)}`;
@@ -1360,7 +1360,6 @@
     document.getElementById('rptEquipmentKpi').innerHTML = renderKpiRows(d.equipmentKpi || []);
 
     // Repair table
-    const fmtDate = s => s ? s.substring(0, 10) : '';
     document.getElementById('rptRepairCount').textContent = `(${repairs.length} รายการ)`;
     document.getElementById('rptRepairTable').innerHTML = repairs.map(r => `
       <tr class="border-b border-slate-100 hover:bg-slate-50">
@@ -1381,7 +1380,7 @@
     document.getElementById('rptBookingTable').innerHTML = bookings.map(b => `
       <tr class="border-b border-slate-100 hover:bg-slate-50">
         <td class="py-1.5 px-1.5 font-mono">${esc(b.ticket)}</td>
-        <td class="py-1.5 px-1.5">${esc(b.date)}</td>
+        <td class="py-1.5 px-1.5">${esc(fmtDate(b.date))}</td>
         <td class="py-1.5 px-1.5">${esc(b.startTime)}-${esc(b.endTime)}</td>
         <td class="py-1.5 px-1.5">${esc(b.room)}</td>
         <td class="py-1.5 px-1.5">${esc(b.name)}</td>
@@ -1397,8 +1396,8 @@
     document.getElementById('rptEquipmentTable').innerHTML = equips.map(b => `
       <tr class="border-b border-slate-100 hover:bg-slate-50">
         <td class="py-1.5 px-1.5 font-mono">${esc(b.ticket)}</td>
-        <td class="py-1.5 px-1.5">${esc(b.date)}</td>
-        <td class="py-1.5 px-1.5">${esc(b.endDate || b.date)}</td>
+        <td class="py-1.5 px-1.5">${esc(fmtDate(b.date))}</td>
+        <td class="py-1.5 px-1.5">${esc(fmtDate(b.endDate || b.date))}</td>
         <td class="py-1.5 px-1.5">${esc(b.startTime)}-${esc(b.endTime)}</td>
         <td class="py-1.5 px-1.5">${esc(b.equipment)}</td>
         <td class="py-1.5 px-1.5 text-center">${esc(b.qty)}</td>
@@ -1440,7 +1439,7 @@
     const sumRows = [
       ['รายงานสรุปงานงานโสตและอาคารสถานที่'],
       ['โรงเรียนเซนต์ดอมินิก'],
-      [`ช่วงเวลา: ${d.dateFrom} ถึง ${d.dateTo}`],
+      [`ช่วงเวลา: ${fmtDate(d.dateFrom)} ถึง ${fmtDate(d.dateTo)}`],
       [`สร้างเมื่อ: ${new Date().toLocaleString('th-TH')}`],
       [],
       ['ยอดรวม'],
@@ -1501,7 +1500,7 @@
     if (showRepair) {
       const repairRows = [['Ticket','วันที่แจ้ง','ผู้แจ้ง','เบอร์โทร','อุปกรณ์','สถานที่','อาการ','สถานะ','ผู้รับผิดชอบ']];
       (d.repairs || []).forEach(r => repairRows.push([
-        r.ticket, (r.createdAt||'').substring(0,10), r.name||'', r.phone||'', r.equipment||'', r.location||'', r.description||'', r.status||'', r.updatedBy||''
+        r.ticket, fmtDate(r.createdAt), r.name||'', r.phone||'', r.equipment||'', r.location||'', r.description||'', r.status||'', r.updatedBy||''
       ]));
       const repairWidths = [16, 12, 22, 14, 22, 24, 35, 14, 18];
       XLSX.utils.book_append_sheet(wb, buildSheet(repairRows, repairWidths), 'แจ้งซ่อม');
@@ -1511,7 +1510,7 @@
     if (showBooking) {
       const bookingRows = [['Ticket','วันใช้','เริ่ม','สิ้นสุด','ห้อง','ผู้จอง','เบอร์โทร','จำนวนคน','วัตถุประสงค์','อุปกรณ์','หมายเหตุ','สถานะ','ผู้รับผิดชอบ']];
       (d.bookings || []).forEach(b => bookingRows.push([
-        b.ticket, b.date, b.startTime, b.endTime, b.room||'', b.name||'', b.phone||'', b.attendees||'', b.purpose||'', b.equipment||'', b.note||'', b.status||'', b.updatedBy||''
+        b.ticket, fmtDate(b.date), b.startTime, b.endTime, b.room||'', b.name||'', b.phone||'', b.attendees||'', b.purpose||'', b.equipment||'', b.note||'', b.status||'', b.updatedBy||''
       ]));
       const bookingWidths = [16, 12, 8, 8, 20, 22, 14, 10, 30, 20, 25, 14, 18];
       XLSX.utils.book_append_sheet(wb, buildSheet(bookingRows, bookingWidths), 'จองห้องประชุม');
@@ -1520,7 +1519,7 @@
     if (showEquipment) {
       const equipRows = [['Ticket','วันยืม','วันคืน','เริ่ม','สิ้นสุด','อุปกรณ์','จำนวน','ผู้จอง','เบอร์โทร','วัตถุประสงค์','หมายเหตุ','สถานะ','ผู้รับผิดชอบ']];
       (d.equipmentBookings || []).forEach(b => equipRows.push([
-        b.ticket, b.date, b.endDate||b.date, b.startTime, b.endTime, b.equipment||'', b.qty||'', b.name||'', b.phone||'', b.purpose||'', b.note||'', b.status||'', b.updatedBy||''
+        b.ticket, fmtDate(b.date), fmtDate(b.endDate||b.date), b.startTime, b.endTime, b.equipment||'', b.qty||'', b.name||'', b.phone||'', b.purpose||'', b.note||'', b.status||'', b.updatedBy||''
       ]));
       const equipWidths = [16, 12, 12, 8, 8, 20, 8, 22, 14, 30, 25, 14, 18];
       XLSX.utils.book_append_sheet(wb, buildSheet(equipRows, equipWidths), 'จองอุปกรณ์');
@@ -1781,7 +1780,7 @@
       </div>
       <div class="bg-blue-50 rounded-xl p-3 mb-2 text-center">
         <div class="font-bold text-blue-800">${esc(b.room)}</div>
-        <div class="text-sm text-blue-600">${esc(b.date)}</div>
+        <div class="text-sm text-blue-600">${esc(fmtDate(b.date))}</div>
         <div class="text-sm text-slate-600">${esc(b.startTime)} – ${esc(b.endTime)} น.</div>
       </div>
       <div class="space-y-1.5 text-sm text-slate-600">
@@ -1806,7 +1805,7 @@
       </div>
       <div class="bg-indigo-50 rounded-xl p-3 mb-2 text-center">
         <div class="font-bold text-indigo-800"><i class="fa-solid fa-box mr-1"></i>${esc(b.equipment)} <span class="text-indigo-600">x${esc(b.qty)}</span></div>
-        <div class="text-sm text-indigo-600">${esc(b.date)}${(b.endDate && b.endDate !== b.date) ? ' → ' + esc(b.endDate) : ''}</div>
+        <div class="text-sm text-indigo-600">${esc(fmtDate(b.date))}${(b.endDate && b.endDate !== b.date) ? ' → ' + esc(fmtDate(b.endDate)) : ''}</div>
         <div class="text-sm text-slate-600">${esc(b.startTime)} – ${esc(b.endTime)} น.</div>
       </div>
       <div class="space-y-1.5 text-sm text-slate-600">
@@ -1854,7 +1853,7 @@
       </a>` : ''}` : isEquip ? `
       <div class="bg-indigo-50 rounded-xl p-3 mb-4 text-center">
         <div class="font-bold text-indigo-800"><i class="fa-solid fa-box mr-1"></i>${esc(job.equipment)} <span class="text-indigo-600">x${esc(job.qty)}</span></div>
-        <div class="text-sm text-indigo-600">ยืม ${esc(job.date)} ${esc(job.startTime)} น.${(job.endDate && job.endDate !== job.date) ? ' → คืน ' + esc(job.endDate) + ' ' + esc(job.endTime) + ' น.' : ' – ' + esc(job.endTime) + ' น.'}</div>
+        <div class="text-sm text-indigo-600">ยืม ${esc(fmtDate(job.date))} ${esc(job.startTime)} น.${(job.endDate && job.endDate !== job.date) ? ' → คืน ' + esc(fmtDate(job.endDate)) + ' ' + esc(job.endTime) + ' น.' : ' – ' + esc(job.endTime) + ' น.'}</div>
       </div>
       <div class="space-y-3 text-sm text-slate-600">
         <div class="flex gap-3"><i class="fa-solid fa-user w-4 mt-0.5 text-slate-400 flex-shrink-0"></i><span>${esc(job.name)}</span></div>
@@ -1863,7 +1862,7 @@
       </div>` : `
       <div class="bg-blue-50 rounded-xl p-3 mb-4 text-center">
         <div class="font-bold text-blue-800">${esc(job.room)}</div>
-        <div class="text-sm text-blue-600">${esc(job.date)}</div>
+        <div class="text-sm text-blue-600">${esc(fmtDate(job.date))}</div>
         <div class="text-sm text-slate-600">${esc(job.startTime)} – ${esc(job.endTime)} น.</div>
       </div>
       <div class="space-y-3 text-sm text-slate-600">
@@ -2436,7 +2435,7 @@
           <i class="fa-solid fa-user text-slate-400 mt-0.5"></i>
           <div class="flex-1 min-w-0">
             <div class="font-medium">${esc(h.name)} <span class="text-indigo-600">x${esc(h.qty)}</span> <span class="text-slate-400 font-mono">${esc(h.ticket)}</span></div>
-            <div class="text-slate-400">คืน ${esc(h.endDate || h.date)} ${esc(h.endTime)} น. · ${esc(h.purpose || '')}</div>
+            <div class="text-slate-400">คืน ${esc(fmtDate(h.endDate || h.date))} ${esc(h.endTime)} น. · ${esc(h.purpose || '')}</div>
           </div>
         </div>`).join('') : '<div class="text-xs text-slate-400 mt-2">— ว่างทั้งหมด ไม่มีใครยืมอยู่ —</div>';
       return `
@@ -2509,7 +2508,7 @@
           <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-mobile-screen"></i></div>
           <div class="flex-1 min-w-0">
             <select onchange="setDeviceOwner('${tok}', this.value)" class="form-input text-sm py-1 font-semibold w-full ${d.owner ? '' : 'border-amber-300 bg-amber-50'}">${ownerOpts}</select>
-            <div class="text-xs text-slate-400 mt-0.5">${esc(deviceName(d.user_agent))} · …${esc((d.token || '').slice(-6))} · ล่าสุด ${esc(d.last_seen || '-')}</div>
+            <div class="text-xs text-slate-400 mt-0.5">${esc(deviceName(d.user_agent))} · …${esc((d.token || '').slice(-6))} · ล่าสุด ${esc(d.last_seen ? fmtDate(d.last_seen) : '-')}</div>
           </div>
           <div class="flex flex-wrap gap-x-4 gap-y-1.5 text-sm flex-shrink-0" data-devicetok="${tok}">
             <label class="inline-flex items-center gap-1.5 cursor-pointer"><input type="checkbox" value="repair" ${chk('repair')} onchange="onNotifCheck(this,'${tok}')" class="w-4 h-4"> แจ้งซ่อม</label>
@@ -2568,6 +2567,12 @@
   // UTILITIES
   // ============================================================
   function esc(s) { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  // YYYY-MM-DD (หรือ datetime) → DD-MM-YYYY
+  function fmtDate(s) {
+    if (!s) return '';
+    const m = String(s).match(/(\d{4})-(\d{2})-(\d{2})/);
+    return m ? `${m[3]}-${m[2]}-${m[1]}` : String(s);
+  }
 
   function showToast(type, msg) {
     const t = document.getElementById('toast');
