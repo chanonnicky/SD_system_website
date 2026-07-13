@@ -192,14 +192,6 @@
               </select>
             </div>
           </div>
-          <!-- Row 2: สถานะ (multi-select) -->
-          <div class="flex flex-wrap gap-2 items-center">
-            <span class="text-xs text-slate-400">สถานะ:</span>
-            <button onclick="toggleStatusFilter('รับเรื่อง')"       class="room-filter active" data-s="รับเรื่อง">🟡 มีงานใหม่</button>
-            <button onclick="toggleStatusFilter('รอดำเนินการ')"     class="room-filter active" data-s="รอดำเนินการ">🟡 รอดำเนินการ</button>
-            <button onclick="toggleStatusFilter('กำลังดำเนินการ')" class="room-filter active" data-s="กำลังดำเนินการ">🔵 กำลังดำเนินงาน</button>
-            <button onclick="toggleStatusFilter('จองห้องสำเร็จ')"   class="room-filter active" data-s="จองห้องสำเร็จ">🔵 จองห้องสำเร็จ</button>
-          </div>
         </div>
         <div id="loadingPending" class="text-center py-16 text-slate-400">
           <i class="fa-solid fa-spinner fa-spin text-4xl mb-3"></i>
@@ -235,10 +227,7 @@
           </div>
           <div class="flex flex-wrap gap-2 items-center">
             <span class="text-xs text-slate-400">สถานะ:</span>
-            <button onclick="toggleAllStatus('รับเรื่อง')"       class="room-filter active" data-as="รับเรื่อง">🟡 มีงานใหม่</button>
             <button onclick="toggleAllStatus('รอดำเนินการ')"     class="room-filter active" data-as="รอดำเนินการ">🟡 รอดำเนินการ</button>
-            <button onclick="toggleAllStatus('กำลังดำเนินการ')" class="room-filter active" data-as="กำลังดำเนินการ">🔵 กำลังดำเนินงาน</button>
-            <button onclick="toggleAllStatus('จองห้องสำเร็จ')"   class="room-filter active" data-as="จองห้องสำเร็จ">🔵 จองห้องสำเร็จ</button>
             <button onclick="toggleAllStatus('เสร็จสิ้น')"       class="room-filter active" data-as="เสร็จสิ้น">✅ เสร็จสิ้น</button>
             <button onclick="toggleAllStatus('ยกเลิก')"           class="room-filter active" data-as="ยกเลิก">❌ ยกเลิก</button>
           </div>
@@ -577,12 +566,8 @@
             </div>
             <div class="flex flex-wrap gap-3">
               <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" data-status="รับเรื่อง,รอดำเนินการ" checked class="rpt-status w-4 h-4 accent-blue-600">
-                <span class="text-sm px-2 py-0.5 rounded-md bg-blue-100 text-blue-700">รับเรื่อง/รอดำเนินการ</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" data-status="กำลังดำเนินการ,จองห้องสำเร็จ" checked class="rpt-status w-4 h-4 accent-orange-600">
-                <span class="text-sm px-2 py-0.5 rounded-md bg-orange-100 text-orange-700">กำลังดำเนินการ/จองห้องสำเร็จ</span>
+                <input type="checkbox" data-status="รอดำเนินการ" checked class="rpt-status w-4 h-4 accent-amber-600">
+                <span class="text-sm px-2 py-0.5 rounded-md bg-amber-100 text-amber-700">รอดำเนินการ</span>
               </label>
               <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" data-status="เสร็จสิ้น" checked class="rpt-status w-4 h-4 accent-emerald-600">
@@ -1111,9 +1096,9 @@
   // ============================================================
   let _session = null;
   let _pendingRepairs = [], _pendingBookings = [], _pendingEquip = [], _pendingFilter = 'all';
-  let _pendingStatuses = new Set(['รับเรื่อง', 'กำลังดำเนินการ', 'รอดำเนินการ', 'จองห้องสำเร็จ']);
+  let _pendingStatuses = new Set(['รอดำเนินการ']);
   let _allRepairs = [], _allBookings = [], _allEquipBookings = [], _allFilter = 'all';
-  let _allStatuses = new Set(['รับเรื่อง', 'กำลังดำเนินการ', 'รอดำเนินการ', 'จองห้องสำเร็จ', 'เสร็จสิ้น', 'ยกเลิก']);
+  let _allStatuses = new Set(['รอดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก']);
   let _allSort = 'newest';
   let _pendingSort = 'newest';
 
@@ -1337,7 +1322,7 @@
     const bookings = d.bookings || [];
     const equips = d.equipmentBookings || [];
     const doneCount = [...repairs, ...bookings, ...equips].filter(j => j.status === 'เสร็จสิ้น').length;
-    const pendingCount = [...repairs, ...bookings, ...equips].filter(j => ['รับเรื่อง','กำลังดำเนินการ','รอดำเนินการ','จองห้องสำเร็จ'].includes(j.status)).length;
+    const pendingCount = [...repairs, ...bookings, ...equips].filter(j => (j.status === 'รอดำเนินการ')).length;
     document.getElementById('rptStatRepairTotal').textContent  = repairs.length;
     document.getElementById('rptStatBookingTotal').textContent = bookings.length;
     document.getElementById('rptStatDone').textContent         = doneCount;
@@ -1448,7 +1433,7 @@
       ['จองห้องประชุมรวม', (d.bookings || []).length],
       ['จองอุปกรณ์รวม', (d.equipmentBookings || []).length],
       ['เสร็จสิ้นแล้ว', [...(d.repairs||[]), ...(d.bookings||[]), ...(d.equipmentBookings||[])].filter(j => j.status === 'เสร็จสิ้น').length],
-      ['กำลังดำเนินการ', [...(d.repairs||[]), ...(d.bookings||[]), ...(d.equipmentBookings||[])].filter(j => ['รับเรื่อง','กำลังดำเนินการ','รอดำเนินการ','จองห้องสำเร็จ'].includes(j.status)).length],
+      ['กำลังดำเนินการ', [...(d.repairs||[]), ...(d.bookings||[]), ...(d.equipmentBookings||[])].filter(j => (j.status === 'รอดำเนินการ')).length],
       [],
     ];
     if (showRepair && (d.repairStatusSummary||[]).length) {
@@ -1595,7 +1580,7 @@
     const sortFn = (a, b) => {
       if (_pendingSort === 'oldest') return a.ticket.localeCompare(b.ticket);
       if (_pendingSort === 'status') {
-        const order = ['รับเรื่อง', 'รอดำเนินการ', 'กำลังดำเนินการ', 'จองห้องสำเร็จ'];
+        const order = ['รอดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก'];
         return order.indexOf(a.status) - order.indexOf(b.status);
       }
       return b.ticket.localeCompare(a.ticket); // newest
@@ -1674,7 +1659,7 @@
     const sortFn = (a, b) => {
       if (_allSort === 'oldest') return a.ticket.localeCompare(b.ticket);
       if (_allSort === 'status') {
-        const order = ['รับเรื่อง', 'รอดำเนินการ', 'กำลังดำเนินการ', 'จองห้องสำเร็จ', 'เสร็จสิ้น', 'ยกเลิก'];
+        const order = ['รอดำเนินการ', 'เสร็จสิ้น', 'ยกเลิก'];
         return order.indexOf(a.status) - order.indexOf(b.status);
       }
       return b.ticket.localeCompare(a.ticket);
@@ -1874,14 +1859,9 @@
         ${noteBoxHtml(job.note)}
       </div>`;
 
-    document.getElementById('modalBtns').innerHTML = isBooking ? `
-      <button onclick="updateStatus('${esc(job.ticket)}','รอดำเนินการ')"   class="px-3 py-2 bg-yellow-50 text-yellow-700 rounded-xl hover:bg-yellow-100 transition-colors font-medium text-sm">🟡 รอดำเนินการ</button>
-      <button onclick="updateStatus('${esc(job.ticket)}','จองห้องสำเร็จ')" class="px-3 py-2 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors font-medium text-sm">✅ จองห้องสำเร็จ</button>
-      <button onclick="updateStatus('${esc(job.ticket)}','เสร็จสิ้น')"       class="px-3 py-2 bg-green-50 text-green-700 rounded-xl hover:bg-green-100 transition-colors font-medium text-sm">🏁 เสร็จสิ้น</button>
-      <button onclick="updateStatus('${esc(job.ticket)}','ยกเลิก')"           class="px-3 py-2 bg-red-50 text-red-700 rounded-xl hover:bg-red-100 transition-colors font-medium text-sm">❌ ยกเลิก</button>` : `
-      <button onclick="updateStatus('${esc(job.ticket)}','กำลังดำเนินการ')" class="px-3 py-2 bg-blue-50 text-blue-700 rounded-xl hover:bg-blue-100 transition-colors font-medium text-sm">🔵 กำลังดำเนินงาน</button>
-      <button onclick="updateStatus('${esc(job.ticket)}','เสร็จสิ้น')"       class="px-3 py-2 bg-green-50 text-green-700 rounded-xl hover:bg-green-100 transition-colors font-medium text-sm">✅ เสร็จสิ้น</button>
-      <button onclick="updateStatus('${esc(job.ticket)}','ยกเลิก')"           class="px-3 py-2 bg-red-50 text-red-700 rounded-xl hover:bg-red-100 transition-colors font-medium text-sm col-span-2">❌ ยกเลิก</button>`;
+    document.getElementById('modalBtns').innerHTML = `
+      <button onclick="updateStatus('${esc(job.ticket)}','เสร็จสิ้น')" class="px-3 py-2 bg-green-50 text-green-700 rounded-xl hover:bg-green-100 transition-colors font-medium text-sm">✅ เสร็จสิ้น</button>
+      <button onclick="updateStatus('${esc(job.ticket)}','ยกเลิก')"   class="px-3 py-2 bg-red-50 text-red-700 rounded-xl hover:bg-red-100 transition-colors font-medium text-sm">❌ ยกเลิก</button>`;
 
     document.getElementById('jobModal').classList.remove('hidden');
   }
