@@ -365,6 +365,10 @@
               <textarea id="roomFeatures" class="form-input" rows="3" placeholder="จอ LED&#10;ระบบเครื่องเสียง"></textarea>
             </div>
             <div class="sm:col-span-2">
+              <label class="form-label"><i class="fa-solid fa-bullhorn text-amber-500 mr-1"></i>ประกาศ / เงื่อนไขพิเศษ <span class="text-xs text-slate-400">(แสดงตอนเลือกห้องในหน้าจอง — เช่น ต้องติดต่อใครก่อน)</span></label>
+              <textarea id="roomAnnounce" class="form-input" rows="2" placeholder="เช่น การขอใช้ห้องนี้ต้องติดต่อ อ.สมชาย (งานโสตฯ) ก่อนทุกครั้ง"></textarea>
+            </div>
+            <div class="sm:col-span-2">
               <label class="inline-flex items-center gap-2 text-sm text-slate-700">
                 <input type="checkbox" id="roomActive" class="w-4 h-4" checked />
                 เปิดใช้งาน (แสดงในหน้าจองห้อง)
@@ -2119,6 +2123,7 @@
     document.getElementById('roomSheetColor').value = /^#[0-9a-fA-F]{6}$/.test(col) ? col : '#e2e8f0';
     document.getElementById('roomSheetColorText').value = col;
     document.getElementById('roomFeatures').value = (r.features || []).join('\n');
+    document.getElementById('roomAnnounce').value = r.announce || '';
     document.getElementById('roomActive').checked = isEdit ? !!r.active : true;
     document.getElementById('roomModal').classList.remove('hidden');
     document.getElementById(isEdit ? 'roomLabel' : 'roomId').focus();
@@ -2156,6 +2161,7 @@
       calClass: document.getElementById('roomCalClass').value.trim(),
       sortOrder: document.getElementById('roomSortOrder').value.trim(),
       active: document.getElementById('roomActive').checked ? 1 : 0,
+      announce: document.getElementById('roomAnnounce').value.trim(),
       features,
     };
     fetch(apiUrl(), {
